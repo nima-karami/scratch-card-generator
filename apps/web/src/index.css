@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Syne", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+
+  --color-void: #07070d;
+  --color-surface: #0f0f18;
+  --color-surface-raised: #171723;
+  --color-surface-bright: #1f1f30;
+
+  --color-gold: #f5a623;
+  --color-gold-light: #ffd700;
+  --color-gold-dim: #b8860b;
+  --color-teal: #00e5c7;
+  --color-teal-dim: #00a88f;
+
+  --color-text-primary: #eee8d5;
+  --color-text-secondary: #9a917f;
+  --color-text-muted: #5c5647;
+
+  --color-danger: #e53e3e;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-void);
+  color: var(--color-text-primary);
+  overflow-x: hidden;
+}
+
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 180px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(245, 166, 35, 0.12) 40%,
+    rgba(255, 215, 0, 0.22) 50%,
+    rgba(245, 166, 35, 0.12) 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.4s ease-in-out infinite;
+}
+
+.glow-gold {
+  box-shadow:
+    0 0 20px rgba(245, 166, 35, 0.15),
+    0 0 60px rgba(245, 166, 35, 0.08),
+    inset 0 1px 0 rgba(255, 215, 0, 0.1);
+}
+
+.glow-gold-strong {
+  box-shadow:
+    0 0 30px rgba(245, 166, 35, 0.25),
+    0 0 80px rgba(245, 166, 35, 0.12),
+    inset 0 1px 0 rgba(255, 215, 0, 0.15);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
