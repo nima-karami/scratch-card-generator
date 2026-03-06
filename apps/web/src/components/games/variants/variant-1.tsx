@@ -16,7 +16,6 @@ export function Variant1({ cardData }: Variant1Props) {
   const games = variant?.games ?? ([] as ScratchCardGame[]);
 
   const prizeGrid = games.find((game) => game.id === "prize-grid");
-  console.log("prizeGrid", prizeGrid);
   if (!prizeGrid) {
     return null;
   }

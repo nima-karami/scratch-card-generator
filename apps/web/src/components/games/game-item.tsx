@@ -16,19 +16,29 @@ export interface GameItemProps {
   data: GameItemData;
   size?: GameItemSize;
   onReveal?: (id: string) => void;
-  /** Spritesheet config when item uses coverSpriteSheetSrc (e.g. from PrizeGridData) */
-  spriteSheetConfig?: { frameWidth: number; frameHeight: number; cols: number; rows: number };
+  /** Spritesheet config when item uses coverSpriteSheetSrc (e.g. from PrizeGridData). Frame size is derived from image. */
+  spriteSheetConfig?: { cols: number; rows: number };
 }
 
 export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: GameItemProps) {
   const [localRevealed, setLocalRevealed] = useState(false);
+  const [isPlayingRevealAnimation, setIsPlayingRevealAnimation] = useState(false);
   const revealed = data.revealed || localRevealed;
 
+  function handleRevealComplete() {
+    setLocalRevealed(true);
+    setIsPlayingRevealAnimation(false);
+    onReveal?.(data.id);
+  }
+
   function handleClick() {
-    if (onReveal) {
-      onReveal(data.id);
+    if (revealed) return;
+    if (data.coverSpriteSheetSrc && spriteSheetConfig) {
+      if (isPlayingRevealAnimation) return;
+      setIsPlayingRevealAnimation(true);
     } else {
-      setLocalRevealed((prev) => !prev);
+      if (onReveal) onReveal(data.id);
+      else setLocalRevealed(true);
     }
   }
 
@@ -40,7 +50,23 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
       whileTap={{ scale: 0.95 }}
       className={cn("rounded-lg border border-gold/30 bg-surface-bright flex items-center justify-center font-semibold text-text-primary overflow-hidden shrink-0", sizeClasses[size])}
     >
-      {revealed ? (
+      {data.coverSpriteSheetSrc && spriteSheetConfig ? (
+        <div className="relative w-full h-full">
+          <span className="absolute inset-0 flex items-center justify-center font-semibold text-text-primary">
+            {data.value}
+          </span>
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+            <SpriteSheetRenderer
+              src={data.coverSpriteSheetSrc}
+              cols={spriteSheetConfig.cols}
+              rows={spriteSheetConfig.rows}
+              className="max-w-full max-h-full"
+              play={isPlayingRevealAnimation}
+              onComplete={handleRevealComplete}
+            />
+          </div>
+        </div>
+      ) : revealed ? (
         <motion.span
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -48,17 +74,6 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
         >
           {data.value}
         </motion.span>
-      ) : data.coverSpriteSheetSrc && spriteSheetConfig ? (
-        <div className="w-full h-full flex items-center justify-center overflow-hidden">
-          <SpriteSheetRenderer
-            src={data.coverSpriteSheetSrc}
-            frameWidth={spriteSheetConfig.frameWidth}
-            frameHeight={spriteSheetConfig.frameHeight}
-            cols={spriteSheetConfig.cols}
-            rows={spriteSheetConfig.rows}
-            className="max-w-full max-h-full"
-          />
-        </div>
       ) : data.coverUrl ? (
         <img
           src={data.coverUrl}

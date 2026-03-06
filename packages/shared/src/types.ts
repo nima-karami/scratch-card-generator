@@ -25,10 +25,8 @@ export interface GameItemData {
   revealed: boolean;
 }
 
-/** Shared spritesheet config (frame dimensions, grid). Only src differs per item. */
+/** Shared spritesheet config (grid only). Frame size is derived from image dimensions: frameWidth = imageWidth/cols, frameHeight = imageHeight/rows. */
 export interface SpriteSheetConfig {
-  frameWidth: number;
-  frameHeight: number;
   cols: number;
   rows: number;
 }

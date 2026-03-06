@@ -1,7 +1,14 @@
 import type { CardData, GameItemData } from "@repo/shared";
 
-function gameItem(id: string, value: string, revealed = false): GameItemData {
-  return { id, value, revealed };
+const COOKIE_SPRITESHEET = "/assets/cookie-shatter.png";
+
+function gameItem(
+  id: string,
+  value: string,
+  revealed = false,
+  coverSpriteSheetSrc?: string,
+): GameItemData {
+  return { id, value, revealed, coverSpriteSheetSrc };
 }
 
 export const mockCardPrizeGrid: CardData = {
@@ -15,24 +22,25 @@ export const mockCardPrizeGrid: CardData = {
       {
         id: "prize-grid",
         items: [
-          gameItem("p1", "WIN"),
-          gameItem("p2", "$5"),
-          gameItem("p3", "FREE"),
-          gameItem("p4", "BONUS"),
-          gameItem("p5", "WIN"),
-          gameItem("p6", "$10"),
-          gameItem("p7", "WIN"),
-          gameItem("p8", "$5"),
-          gameItem("p9", "FREE"),
-          gameItem("p10", "BONUS"),
-          gameItem("p11", "WIN"),
-          gameItem("p12", "$10"),
-          gameItem("p13", "WIN"),
-          gameItem("p14", "$5"),
-          gameItem("p15", "FREE"),
+          gameItem("p1", "$0", false, COOKIE_SPRITESHEET),
+          gameItem("p2", "$5", false, COOKIE_SPRITESHEET),
+          gameItem("p3", "$10", false, COOKIE_SPRITESHEET),
+          gameItem("p4", "$50", false, COOKIE_SPRITESHEET),
+          gameItem("p5", "$20", false, COOKIE_SPRITESHEET),
+          gameItem("p6", "$10", false, COOKIE_SPRITESHEET),
+          gameItem("p7", "$100", false, COOKIE_SPRITESHEET),
+          gameItem("p8", "$5", false, COOKIE_SPRITESHEET),
+          gameItem("p9", "$0", false, COOKIE_SPRITESHEET),
+          gameItem("p10", "$0", false, COOKIE_SPRITESHEET),
+          gameItem("p11", "$0", false, COOKIE_SPRITESHEET),
+          gameItem("p12", "$10", false, COOKIE_SPRITESHEET),
+          gameItem("p13", "$0", false, COOKIE_SPRITESHEET),
+          gameItem("p14", "$5", false, COOKIE_SPRITESHEET),
+          gameItem("p15", "$0", false, COOKIE_SPRITESHEET),
         ],
         cols: 3,
         rows: 5,
+        coverSpriteSheet: { cols: 4, rows: 3 },
       },
     ],
   },
