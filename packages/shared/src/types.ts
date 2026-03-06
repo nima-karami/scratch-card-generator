@@ -15,12 +15,92 @@ export interface CardImageSlot {
   alt?: string;
 }
 
+/** One revealable cell: cover (image or spritesheet) and value underneath */
+export interface GameItemData {
+  id: string;
+  coverUrl?: string;
+  /** Spritesheet image URL; uses game-level config. Takes precedence over coverUrl. */
+  coverSpriteSheetSrc?: string;
+  value: string;
+  revealed: boolean;
+}
+
+/** Shared spritesheet config (frame dimensions, grid). Only src differs per item. */
+export interface SpriteSheetConfig {
+  frameWidth: number;
+  frameHeight: number;
+  cols: number;
+  rows: number;
+}
+
+/** Match-a-bunch game: 2–5 match items + prize */
+export interface MatchABunchData {
+  id: "match-a-bunch";
+  items: GameItemData[];
+  matchCount: number;
+  prize: string;
+}
+
+/** Bonus spot: single reveal for a prize */
+export interface BonusSpotData {
+  id: "bonus-spot";
+  item: GameItemData;
+  prize: string;
+}
+
+/** Lucky numbers: row of revealable items (2, 3, 5, etc.) */
+export interface LuckyNumbersData {
+  id: "lucky-numbers";
+  items: GameItemData[];
+  count: number;
+}
+
+/** Your numbers: grid of revealable items (e.g. 3x3, 3x4, 4x4) */
+export interface YourNumbersData {
+  id: "your-numbers";
+  items: GameItemData[];
+  cols: number;
+  rows: number;
+}
+
+/** Prize grid: grid of revealable cells, each shows a prize (no matching) */
+export interface PrizeGridData {
+  id: "prize-grid";
+  items: GameItemData[];
+  cols: number;
+  rows: number;
+  /** Shared spritesheet config for items with coverSpriteSheetSrc; only src differs per item */
+  coverSpriteSheet?: SpriteSheetConfig;
+}
+
+export type GameId =
+  | "prize-grid"
+  | "match-a-bunch"
+  | "bonus-spot"
+  | "lucky-numbers"
+  | "your-numbers";
+
+export type ScratchCardGame =
+  | PrizeGridData
+  | MatchABunchData
+  | BonusSpotData
+  | LuckyNumbersData
+  | YourNumbersData;
+
+/** Defines which games appear on the card and in what order */
+export interface ScratchCardVariant {
+  id: "variant-1" | "variant-2" | "variant-3";
+  name: string;
+  games: ScratchCardGame[];
+}
+
 /** Final composed card data for the scratch-card layout */
 export interface CardData {
   title: string;
   tagline: string;
-  layout: string;
   images: CardImageSlot[];
+  /** When present, card renders the game variant; otherwise legacy image layout */
+  variant?: ScratchCardVariant;
 }
 
 /** Job status for internal/SSE use */

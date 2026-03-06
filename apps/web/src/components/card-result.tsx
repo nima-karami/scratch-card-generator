@@ -1,14 +1,17 @@
-import { useRef } from "react";
-import { motion } from "motion/react";
+import { useRef, useState, useEffect } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { useGameStore } from "../stores/game-store";
+import { ScratchCard } from "./games";
 
 export function CardResult() {
   const { cardData, reset } = useGameStore();
   const cardRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   if (!cardData) return null;
 
-  function handleDownload() {
+  function handleShare() {
     if (!cardRef.current || !cardData) return;
     const el = cardRef.current;
     el.requestFullscreen?.().catch(() => {});
@@ -16,117 +19,139 @@ export function CardResult() {
       const text = `${cardData.title} \u2013 ${cardData.tagline}`;
       navigator.clipboard.writeText(text).catch(() => {});
     }
+    setMenuOpen(false);
   }
 
-  return (
-    <div className="relative min-h-dvh flex flex-col items-center justify-center px-6 py-12">
-      {/* Background glow */}
-      <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-gold/[0.07] blur-[140px]" />
+  function handleGenerateAnother() {
+    reset();
+    setMenuOpen(false);
+  }
 
-      <div className="relative z-10 w-full max-w-sm space-y-8">
-        {/* Card */}
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [menuOpen]);
+
+  return (
+    <div className="fixed inset-0 flex min-h-dvh flex-col">
+      {/* Background glow - hidden on mobile when card is full-screen */}
+      <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-gold/[0.07] blur-[140px] md:block hidden" />
+
+      {/* Full-screen card area on mobile, centered on desktop */}
+      <div className="flex flex-1 min-h-0 items-center justify-center overflow-hidden p-0 md:p-6">
         <motion.div
           ref={cardRef}
           initial={{ opacity: 0, y: 40, scale: 0.92 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="relative rounded-2xl border border-gold/30 bg-surface-raised overflow-hidden glow-gold-strong"
+          className="h-full w-full md:h-auto md:max-w-sm md:w-full"
         >
-          {/* Shimmer overlay */}
-          <div className="shimmer pointer-events-none absolute inset-0 z-10 rounded-2xl" />
-
-          {/* Corner accents */}
-          <div className="absolute top-0 left-0 w-10 h-10 border-t-2 border-l-2 border-gold/40 rounded-tl-2xl" />
-          <div className="absolute top-0 right-0 w-10 h-10 border-t-2 border-r-2 border-gold/40 rounded-tr-2xl" />
-          <div className="absolute bottom-0 left-0 w-10 h-10 border-b-2 border-l-2 border-gold/40 rounded-bl-2xl" />
-          <div className="absolute bottom-0 right-0 w-10 h-10 border-b-2 border-r-2 border-gold/40 rounded-br-2xl" />
-
-          <div className="relative z-20 p-7">
-            {/* Eyebrow */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-[10px] uppercase tracking-[0.3em] text-gold-dim font-medium mb-4"
-            >
-              Instant Win
-            </motion.p>
-
-            {/* Title */}
-            <motion.h2
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="font-display text-3xl font-extrabold text-gold-light leading-tight"
-            >
-              {cardData.title}
-            </motion.h2>
-
-            {/* Tagline */}
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.55, duration: 0.4 }}
-              className="text-text-secondary text-sm mt-2 leading-relaxed"
-            >
-              {cardData.tagline}
-            </motion.p>
-
-            {/* Divider */}
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: 0.65, duration: 0.6, ease: "easeInOut" }}
-              className="h-px w-full bg-gradient-to-r from-transparent via-gold/30 to-transparent my-5 origin-left"
+          {cardData.variant ? (
+            <ScratchCard
+              cardData={cardData}
+              className="h-full w-full rounded-none md:rounded-2xl md:h-auto md:w-auto"
             />
-
-            {/* Images */}
-            <div className="flex flex-wrap gap-3">
-              {cardData.images.map((img, i) => (
-                <motion.img
-                  key={img.id}
-                  src={img.url}
-                  alt={img.alt ?? ""}
-                  initial={{ opacity: 0, scale: 0.6, y: 12 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{
-                    delay: 0.7 + i * 0.15,
-                    duration: 0.5,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  className="w-22 h-22 rounded-xl border border-gold/20 object-cover"
-                />
-              ))}
-            </div>
-          </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="relative h-full w-full rounded-none border border-gold/30 bg-surface-raised overflow-hidden glow-gold-strong p-7 md:rounded-2xl md:h-auto md:w-auto"
+            >
+              <p className="text-[10px] uppercase tracking-[0.3em] text-gold-dim font-medium mb-4">
+                Instant Win
+              </p>
+              <h2 className="font-display text-3xl font-extrabold text-gold-light leading-tight">
+                {cardData.title}
+              </h2>
+              <p className="text-text-secondary text-sm mt-2 leading-relaxed">
+                {cardData.tagline}
+              </p>
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/30 to-transparent my-5" />
+              <div className="flex flex-wrap gap-3">
+                {cardData.images.map((img, i) => (
+                  <motion.img
+                    key={img.id}
+                    src={img.url}
+                    alt={img.alt ?? ""}
+                    initial={{ opacity: 0, scale: 0.6, y: 12 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{
+                      delay: 0.7 + i * 0.15,
+                      duration: 0.5,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className="w-22 h-22 rounded-xl border border-gold/20 object-cover"
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
         </motion.div>
+      </div>
 
-        {/* Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0, duration: 0.5 }}
-          className="flex flex-col gap-3"
+      {/* Menu button - top right */}
+      <div ref={menuRef} className="absolute right-4 top-4 z-30 md:right-6 md:top-6">
+        <motion.button
+          type="button"
+          onClick={() => setMenuOpen((o) => !o)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/30 bg-surface-raised/90 backdrop-blur-sm text-gold shadow-lg transition-colors hover:bg-surface-bright"
+          aria-label="Open menu"
+          aria-expanded={menuOpen}
         >
-          <motion.button
-            type="button"
-            onClick={handleDownload}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            className="w-full rounded-xl border border-gold/30 bg-surface-raised py-3.5 text-sm font-semibold text-gold transition-colors duration-200 hover:bg-surface-bright"
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            Share / Screenshot
-          </motion.button>
-          <motion.button
-            type="button"
-            onClick={reset}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            className="w-full rounded-xl border border-surface-bright py-3.5 text-sm font-medium text-text-secondary transition-colors duration-200 hover:text-text-primary hover:border-surface-bright"
-          >
-            Generate another
-          </motion.button>
-        </motion.div>
+            <circle cx="12" cy="6" r="1.5" fill="currentColor" />
+            <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+            <circle cx="12" cy="18" r="1.5" fill="currentColor" />
+          </svg>
+        </motion.button>
+
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.96 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="absolute right-0 top-12 min-w-[180px] rounded-xl border border-gold/30 bg-surface-raised py-2 shadow-xl"
+            >
+              <button
+                type="button"
+                onClick={handleShare}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold text-gold transition-colors hover:bg-surface-bright"
+              >
+                Share / Screenshot
+              </button>
+              <button
+                type="button"
+                onClick={handleGenerateAnother}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-text-secondary transition-colors hover:bg-surface-bright hover:text-text-primary"
+              >
+                Generate another
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

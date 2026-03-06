@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "extract-alpha": "tsx apps/server/src/scripts/extract-alpha.ts",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
