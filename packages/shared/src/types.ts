@@ -31,6 +31,18 @@ export interface SpriteSheetConfig {
   rows: number;
 }
 
+/** Parameters for spritesheet generation pipeline (prompt construction, image gen, alpha extraction). */
+export interface SpritesheetGenerationConfig {
+  canvasWidth: number;
+  canvasHeight: number;
+  cols: number;
+  rows: number;
+  subject: string;
+  animationAction: string;
+  keyframes: { frame: number; description: string }[];
+  visualStyle: string;
+}
+
 /** Match-a-bunch game: 2–5 match items + prize */
 export interface MatchABunchData {
   id: "match-a-bunch";

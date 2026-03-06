@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "extract-alpha": "tsx apps/server/src/scripts/extract-alpha.ts",
+    "generate-spritesheet": "tsx apps/server/src/scripts/generate-spritesheet.ts",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",

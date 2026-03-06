@@ -1,6 +1,8 @@
 import type { CardData, GameItemData } from "@repo/shared";
 
 const COOKIE_SPRITESHEET = "/assets/cookie-shatter.png";
+const APPLE_SPRITESHEET = "/assets/apple-eating.png";
+const DINOSAUR_SPRITESHEET = "/assets/dinosaur-dying.png";
 
 function gameItem(
   id: string,
@@ -22,17 +24,17 @@ export const mockCardPrizeGrid: CardData = {
       {
         id: "prize-grid",
         items: [
-          gameItem("p1", "$0", false, COOKIE_SPRITESHEET),
-          gameItem("p2", "$5", false, COOKIE_SPRITESHEET),
+          gameItem("p1", "$0", false, APPLE_SPRITESHEET),
+          gameItem("p2", "$5", false, APPLE_SPRITESHEET),
           gameItem("p3", "$10", false, COOKIE_SPRITESHEET),
-          gameItem("p4", "$50", false, COOKIE_SPRITESHEET),
-          gameItem("p5", "$20", false, COOKIE_SPRITESHEET),
-          gameItem("p6", "$10", false, COOKIE_SPRITESHEET),
-          gameItem("p7", "$100", false, COOKIE_SPRITESHEET),
+          gameItem("p4", "$50", false, APPLE_SPRITESHEET),
+          gameItem("p5", "$20", false, APPLE_SPRITESHEET),
+          gameItem("p6", "$10", false, APPLE_SPRITESHEET),
+          gameItem("p7", "$100", false, DINOSAUR_SPRITESHEET),
           gameItem("p8", "$5", false, COOKIE_SPRITESHEET),
           gameItem("p9", "$0", false, COOKIE_SPRITESHEET),
           gameItem("p10", "$0", false, COOKIE_SPRITESHEET),
-          gameItem("p11", "$0", false, COOKIE_SPRITESHEET),
+          gameItem("p11", "$0", false, DINOSAUR_SPRITESHEET),
           gameItem("p12", "$10", false, COOKIE_SPRITESHEET),
           gameItem("p13", "$0", false, COOKIE_SPRITESHEET),
           gameItem("p14", "$5", false, COOKIE_SPRITESHEET),

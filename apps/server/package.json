@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@google/genai": "^1.44.0",
     "@repo/shared": "*",
     "bullmq": "^5.34.8",
     "cors": "^2.8.5",
