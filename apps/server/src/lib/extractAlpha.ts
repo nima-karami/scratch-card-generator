@@ -14,12 +14,13 @@ export async function extractAlphaTwoPass(
   const img1 = sharp(imgOnWhitePath);
   const img2 = sharp(imgOnBlackPath);
 
-  const { data: dataWhite, info: meta } = await img1
+  const { data: dataWhite, info: metaWhite } = await img1
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
 
   const { data: dataBlack } = await img2
+    .resize(metaWhite.width, metaWhite.height, { fit: "fill" })
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
@@ -30,8 +31,10 @@ export async function extractAlphaTwoPass(
 
   const outputBuffer = Buffer.alloc(dataWhite.length);
   const bgDist = Math.sqrt(3 * 255 * 255);
+  /** Pixels on white background above this are treated as empty (fully transparent) to avoid artifacts on blank/white frames. */
+  const nearWhiteThreshold = 250;
 
-  for (let i = 0; i < meta.width * meta.height; i++) {
+  for (let i = 0; i < metaWhite.width * metaWhite.height; i++) {
     const offset = i * 4;
 
     const rW = dataWhite[offset];
@@ -42,12 +45,17 @@ export async function extractAlphaTwoPass(
     const gB = dataBlack[offset + 1];
     const bB = dataBlack[offset + 2];
 
+    // Empty/white regions: treat as fully transparent so last (white) frames don't get greenish/dim artifacts from Gemini swap
+    const isNearWhite =
+      rW >= nearWhiteThreshold && gW >= nearWhiteThreshold && bW >= nearWhiteThreshold;
+
     const pixelDist = Math.sqrt(
       Math.pow(rW - rB, 2) + Math.pow(gW - gB, 2) + Math.pow(bW - bB, 2)
     );
 
     let alpha = 1 - pixelDist / bgDist;
     alpha = Math.max(0, Math.min(1, alpha));
+    if (isNearWhite) alpha = 0;
 
     let rOut = 0,
       gOut = 0,
@@ -65,7 +73,7 @@ export async function extractAlphaTwoPass(
   }
 
   await sharp(outputBuffer, {
-    raw: { width: meta.width, height: meta.height, channels: 4 },
+    raw: { width: metaWhite.width, height: metaWhite.height, channels: 4 },
   })
     .png()
     .toFile(outputPath);

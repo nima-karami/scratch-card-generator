@@ -13,7 +13,11 @@ export async function swapBackground(
   const fromHex = from === "white" ? "#FFFFFF" : "#000000";
   const toHex = to === "white" ? "#FFFFFF" : "#000000";
 
-  const instruction = `Change ONLY the background color of this image from pure ${from} ${fromHex} to pure ${to} ${toHex}. Do not alter any of the sprite content, colors, positions, shapes, or details whatsoever. The background must become a solid uniform ${to} color everywhere it was previously ${from}.`;
+  const instruction = `Change the background of this image from pure ${from} ${fromHex} to pure ${to} ${toHex}.
+
+1. Replace all solid ${from} background areas with solid uniform ${to} ${toHex}.
+2. Preserve all fully opaque sprite content: do not change its colors, positions, shapes, or details.
+3. Important: Where the image is transparent or semi-transparent (e.g. fading edges, ghostly or faint areas that were blending with the ${from} background), update those regions so they blend with the new ${to} background instead. They should not stay as light/white/grey patches on ${to}; they should visually integrate with ${to} (e.g. darken toward ${toHex} where they were fading toward ${fromHex}). The goal is that transparent and semi-transparent areas look correct on the new background, not like opaque blobs.`;
 
   return editImage(imageBuffer, instruction);
 }

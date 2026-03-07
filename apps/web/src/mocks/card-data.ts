@@ -1,8 +1,9 @@
 import type { CardData, GameItemData } from "@repo/shared";
 
 const COOKIE_SPRITESHEET = "/assets/cookie-shatter.png";
+const COOKIE_SPRITESHEET_2 = "/assets/cookie-shatter-2.png";
 const APPLE_SPRITESHEET = "/assets/apple-eating.png";
-const DINOSAUR_SPRITESHEET = "/assets/dinosaur-dying.png";
+const DINOSAUR_SPRITESHEET = "/assets/dinosaur-dying-3.png";
 
 function gameItem(
   id: string,
@@ -24,21 +25,47 @@ export const mockCardPrizeGrid: CardData = {
       {
         id: "prize-grid",
         items: [
-          gameItem("p1", "$0", false, APPLE_SPRITESHEET),
-          gameItem("p2", "$5", false, APPLE_SPRITESHEET),
-          gameItem("p3", "$10", false, COOKIE_SPRITESHEET),
-          gameItem("p4", "$50", false, APPLE_SPRITESHEET),
-          gameItem("p5", "$20", false, APPLE_SPRITESHEET),
-          gameItem("p6", "$10", false, APPLE_SPRITESHEET),
-          gameItem("p7", "$100", false, DINOSAUR_SPRITESHEET),
-          gameItem("p8", "$5", false, COOKIE_SPRITESHEET),
-          gameItem("p9", "$0", false, COOKIE_SPRITESHEET),
-          gameItem("p10", "$0", false, COOKIE_SPRITESHEET),
+          gameItem("p1", "$0", false, DINOSAUR_SPRITESHEET),
+          gameItem("p2", "$5", false, DINOSAUR_SPRITESHEET),
+          gameItem("p3", "$10", false, DINOSAUR_SPRITESHEET),
+          gameItem("p4", "$50", false, DINOSAUR_SPRITESHEET),
+          gameItem("p5", "$20", false, DINOSAUR_SPRITESHEET),
+          gameItem("p6", "$10", false, DINOSAUR_SPRITESHEET),
+          gameItem("p7", "$0", false, DINOSAUR_SPRITESHEET),
+          gameItem("p8", "$0", false, DINOSAUR_SPRITESHEET),
+          gameItem("p9", "$0", false, DINOSAUR_SPRITESHEET),
+          gameItem("p10", "$0", false, DINOSAUR_SPRITESHEET),
           gameItem("p11", "$0", false, DINOSAUR_SPRITESHEET),
-          gameItem("p12", "$10", false, COOKIE_SPRITESHEET),
-          gameItem("p13", "$0", false, COOKIE_SPRITESHEET),
-          gameItem("p14", "$5", false, COOKIE_SPRITESHEET),
-          gameItem("p15", "$0", false, COOKIE_SPRITESHEET),
+          gameItem("p12", "$0", false, DINOSAUR_SPRITESHEET),
+          gameItem("p13", "$0", false, DINOSAUR_SPRITESHEET),
+          gameItem("p14", "$0", false, DINOSAUR_SPRITESHEET),
+          gameItem("p15", "$0", false, DINOSAUR_SPRITESHEET),
+        ],
+        cols: 3,
+        rows: 5,
+        coverSpriteSheet: { cols: 4, rows: 4 },
+      },
+    ],
+  },
+};
+
+export const mockCardPrizeGrid2: CardData = {
+  title: "Prize Grid 2",
+  tagline: "Win big with this grid",
+  images: [],
+  variant: {
+    id: "variant-1",
+    name: "Variant 1",
+    games: [
+      {
+        id: "prize-grid",
+        items: [
+          gameItem("p1", "$0", false, COOKIE_SPRITESHEET),
+          gameItem("p2", "$5", false, COOKIE_SPRITESHEET),
+          gameItem("p3", "$10", false, COOKIE_SPRITESHEET),
+          gameItem("p4", "$50", false, COOKIE_SPRITESHEET),
+          gameItem("p5", "$20", false, COOKIE_SPRITESHEET),
+          gameItem("p6", "$10", false, COOKIE_SPRITESHEET),
         ],
         cols: 3,
         rows: 5,
@@ -48,8 +75,47 @@ export const mockCardPrizeGrid: CardData = {
   },
 };
 
+const MOCK_CARD_PRIZE_GRID_3_SPRITESHEET = "/assets/dinosaur-dying-4.png";
+
+export const mockCardPrizeGrid3: CardData = {
+  title: "Prize Grid 3",
+  tagline: "Win big with this grid",
+  images: [],
+  variant: {
+    id: "variant-1",
+    name: "Variant 1",
+    games: [
+      {
+        id: "prize-grid",
+        items: [
+          gameItem("p1", "$0", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p2", "$5", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p3", "$10", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p4", "$50", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p5", "$20", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p6", "$10", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p7", "$0", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p8", "$0", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p9", "$0", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p10", "$0", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p11", "$0", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p12", "$0", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p13", "$0", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p14", "$0", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+          gameItem("p15", "$0", false, MOCK_CARD_PRIZE_GRID_3_SPRITESHEET),
+        ],
+        cols: 3,
+        rows: 5,
+        coverSpriteSheet: { cols: 6, rows: 6 },
+      },
+    ],
+  },
+};
+
 const MOCKS: Record<string, CardData> = {
-  prizeGrid: mockCardPrizeGrid,
+  prizeGrid1: mockCardPrizeGrid,
+  prizeGrid2: mockCardPrizeGrid2,
+  prizeGrid3: mockCardPrizeGrid3,
 };
 
 export const MOCK_KEYS = Object.keys(MOCKS);

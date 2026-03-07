@@ -3,6 +3,7 @@ import "dotenv/config";
 import { writeFile } from "fs/promises";
 import { generateSpritesheet } from "../lib/spritesheet/generate.js";
 import type { SpritesheetPromptParams } from "../lib/spritesheet/prompt-builder.js";
+import { config } from "../config.js";
 
 const USAGE = `
 Usage: generate-spritesheet <subject> <action> <cols> <rows> <width> <height> <output>
@@ -78,6 +79,7 @@ async function main(): Promise<void> {
   console.log(`  Subject: ${subject} ${action}`);
   console.log(`  Grid: ${cols}x${rows} (${totalFrames} frames)`);
   console.log(`  Size: ${width}x${height}px`);
+  console.log(`  QA Config: Algorithmic=${config.spritesheet.qa.algorithmicEnabled}, LLM=${config.spritesheet.qa.llmEnabled}, MaxRetries=${config.spritesheet.qa.maxRetries}`);
 
   try {
     const result = await generateSpritesheet(params);
