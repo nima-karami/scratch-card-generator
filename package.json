@@ -8,6 +8,8 @@
   "scripts": {
     "extract-alpha": "tsx apps/server/src/scripts/extract-alpha.ts",
     "generate-spritesheet": "tsx apps/server/src/scripts/generate-spritesheet.ts",
+    "generate-kling-video": "tsx apps/server/src/scripts/generate-kling-video.ts",
+    "generate-sound-effect": "tsx apps/server/src/scripts/generate-sound-effect.ts",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",

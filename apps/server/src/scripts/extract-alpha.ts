@@ -2,16 +2,18 @@
 import { access } from "fs/promises";
 import { constants } from "fs";
 import { extractAlphaTwoPass } from "../lib/extractAlpha.js";
+import { parseNamedArgs } from "./cli-utils.js";
 
 const USAGE = `
-Usage: extract-alpha <white-image> <black-image> <output-path>
+Usage: npm run extract-alpha -- --white <path> --black <path> --output <path>
 
-  white-image   Path to the image on white (#FFFFFF) background
-  black-image   Path to the identical image on black (#000000) background
-  output-path   Path for the output PNG with transparent background
+Options:
+  --white <path>   Path to the image on white (#FFFFFF) background
+  --black <path>   Path to the identical image on black (#000000) background
+  --output <path>  Path for the output PNG with transparent background
 
 Example:
-  npm run extract-alpha -- white.png black.png output.png
+  npm run extract-alpha -- --white white.png --black black.png --output output.png
 `;
 
 async function fileExists(path: string): Promise<boolean> {
@@ -24,13 +26,16 @@ async function fileExists(path: string): Promise<boolean> {
 }
 
 async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  if (args.length !== 3) {
+  const opts = parseNamedArgs();
+  const whitePath = opts.white;
+  const blackPath = opts.black;
+  const outputPath = opts.output;
+
+  if (!whitePath || !blackPath || !outputPath) {
+    console.error("Error: --white, --black, and --output are required.");
     console.error(USAGE);
     process.exit(1);
   }
-
-  const [whitePath, blackPath, outputPath] = args;
 
   if (!(await fileExists(whitePath))) {
     console.error(`Error: File not found: ${whitePath}`);

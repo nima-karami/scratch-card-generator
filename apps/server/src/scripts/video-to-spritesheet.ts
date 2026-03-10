@@ -4,37 +4,42 @@ import { writeFile } from "fs/promises";
 import { generateSpritesheetFromVideo } from "../lib/spritesheet/generate-from-video.js";
 import type { GenerateFromVideoParams } from "../lib/spritesheet/generate-from-video.js";
 import { resolve } from "path";
+import { parseNamedArgs } from "./cli-utils.js";
 
 const USAGE = `
-Usage: video-to-spritesheet <videoPath> <cols> <rows> <width> <height> <output>
+Usage: npm run video-to-spritesheet -- --video <path> --cols <n> --rows <n> --width <px> --height <px> --output <path>
 
-  videoPath The path to the input video file
-  cols      Number of columns in the spritesheet
-  rows      Number of rows in the spritesheet
-  width     Canvas width in pixels per frame
-  height    Canvas height in pixels per frame
-  output    Output path for the transparent PNG
+Options:
+  --video <path>   Path to the input video file
+  --cols <n>       Number of columns in the spritesheet
+  --rows <n>       Number of rows in the spritesheet
+  --width <px>     Canvas width in pixels per frame
+  --height <px>    Canvas height in pixels per frame
+  --output <path>  Output path for the transparent PNG
 
 Example:
-  npm run video-to-spritesheet -- ./input.mp4 4 3 256 256 ./output.png
+  npm run video-to-spritesheet -- --video ./input.mp4 --cols 4 --rows 3 --width 256 --height 256 --output ./output.png
 `;
 
 async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  if (args.length !== 6) {
+  const opts = parseNamedArgs();
+  const required = ["video", "cols", "rows", "width", "height", "output"] as const;
+  const missing = required.filter((k) => !opts[k]);
+  if (missing.length > 0) {
+    console.error(`Error: Missing required options: ${missing.map((k) => `--${k}`).join(", ")}`);
     console.error(USAGE);
     process.exit(1);
   }
 
-  const [videoPath, colsStr, rowsStr, widthStr, heightStr, outputPath] = args;
-
-  const cols = parseInt(colsStr, 10);
-  const rows = parseInt(rowsStr, 10);
-  const width = parseInt(widthStr, 10);
-  const height = parseInt(heightStr, 10);
+  const videoPath = resolve(opts.video!);
+  const outputPath = opts.output!;
+  const cols = parseInt(opts.cols!, 10);
+  const rows = parseInt(opts.rows!, 10);
+  const width = parseInt(opts.width!, 10);
+  const height = parseInt(opts.height!, 10);
 
   if ([cols, rows, width, height].some((n) => isNaN(n))) {
-    console.error("Error: cols, rows, width, and height must be numbers.");
+    console.error("Error: --cols, --rows, --width, and --height must be numbers.");
     console.error(USAGE);
     process.exit(1);
   }
@@ -42,7 +47,7 @@ async function main(): Promise<void> {
   const totalFrames = cols * rows;
 
   const params: GenerateFromVideoParams = {
-    videoPath: resolve(videoPath),
+    videoPath,
     cols,
     rows,
     canvasWidth: width,

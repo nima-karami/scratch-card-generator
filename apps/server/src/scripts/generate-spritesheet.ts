@@ -4,20 +4,22 @@ import { writeFile } from "fs/promises";
 import { generateSpritesheet } from "../lib/spritesheet/generate.js";
 import type { SpritesheetPromptParams } from "../lib/spritesheet/prompt-builder.js";
 import { config } from "../config.js";
+import { parseNamedArgs } from "./cli-utils.js";
 
 const USAGE = `
-Usage: generate-spritesheet <subject> <action> <cols> <rows> <width> <height> <output>
+Usage: npm run generate-spritesheet -- --subject "<subject>" --action "<action>" --cols <n> --rows <n> --width <px> --height <px> --output <path>
 
-  subject   Subject of the animation (e.g. "chocolate chip cookie")
-  action    Animation action (e.g. "crumbling")
-  cols      Number of columns
-  rows      Number of rows
-  width     Canvas width in pixels
-  height    Canvas height in pixels
-  output    Output path for the transparent PNG
+Options:
+  --subject <text>   Subject of the animation (e.g. "chocolate chip cookie")
+  --action <text>   Animation action (e.g. "crumbling")
+  --cols <n>        Number of columns
+  --rows <n>        Number of rows
+  --width <px>      Canvas width in pixels
+  --height <px>     Canvas height in pixels
+  --output <path>   Output path for the transparent PNG
 
 Example:
-  npm run generate-spritesheet -- "Apple" "being eaten" 4 3 1024 768 ./output.png
+  npm run generate-spritesheet -- --subject "Apple" --action "being eaten" --cols 4 --rows 3 --width 1024 --height 768 --output ./output.png
 `;
 
 function defaultKeyframes(
@@ -39,23 +41,27 @@ function defaultKeyframes(
   ];
 }
 
+const REQUIRED = ["subject", "action", "cols", "rows", "width", "height", "output"] as const;
+
 async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  if (args.length !== 7) {
+  const opts = parseNamedArgs();
+  const missing = REQUIRED.filter((k) => !opts[k]);
+  if (missing.length > 0) {
+    console.error(`Error: Missing required options: ${missing.map((k) => `--${k}`).join(", ")}`);
     console.error(USAGE);
     process.exit(1);
   }
 
-  const [subject, action, colsStr, rowsStr, widthStr, heightStr, outputPath] =
-    args;
-
-  const cols = parseInt(colsStr, 10);
-  const rows = parseInt(rowsStr, 10);
-  const width = parseInt(widthStr, 10);
-  const height = parseInt(heightStr, 10);
+  const subject = opts.subject!;
+  const action = opts.action!;
+  const outputPath = opts.output!;
+  const cols = parseInt(opts.cols!, 10);
+  const rows = parseInt(opts.rows!, 10);
+  const width = parseInt(opts.width!, 10);
+  const height = parseInt(opts.height!, 10);
 
   if ([cols, rows, width, height].some((n) => isNaN(n))) {
-    console.error("Error: cols, rows, width, and height must be numbers.");
+    console.error("Error: --cols, --rows, --width, and --height must be numbers.");
     console.error(USAGE);
     process.exit(1);
   }
