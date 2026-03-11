@@ -3,6 +3,8 @@ import { cn } from "../../lib/utils";
 import { ScratchCardBackground } from "./scratch-card-background";
 import { Variant1, Variant2, Variant3 } from "./variants";
 
+const DEFAULT_BACKGROUND_VIDEO = "/assets/videos/video-background.mp4";
+
 export interface ScratchCardProps {
   cardData: CardData;
   /** Optional class name for the root element */
@@ -16,6 +18,8 @@ export function ScratchCard({ cardData, className = "" }: ScratchCardProps) {
     return null;
   }
 
+  const videoUrl = cardData.backgroundVideoUrl ?? DEFAULT_BACKGROUND_VIDEO;
+
   return (
     <div
       className={cn(
@@ -23,13 +27,7 @@ export function ScratchCard({ cardData, className = "" }: ScratchCardProps) {
         className,
       )}
     >
-      <ScratchCardBackground />
-
-      {/* Corner accents */}
-      <div className="absolute top-0 left-0 w-10 h-10 border-t-2 border-l-2 border-gold/40 rounded-tl-2xl z-10 pointer-events-none" />
-      <div className="absolute top-0 right-0 w-10 h-10 border-t-2 border-r-2 border-gold/40 rounded-tr-2xl z-10 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-10 h-10 border-b-2 border-l-2 border-gold/40 rounded-bl-2xl z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-10 h-10 border-b-2 border-r-2 border-gold/40 rounded-br-2xl z-10 pointer-events-none" />
+      <ScratchCardBackground videoUrl={videoUrl} />
 
       <div className="relative z-20 flex flex-col flex-1 min-h-0">
         {variant.id === "variant-1" && <Variant1 cardData={cardData} />}

@@ -16,6 +16,14 @@ export const config = {
     /** When set, generated sound effects are also written here with sequential ids (0001-slug.mp3, 0002-slug.mp3, …). */
     debugOutputDir: process.env.SOUND_EFFECT_DEBUG_OUTPUT_DIR || null,
   },
+  titleImage: {
+    /** When set, generated title images are also written here with sequential ids (0001-slug.png, 0002-slug.png, …). */
+    debugOutputDir: process.env.TITLE_IMAGE_DEBUG_OUTPUT_DIR || null,
+  },
+  videoBackground: {
+    /** When set, generated video backgrounds are also written here (0001-slug.mp4, 0001-slug-frame.png, video-background-log.txt). */
+    debugOutputDir: process.env.VIDEO_BACKGROUND_DEBUG_OUTPUT_DIR || null,
+  },
   kling: {
     /** API key for Kling 3.0 (get from kling3api.com). Required for Kling video endpoints and CLI. */
     apiKey: process.env.KLING_API_KEY ?? null,

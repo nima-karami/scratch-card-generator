@@ -26,7 +26,7 @@ function findGame<T extends ScratchCardGame>(
 }
 
 export function Variant2({ cardData }: Variant2Props) {
-  const { title, tagline, variant } = cardData;
+  const { title, tagline, titleImageUrl, variant } = cardData;
   const games = variant?.games ?? [];
 
   const bonusSpot = findGame<BonusSpotData>(games, "bonus-spot");
@@ -38,7 +38,7 @@ export function Variant2({ cardData }: Variant2Props) {
     <>
       {/* Header: ~25% of card height */}
       <div className="flex-[0_0_25%] min-h-0 flex flex-col justify-center shrink-0 p-7 pb-4">
-        <ScratchCardHeader title={title} tagline={tagline} />
+        <ScratchCardHeader title={title} tagline={tagline} titleImageUrl={titleImageUrl} />
       </div>
 
       {/* Games: remaining space, predefined layout */}

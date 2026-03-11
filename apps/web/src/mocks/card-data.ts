@@ -5,6 +5,8 @@ const COOKIE_SPRITESHEET_2 = "/assets/cookie-shatter-2.png";
 const APPLE_SPRITESHEET = "/assets/apple-eating.png";
 const DINOSAUR_SPRITESHEET = "/assets/dinosaur-dying-3.png";
 
+const TITLE_IMAGE_COOKIES = "/assets/titles/cookies-title.png";
+
 function gameItem(
   id: string,
   value: string,
@@ -18,6 +20,7 @@ export const mockCardPrizeGrid: CardData = {
   title: "Prize Grid",
   tagline: "Win big with this grid",
   images: [],
+  titleImageUrl: TITLE_IMAGE_COOKIES,
   variant: {
     id: "variant-1",
     name: "Variant 1",
@@ -81,6 +84,7 @@ export const mockCardPrizeGrid3: CardData = {
   title: "Prize Grid 3",
   tagline: "Win big with this grid",
   images: [],
+  titleImageUrl: TITLE_IMAGE_COOKIES,
   variant: {
     id: "variant-1",
     name: "Variant 1",

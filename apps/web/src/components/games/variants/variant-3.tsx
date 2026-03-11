@@ -26,7 +26,7 @@ function findGame<T extends ScratchCardGame>(
 }
 
 export function Variant3({ cardData }: Variant3Props) {
-  const { title, tagline, variant } = cardData;
+  const { title, tagline, titleImageUrl, variant } = cardData;
   const games = variant?.games ?? [];
 
   const bonusSpot = findGame<BonusSpotData>(games, "bonus-spot");
@@ -35,10 +35,10 @@ export function Variant3({ cardData }: Variant3Props) {
   const yourNumbers = findGame<YourNumbersData>(games, "your-numbers");
 
   return (
-    <>
+    <div className="flex flex-col h-full py-20">
       {/* Header: ~15% of card height */}
-      <div className="flex-[0_0_15%] min-h-0 flex flex-col justify-center shrink-0 p-7 pb-2">
-        <ScratchCardHeader title={title} tagline={tagline} />
+      <div className="flex-[0_0_20%] min-h-0 flex flex-col justify-center shrink-0 p-7 pb-2">
+        <ScratchCardHeader title={title} tagline={tagline} titleImageUrl={titleImageUrl} />
       </div>
 
       {/* Games: remaining space, your-numbers gets most room */}
@@ -71,6 +71,6 @@ export function Variant3({ cardData }: Variant3Props) {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import type { GameItemData } from "@repo/shared";
+import { useSoundStore } from "../../stores/sound-store";
 import { cn } from "../../lib/utils";
 import { SpriteSheetRenderer } from "./sprite-sheet-renderer";
 
@@ -21,6 +22,7 @@ export interface GameItemProps {
 }
 
 export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: GameItemProps) {
+  const playRevealSound = useSoundStore((s) => s.playRevealSound);
   const [localRevealed, setLocalRevealed] = useState(false);
   const [isPlayingRevealAnimation, setIsPlayingRevealAnimation] = useState(false);
   const revealed = data.revealed || localRevealed;
@@ -35,8 +37,10 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
     if (revealed) return;
     if (data.coverSpriteSheetSrc && spriteSheetConfig) {
       if (isPlayingRevealAnimation) return;
+      playRevealSound();
       setIsPlayingRevealAnimation(true);
     } else {
+      playRevealSound();
       if (onReveal) onReveal(data.id);
       else setLocalRevealed(true);
     }

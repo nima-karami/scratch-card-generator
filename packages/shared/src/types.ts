@@ -111,6 +111,10 @@ export interface CardData {
   images: CardImageSlot[];
   /** When present, card renders the game variant; otherwise legacy image layout */
   variant?: ScratchCardVariant;
+  /** Optional image URL for the card title (when set, header shows this instead of plain title text) */
+  titleImageUrl?: string;
+  /** Optional video URL for the card background (when set, used as looped background; otherwise default asset) */
+  backgroundVideoUrl?: string;
 }
 
 /** Job status for internal/SSE use */

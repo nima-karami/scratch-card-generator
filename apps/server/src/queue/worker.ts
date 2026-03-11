@@ -62,6 +62,9 @@ async function runImageStep(
   ];
 }
 
+/** Placeholder title image URL (same asset as web public; client resolves relative to its origin). */
+const DEFAULT_TITLE_IMAGE_URL = "/assets/titles/cookies-title.png";
+
 /** Stub: Step 3 — Compose final card data */
 function runComposeStep(
   design: { title: string; tagline: string; layout: string },
@@ -72,6 +75,7 @@ function runComposeStep(
     tagline: design.tagline,
     layout: design.layout,
     images: images.map((img) => ({ id: img.id, url: img.url })),
+    titleImageUrl: DEFAULT_TITLE_IMAGE_URL,
   };
 }
 

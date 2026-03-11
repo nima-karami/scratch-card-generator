@@ -12,7 +12,7 @@ export interface Variant1Props {
 }
 
 export function Variant1({ cardData }: Variant1Props) {
-  const { title, tagline, variant } = cardData;
+  const { title, tagline, titleImageUrl, variant } = cardData;
   const games = variant?.games ?? ([] as ScratchCardGame[]);
 
   const prizeGrid = games.find((game) => game.id === "prize-grid");
@@ -21,10 +21,10 @@ export function Variant1({ cardData }: Variant1Props) {
   }
 
   return (
-    <>
+    <div className="flex flex-col h-full gap-4">
       {/* Header: ~20% of card height */}
-      <div className="flex-[0_0_20%] min-h-0 flex flex-col justify-center shrink-0 p-7 pb-4">
-        <ScratchCardHeader title={title} tagline={tagline} />
+      <div className="min-h-0 flex flex-col justify-center shrink-0 p-7 pb-4">
+        <ScratchCardHeader title={title} tagline={tagline} titleImageUrl={titleImageUrl} />
       </div>
 
       {/* Games: remaining space, stacked */}
@@ -33,6 +33,6 @@ export function Variant1({ cardData }: Variant1Props) {
           <PrizeGrid data={prizeGrid} />
         </GameContainer>
       </div>
-    </>
+    </div>
   );
 }
