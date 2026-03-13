@@ -101,7 +101,7 @@ function buildPatternPrompt(
 }
 
 function requireGeminiApiKey(): void {
-  if (!process.env.GEMINI_API_KEY) {
+  if (!config.gemini.apiKey) {
     throw new Error(
       "GEMINI_API_KEY is required for gradient and pattern types. Set it in .env or use type=solid for no API key.",
     );
@@ -176,14 +176,14 @@ function slugFromParams(params: GenerateContainerImageParams, maxLen = 50): stri
 export type WriteContainerImageDebugParams = GenerateContainerImageParams;
 
 /**
- * When config.containerImage.debugOutputDir is set, write the buffer there as NNNN-slug.png
+ * When config.debug.containerImage is set, write the buffer there as NNNN-slug.png
  * and append a line to container-image-log.txt. No-op when debug output dir is not set.
  */
 export async function writeContainerImageDebug(
   buffer: Buffer,
   params: WriteContainerImageDebugParams,
 ): Promise<void> {
-  const debugDir = config.containerImage.debugOutputDir;
+  const debugDir = config.debug.containerImage;
   if (!debugDir) return;
   await mkdir(debugDir, { recursive: true });
   const debugId = await nextContainerImageDebugId(debugDir);

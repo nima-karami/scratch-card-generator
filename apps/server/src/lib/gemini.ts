@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { config } from "../config.js";
 
 const IMAGE_MODEL = "gemini-3.1-flash-image-preview";
 
@@ -6,7 +7,7 @@ let client: GoogleGenAI | null = null;
 
 function getClient(): GoogleGenAI {
   if (!client) {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = config.gemini.apiKey;
     if (!apiKey) {
       throw new Error("GEMINI_API_KEY is not set");
     }

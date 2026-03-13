@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { config } from "../../config.js";
 import type { SpritesheetPromptParams } from "./prompt-builder.js";
 
 const INSTRUCTION_MODEL = "gemini-3.1-pro-preview";
@@ -11,7 +12,7 @@ export async function buildDetailedEditInstruction(
   issues: string[],
   params: SpritesheetPromptParams
 ): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = config.gemini.apiKey;
   if (!apiKey) {
     return fallbackInstruction(issues, params);
   }

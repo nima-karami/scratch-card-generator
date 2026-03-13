@@ -46,7 +46,7 @@ export async function postContainerImage(req: Request, res: Response): Promise<v
   try {
     const buffer = await generateContainerImage(params);
 
-    if (config.containerImage.debugOutputDir) {
+    if (config.debug.containerImage) {
       await writeContainerImageDebug(buffer, params);
     }
 

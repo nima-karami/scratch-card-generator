@@ -50,13 +50,13 @@ async function main(): Promise<void> {
     await writeFile(outputPath, buffer);
     console.log("Saved to", outputPath);
 
-    if (config.elevenlabs.debugOutputDir) {
+    if (config.debug.soundEffect) {
       await writeSoundEffectDebug(buffer, {
         prompt,
         durationSeconds,
         loop: loopFlag,
       });
-      console.log("Sound effect debug: wrote to", config.elevenlabs.debugOutputDir);
+      console.log("Sound effect debug: wrote to", config.debug.soundEffect);
     }
   } catch (err) {
     console.error(err instanceof Error ? err.message : err);

@@ -45,9 +45,9 @@ async function main(): Promise<void> {
     await writeFile(outputPath, buffer);
     console.log("Saved to", outputPath);
 
-    if (config.titleImage.debugOutputDir) {
+    if (config.debug.titleImage) {
       await writeTitleImageDebug(buffer, params);
-      console.log("Title image debug: wrote to", config.titleImage.debugOutputDir);
+      console.log("Title image debug: wrote to", config.debug.titleImage);
     }
   } catch (err) {
     console.error(err instanceof Error ? err.message : err);

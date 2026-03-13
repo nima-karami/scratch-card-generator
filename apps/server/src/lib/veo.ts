@@ -14,7 +14,7 @@ let client: GoogleGenAI | null = null;
 
 function getClient(): GoogleGenAI {
   if (!client) {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = config.gemini.apiKey;
     if (!apiKey) {
       throw new Error("GEMINI_API_KEY is not set");
     }
@@ -184,7 +184,7 @@ export type WriteVideoBackgroundDebugParams = {
 };
 
 /**
- * When config.videoBackground.debugOutputDir is set, write the video and frame image
+ * When config.debug.videoBackground is set, write the video and frame image
  * as NNNN-slug.mp4 and NNNN-slug-frame.png, and append a line to video-background-log.txt.
  */
 export async function writeVideoBackgroundDebug(
@@ -192,7 +192,7 @@ export async function writeVideoBackgroundDebug(
   frameBuffer: Buffer,
   params: WriteVideoBackgroundDebugParams
 ): Promise<void> {
-  const debugDir = config.videoBackground.debugOutputDir;
+  const debugDir = config.debug.videoBackground;
   if (!debugDir) return;
   await mkdir(debugDir, { recursive: true });
   const debugId = await nextVideoBackgroundDebugId(debugDir);

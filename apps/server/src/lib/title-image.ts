@@ -70,14 +70,14 @@ function slugFromParams(params: GenerateTitleImageParams, maxLen = 40): string {
 export type WriteTitleImageDebugParams = GenerateTitleImageParams;
 
 /**
- * When config.titleImage.debugOutputDir is set, write the buffer there as NNNN-slug.png
+ * When config.debug.titleImage is set, write the buffer there as NNNN-slug.png
  * and append a line to title-image-log.txt. No-op when debug output dir is not set.
  */
 export async function writeTitleImageDebug(
   buffer: Buffer,
   params: WriteTitleImageDebugParams,
 ): Promise<void> {
-  const debugDir = config.titleImage.debugOutputDir;
+  const debugDir = config.debug.titleImage;
   if (!debugDir) return;
   await mkdir(debugDir, { recursive: true });
   const debugId = await nextTitleImageDebugId(debugDir);

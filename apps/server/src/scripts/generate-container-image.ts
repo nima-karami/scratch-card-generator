@@ -81,8 +81,8 @@ async function main(): Promise<void> {
     console.log("Saved to", outputPath);
 
     await writeContainerImageDebug(buffer, params);
-    if (config.containerImage.debugOutputDir) {
-      console.log("Debug: wrote to", config.containerImage.debugOutputDir);
+    if (config.debug.containerImage) {
+      console.log("Debug: wrote to", config.debug.containerImage);
     }
   } catch (err) {
     console.error(err instanceof Error ? err.message : err);

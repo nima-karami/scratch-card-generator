@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import sharp from "sharp";
+import { config } from "../../config.js";
 import type { SpritesheetPromptParams } from "./prompt-builder.js";
 
 export interface QAResult {
@@ -58,7 +59,7 @@ export async function validateWithLLM(
   imageBuffer: Buffer,
   params: SpritesheetPromptParams,
 ): Promise<QAResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = config.gemini.apiKey;
   if (!apiKey) {
     console.warn("GEMINI_API_KEY missing, skipping LLM QA.");
     return { passed: true, reason: "API key missing", confidence: 0 };

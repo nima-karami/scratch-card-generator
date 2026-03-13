@@ -59,7 +59,7 @@ export async function generateSpritesheet(
   let whiteBg: Buffer | null = null;
   let attempts = 0;
   const maxRetries = config.spritesheet.qa.maxRetries;
-  const debugDir = config.spritesheet.qa.debugOutputDir;
+  const debugDir = config.debug.spritesheetQa;
   const debugSubjectSlug = debugDir
     ? params.subject.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
     : null;

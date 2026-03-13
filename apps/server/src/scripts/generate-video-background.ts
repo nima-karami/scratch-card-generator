@@ -84,14 +84,14 @@ async function main(): Promise<void> {
     await writeFile(outputPath, videoBuffer);
     console.log("Saved to", outputPath);
 
-    if (config.videoBackground.debugOutputDir) {
+    if (config.debug.videoBackground) {
       await writeVideoBackgroundDebug(videoBuffer, frameBuffer, {
         theme: imagePath ? undefined : theme,
         prompt: prompt ?? undefined,
         animationPrompt: animationPrompt ?? DEFAULT_ANIMATION_PROMPT,
         durationSeconds: duration,
       });
-      console.log("Video background debug: wrote to", config.videoBackground.debugOutputDir);
+      console.log("Video background debug: wrote to", config.debug.videoBackground);
     }
   } catch (err) {
     console.error(err instanceof Error ? err.message : err);

@@ -27,7 +27,7 @@ export async function postSoundEffect(req: Request, res: Response): Promise<void
       outputFormat: "mp3_44100_128",
     });
 
-    if (config.elevenlabs.debugOutputDir) {
+    if (config.debug.soundEffect) {
       await writeSoundEffectDebug(buffer, { prompt, durationSeconds, loop });
     }
 

@@ -1,7 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
-import { DEFAULT_MAX_GENERATIONS_PER_USER } from "@repo/shared";
+import { config } from "../config.js";
 
-const maxPerUser = Number(process.env.MAX_GENERATIONS_PER_USER) || DEFAULT_MAX_GENERATIONS_PER_USER;
 const counts = new Map<string, number>();
 
 function getClientKey(req: Request): string {
@@ -15,6 +14,7 @@ function getClientKey(req: Request): string {
 export function rateLimitGenerate(req: Request, res: Response, next: NextFunction): void {
   const key = getClientKey(req);
   const current = counts.get(key) ?? 0;
+  const maxPerUser = config.server.maxGenerationsPerUser;
   if (current >= maxPerUser) {
     res.status(429).json({
       error: "Rate limit reached",

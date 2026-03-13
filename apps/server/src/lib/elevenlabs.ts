@@ -108,14 +108,14 @@ export type WriteSoundEffectDebugParams = {
 };
 
 /**
- * When config.elevenlabs.debugOutputDir is set, write the buffer there as NNNN-slug.mp3
+ * When config.debug.soundEffect is set, write the buffer there as NNNN-slug.mp3
  * and append a line to sound-effect-log.txt. No-op when debug output dir is not set.
  */
 export async function writeSoundEffectDebug(
   buffer: Buffer,
   params: WriteSoundEffectDebugParams,
 ): Promise<void> {
-  const debugDir = config.elevenlabs.debugOutputDir;
+  const debugDir = config.debug.soundEffect;
   if (!debugDir) return;
   await mkdir(debugDir, { recursive: true });
   const debugId = await nextSoundEffectDebugId(debugDir);

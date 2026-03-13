@@ -12,6 +12,7 @@ import {
 } from "./routes/kling-video.js";
 import { postSoundEffect, rateLimitSoundEffect } from "./routes/sound-effect.js";
 import { postContainerImage } from "./routes/container-image.js";
+import { config } from "./config.js";
 import { createWorker } from "./queue/worker.js";
 
 const app = express();
@@ -29,7 +30,7 @@ app.post("/api/container-image", postContainerImage);
 
 createWorker();
 
-const PORT = Number(process.env.PORT) || 3001;
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+const port = config.server.port;
+app.listen(port, () => {
+  console.log(`Server listening on http://localhost:${port}`);
 });

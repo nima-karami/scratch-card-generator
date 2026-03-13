@@ -1,4 +1,5 @@
 import { Worker, Job } from "bullmq";
+import { config } from "../config.js";
 import { createRedisConnection } from "./connection.js";
 import { getQueueName } from "./queue.js";
 import type { CardData } from "@repo/shared";
@@ -118,7 +119,6 @@ export function getProgressListener(jobId: string): ProgressCallback | undefined
 }
 
 export function createWorker(): Worker<GenerationJobData, CardData> {
-  const concurrency = Math.min(Number(process.env.MAX_CONCURRENT_JOBS) || 10, 20);
   const worker = new Worker<GenerationJobData, CardData>(
     getQueueName(),
     async (job) => {
@@ -127,7 +127,7 @@ export function createWorker(): Worker<GenerationJobData, CardData> {
     },
     {
       connection: createRedisConnection(),
-      concurrency,
+      concurrency: config.queue.concurrency,
     },
   );
 
