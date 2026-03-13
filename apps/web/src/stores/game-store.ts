@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { CardData } from "@repo/shared";
 import type { SSEEvent } from "../lib/api";
+import { useScratchCardStore } from "./scratch-card-store";
 
 export type View = "landing" | "generating" | "result";
 
@@ -97,12 +98,14 @@ export const useGameStore = create<GameState>((set) => ({
 
   setError: (msg) => set({ error: msg, view: "landing" }),
 
-  reset: () =>
+  reset: () => {
+    useScratchCardStore.getState().reset();
     set({
       view: "landing",
       jobId: null,
       progress: defaultProgress,
       cardData: null,
       error: null,
-    }),
+    });
+  },
 }));

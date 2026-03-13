@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import type { GameItemData } from "@repo/shared";
 import { useSoundStore } from "../../stores/sound-store";
+import { useScratchCardStore } from "../../stores/scratch-card-store";
 import { cn } from "../../lib/utils";
 import { SpriteSheetRenderer } from "./sprite-sheet-renderer";
 
@@ -25,9 +26,32 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
   const playRevealSound = useSoundStore((s) => s.playRevealSound);
   const [localRevealed, setLocalRevealed] = useState(false);
   const [isPlayingRevealAnimation, setIsPlayingRevealAnimation] = useState(false);
-  const revealed = data.revealed || localRevealed;
+
+  const registeredIds = useScratchCardStore((s) => s.registeredIds);
+  const storeItemState = useScratchCardStore((s) => s.itemStates[data.id] ?? "closed");
+  const setItemState = useScratchCardStore((s) => s.setItemState);
+  const isOnScratchCard =
+    registeredIds !== null && registeredIds.size > 0 && registeredIds.has(data.id);
+  const revealed = isOnScratchCard ? storeItemState !== "closed" : data.revealed || localRevealed;
+  const hasSpritesheet = Boolean(data.coverSpriteSheetSrc && spriteSheetConfig);
+  // For spritesheet items: show value only after animation completes (localRevealed). Otherwise store-driven reveal would show value immediately.
+  const showValue = revealed && (!hasSpritesheet || localRevealed);
+
+  // When store sets this item to open/win (e.g. revealAllInSequence), start the spritesheet animation
+  useEffect(() => {
+    if (
+      isOnScratchCard &&
+      storeItemState !== "closed" &&
+      data.coverSpriteSheetSrc &&
+      spriteSheetConfig &&
+      !localRevealed
+    ) {
+      setIsPlayingRevealAnimation(true);
+    }
+  }, [isOnScratchCard, storeItemState, data.coverSpriteSheetSrc, spriteSheetConfig, localRevealed]);
 
   function handleRevealComplete() {
+    if (isOnScratchCard) setItemState(data.id, "open");
     setLocalRevealed(true);
     setIsPlayingRevealAnimation(false);
     onReveal?.(data.id);
@@ -41,6 +65,7 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
       setIsPlayingRevealAnimation(true);
     } else {
       playRevealSound();
+      if (isOnScratchCard) setItemState(data.id, "open");
       if (onReveal) onReveal(data.id);
       else setLocalRevealed(true);
     }
@@ -57,7 +82,16 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
         sizeClasses[size],
       )}
     >
-      {data.coverSpriteSheetSrc && spriteSheetConfig ? (
+      {/* When revealed and (no spritesheet or animation done), show value so store-driven reveal works */}
+      {showValue ? (
+        <motion.span
+          initial={hasSpritesheet ? false : { opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: hasSpritesheet ? 0 : 0.25 }}
+        >
+          {data.value}
+        </motion.span>
+      ) : data.coverSpriteSheetSrc && spriteSheetConfig ? (
         <div className="relative w-full h-full">
           <span className="absolute inset-0 flex items-center justify-center font-semibold text-text-primary">
             {data.value}
@@ -73,14 +107,6 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
             />
           </div>
         </div>
-      ) : revealed ? (
-        <motion.span
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.25 }}
-        >
-          {data.value}
-        </motion.span>
       ) : data.coverUrl ? (
         <img src={data.coverUrl} alt="" className="w-full h-full object-cover" />
       ) : (

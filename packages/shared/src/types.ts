@@ -23,6 +23,8 @@ export interface GameItemData {
   coverSpriteSheetSrc?: string;
   value: string;
   revealed: boolean;
+  /** Prize value in cents; 0 = miss. Enables isWin = (valueCents ?? 0) > 0 for UI/analytics. */
+  valueCents?: number;
 }
 
 /** Shared spritesheet config (grid only). Frame size is derived from image dimensions: frameWidth = imageWidth/cols, frameHeight = imageHeight/rows. */
@@ -49,6 +51,8 @@ export interface MatchABunchData {
   items: GameItemData[];
   matchCount: number;
   prize: string;
+  /** Prize in cents; 0 = miss. */
+  prizeCents?: number;
 }
 
 /** Bonus spot: single reveal for a prize */
@@ -56,13 +60,25 @@ export interface BonusSpotData {
   id: "bonus-spot";
   item: GameItemData;
   prize: string;
+  /** Prize in cents; 0 = miss. */
+  prizeCents?: number;
 }
 
-/** Lucky numbers: row of revealable items (2, 3, 5, etc.) */
+/** One winning number entry: number + prize. Used for match-to-prize (Your Numbers). */
+export interface WinningNumberEntry {
+  number: string;
+  prize: string;
+  prizeCents?: number;
+}
+
+/** Lucky numbers: winning list (number + prize). When a Your Numbers cell matches, user wins that prize. */
 export interface LuckyNumbersData {
   id: "lucky-numbers";
+  /** Display list of winning numbers (each item shows number + prize). Derived from winningNumbers for UI. */
   items: GameItemData[];
   count: number;
+  /** Lookup: number -> prize. Used by client when user reveals a Your Numbers cell. */
+  winningNumbers: WinningNumberEntry[];
 }
 
 /** Your numbers: grid of revealable items (e.g. 3x3, 3x4, 4x4) */

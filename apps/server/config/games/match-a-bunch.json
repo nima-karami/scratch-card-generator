@@ -1,0 +1,15 @@
+{
+  "matchCount": 3,
+  "symbols": [
+    { "symbol": "Cherry", "weight": 1 },
+    { "symbol": "Lemon", "weight": 1 },
+    { "symbol": "Star", "weight": 1 }
+  ],
+  "prizePool": [
+    { "value": "$0", "valueCents": 0, "weight": 50 },
+    { "value": "$10", "valueCents": 1000, "weight": 30 },
+    { "value": "$25", "valueCents": 2500, "weight": 20 }
+  ],
+  "minPrizeCents": 0,
+  "maxPrizeCents": 2500
+}

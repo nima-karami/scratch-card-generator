@@ -46,5 +46,6 @@ export const config = {
     videoBackground: process.env.VIDEO_BACKGROUND_DEBUG_OUTPUT_DIR || null,
     containerImage: process.env.CONTAINER_IMAGE_DEBUG_OUTPUT_DIR || null,
     spritesheetQa: process.env.SPRITESHEET_QA_DEBUG_OUTPUT_DIR || null,
+    glyphSheet: process.env.GLYPH_SHEET_DEBUG_OUTPUT_DIR || null,
   },
 };

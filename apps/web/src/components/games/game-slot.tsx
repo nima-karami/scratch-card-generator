@@ -6,7 +6,7 @@ import { YourNumbers } from "./your-numbers";
 import { PrizeGrid } from "./prize-grid";
 
 export function GameSlot({ game }: { game: ScratchCardGame }) {
-  switch (game.type) {
+  switch (game.id) {
     case "match-a-bunch":
       return <MatchABunch data={game} />;
     case "bonus-spot":

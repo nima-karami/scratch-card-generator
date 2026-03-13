@@ -3,6 +3,8 @@ import { config } from "../config.js";
 import { createRedisConnection } from "./connection.js";
 import { getQueueName } from "./queue.js";
 import type { CardData } from "@repo/shared";
+import { getGameConfigs } from "../config/games/index.js";
+import { generateVariantGames } from "../lib/game-outcomes.js";
 
 export interface GenerationJobData {
   jobId: string;
@@ -66,17 +68,36 @@ async function runImageStep(
 /** Placeholder title image URL (same asset as web public; client resolves relative to its origin). */
 const DEFAULT_TITLE_IMAGE_URL = "/assets/titles/cookies-title.png";
 
-/** Stub: Step 3 — Compose final card data */
+/** Default variant to generate (prize grid only). Can later be driven by request. */
+const DEFAULT_VARIANT_ID = "variant-1" as const;
+const VARIANT_NAMES: Record<typeof DEFAULT_VARIANT_ID | "variant-2" | "variant-3", string> = {
+  "variant-1": "Variant 1",
+  "variant-2": "Variant 2",
+  "variant-3": "Variant 3",
+};
+
+/** Stub: Step 3 — Compose final card data and attach game outcomes from config. */
 function runComposeStep(
   design: { title: string; tagline: string; layout: string },
   images: { id: string; url: string }[],
+  jobId: string,
 ): CardData {
+  const gameConfigs = getGameConfigs();
+  const games = generateVariantGames(DEFAULT_VARIANT_ID, gameConfigs, {
+    jobId,
+    coverSpriteSheet: { cols: 4, rows: 3 },
+    coverSpriteSheetSrc: "/assets/cookie-shatter.png",
+  });
   return {
     title: design.title,
     tagline: design.tagline,
-    layout: design.layout,
     images: images.map((img) => ({ id: img.id, url: img.url })),
     titleImageUrl: DEFAULT_TITLE_IMAGE_URL,
+    variant: {
+      id: DEFAULT_VARIANT_ID,
+      name: VARIANT_NAMES[DEFAULT_VARIANT_ID],
+      games,
+    },
   };
 }
 
@@ -93,10 +114,10 @@ async function processJob(
   // Step 2 — Images
   const images = await runImageStep(prompt, design.layout, onProgress);
 
-  // Step 3 — Compose
+  // Step 3 — Compose (with game outcomes from config)
   onProgress({ type: "composing", message: "Composing your card..." });
   await new Promise((r) => setTimeout(r, 200));
-  const cardData = runComposeStep(design, images);
+  const cardData = runComposeStep(design, images, jobId);
   setJobResult(jobId, cardData);
   onProgress({ type: "complete", jobId });
 

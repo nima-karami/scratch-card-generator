@@ -1,0 +1,12 @@
+{
+  "cols": 3,
+  "rows": 5,
+  "prizePool": [
+    { "value": "$0", "valueCents": 0, "weight": 70 },
+    { "value": "$5", "valueCents": 500, "weight": 15 },
+    { "value": "$10", "valueCents": 1000, "weight": 10 },
+    { "value": "$50", "valueCents": 5000, "weight": 5 }
+  ],
+  "minPrizeCents": 0,
+  "maxPrizeCents": 5000
+}

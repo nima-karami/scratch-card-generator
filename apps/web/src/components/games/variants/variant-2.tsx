@@ -20,9 +20,9 @@ export interface Variant2Props {
 
 function findGame<T extends ScratchCardGame>(
   games: ScratchCardGame[],
-  type: T["type"],
+  id: T["id"],
 ): T | undefined {
-  return games.find((g) => g.type === type) as T | undefined;
+  return games.find((g) => g.id === id) as T | undefined;
 }
 
 export function Variant2({ cardData }: Variant2Props) {

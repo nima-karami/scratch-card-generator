@@ -1,0 +1,11 @@
+{
+  "winWeight": 30,
+  "missWeight": 70,
+  "prizePool": [
+    { "value": "$5", "valueCents": 500, "weight": 50 },
+    { "value": "$10", "valueCents": 1000, "weight": 30 },
+    { "value": "$25", "valueCents": 2500, "weight": 20 }
+  ],
+  "minPrizeCents": 500,
+  "maxPrizeCents": 2500
+}
