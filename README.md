@@ -29,21 +29,27 @@ npm run extract-alpha -- --white white.png --black black.png --output output.png
 
 ### Generate Spritesheet
 
-Generate a spritesheet animation from a text description (requires `GEMINI_API_KEY`).
+Generate a spritesheet animation from a text description (requires `GEMINI_API_KEY`). Visual style is controlled via `--visual-style`; omit it to use the default (2D flat illustration).
 
 ```bash
 npm run generate-spritesheet -- --subject "chocolate chip cookie" --action "crumbling" --cols 4 --rows 3 --width 1024 --height 768 --output ./output.png
 ```
 
-| Option      | Description                    |
-| ----------- | ------------------------------ |
-| `--subject` | Subject of the animation       |
-| `--action`  | Animation action               |
-| `--cols`    | Number of columns              |
-| `--rows`    | Number of rows                 |
-| `--width`   | Canvas width in pixels         |
-| `--height`  | Canvas height in pixels        |
-| `--output`  | Output path for transparent PNG |
+**With custom visual style:**
+```bash
+npm run generate-spritesheet -- --subject "Dinosaur" --action "walking" --cols 4 --rows 2 --width 512 --height 256 --visual-style "pixel art, 16-bit game style" --output dino.png
+```
+
+| Option             | Description                                                                 |
+| ------------------ | --------------------------------------------------------------------------- |
+| `--subject`        | Subject of the animation                                                    |
+| `--action`         | Animation action                                                            |
+| `--cols`           | Number of columns                                                            |
+| `--rows`           | Number of rows                                                              |
+| `--width`          | Canvas width in pixels                                                       |
+| `--height`         | Canvas height in pixels                                                      |
+| `--output`         | Output path for transparent PNG                                              |
+| `--visual-style`   | Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Default: 2D flat illustration style |
 
 ---
 

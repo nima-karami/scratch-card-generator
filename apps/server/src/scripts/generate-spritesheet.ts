@@ -6,20 +6,24 @@ import type { SpritesheetPromptParams } from "../lib/spritesheet/prompt-builder.
 import { config } from "../config.js";
 import { parseNamedArgs } from "./cli-utils.js";
 
+const DEFAULT_VISUAL_STYLE = "2D flat illustration style";
+
 const USAGE = `
-Usage: npm run generate-spritesheet -- --subject "<subject>" --action "<action>" --cols <n> --rows <n> --width <px> --height <px> --output <path>
+Usage: npm run generate-spritesheet -- --subject "<subject>" --action "<action>" --cols <n> --rows <n> --width <px> --height <px> --output <path> [--visual-style <style>]
 
 Options:
-  --subject <text>   Subject of the animation (e.g. "chocolate chip cookie")
-  --action <text>   Animation action (e.g. "crumbling")
-  --cols <n>        Number of columns
-  --rows <n>        Number of rows
-  --width <px>      Canvas width in pixels
-  --height <px>     Canvas height in pixels
-  --output <path>   Output path for the transparent PNG
+  --subject <text>       Subject of the animation (e.g. "chocolate chip cookie")
+  --action <text>        Animation action (e.g. "crumbling")
+  --cols <n>             Number of columns
+  --rows <n>             Number of rows
+  --width <px>           Canvas width in pixels
+  --height <px>          Canvas height in pixels
+  --output <path>        Output path for the transparent PNG
+  --visual-style <text>  Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Default: "${DEFAULT_VISUAL_STYLE}"
 
 Example:
   npm run generate-spritesheet -- --subject "Apple" --action "being eaten" --cols 4 --rows 3 --width 1024 --height 768 --output ./output.png
+  npm run generate-spritesheet -- --subject "Dinosaur" --action "walking" --cols 4 --rows 2 --width 512 --height 256 --visual-style "pixel art, 16-bit game style" --output dino.png
 `;
 
 function defaultKeyframes(
@@ -68,6 +72,7 @@ async function main(): Promise<void> {
 
   const totalFrames = cols * rows;
   const keyframes = defaultKeyframes(totalFrames, subject, action);
+  const visualStyle = opts["visual-style"] ?? DEFAULT_VISUAL_STYLE;
 
   const params: SpritesheetPromptParams = {
     canvasWidth: width,
@@ -77,12 +82,13 @@ async function main(): Promise<void> {
     subject,
     animationAction: action,
     keyframes,
-    visualStyle: "2D flat illustration style",
+    visualStyle,
     backgroundColor: "white",
   };
 
   console.log("Generating spritesheet...");
   console.log(`  Subject: ${subject} ${action}`);
+  console.log(`  Visual style: ${visualStyle}`);
   console.log(`  Grid: ${cols}x${rows} (${totalFrames} frames)`);
   console.log(`  Size: ${width}x${height}px`);
   console.log(`  QA Config: Algorithmic=${config.spritesheet.qa.algorithmicEnabled}, LLM=${config.spritesheet.qa.llmEnabled}, MaxRetries=${config.spritesheet.qa.maxRetries}`);
