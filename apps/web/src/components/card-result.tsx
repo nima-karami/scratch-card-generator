@@ -19,24 +19,6 @@ export function CardResult() {
     };
   }, [muted, startBGM, stopBGM]);
 
-  if (!cardData) return null;
-
-  function handleShare() {
-    if (!cardRef.current || !cardData) return;
-    const el = cardRef.current;
-    el.requestFullscreen?.().catch(() => {});
-    if (navigator.clipboard) {
-      const text = `${cardData.title} \u2013 ${cardData.tagline}`;
-      navigator.clipboard.writeText(text).catch(() => {});
-    }
-    setMenuOpen(false);
-  }
-
-  function handleGenerateAnother() {
-    reset();
-    setMenuOpen(false);
-  }
-
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -48,6 +30,24 @@ export function CardResult() {
       return () => document.removeEventListener("click", handleClickOutside);
     }
   }, [menuOpen]);
+
+  const handleShare = () => {
+    if (!cardRef.current || !cardData) return;
+    const el = cardRef.current;
+    el.requestFullscreen?.().catch(() => {});
+    if (navigator.clipboard) {
+      const text = `${cardData.title} \u2013 ${cardData.tagline}`;
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+    setMenuOpen(false);
+  };
+
+  const handleGenerateAnother = () => {
+    reset();
+    setMenuOpen(false);
+  };
+
+  if (!cardData) return null;
 
   return (
     <div className="fixed inset-0 flex min-h-dvh flex-col">

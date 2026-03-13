@@ -52,7 +52,10 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
       onClick={handleClick}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className={cn("rounded-lg border border-gold/30 bg-surface-bright flex items-center justify-center font-semibold text-text-primary overflow-hidden shrink-0", sizeClasses[size])}
+      className={cn(
+        "rounded-lg flex items-center justify-center font-semibold text-text-primary overflow-hidden shrink-0",
+        sizeClasses[size],
+      )}
     >
       {data.coverSpriteSheetSrc && spriteSheetConfig ? (
         <div className="relative w-full h-full">
@@ -79,11 +82,7 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
           {data.value}
         </motion.span>
       ) : data.coverUrl ? (
-        <img
-          src={data.coverUrl}
-          alt=""
-          className="w-full h-full object-cover"
-        />
+        <img src={data.coverUrl} alt="" className="w-full h-full object-cover" />
       ) : (
         <span className="text-gold-dim">?</span>
       )}

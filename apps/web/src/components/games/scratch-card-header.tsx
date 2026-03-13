@@ -33,9 +33,9 @@ export function ScratchCardHeader({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55, duration: 0.4 }}
-          className="text-text-secondary text-sm mt-2 leading-relaxed"
+          className="text-black text-sm mt-2 leading-relaxed text-center"
         >
-          {tagline}
+          Powered by TimePlay
         </motion.p>
       )}
     </header>

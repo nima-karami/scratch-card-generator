@@ -17,7 +17,7 @@ export { ScratchCardHeader } from "./scratch-card-header";
 export type { ScratchCardHeaderProps } from "./scratch-card-header";
 export type { ScratchCardBackgroundProps } from "./scratch-card-background";
 export { GameContainer } from "./game-container";
-export type { GameContainerProps } from "./game-container";
+export type { GameContainerProps, GameContainerVariant } from "./game-container";
 export { CardTitle } from "./card-title";
 export type { CardTitleProps } from "./card-title";
 export { SpriteSheetRenderer } from "./sprite-sheet-renderer";

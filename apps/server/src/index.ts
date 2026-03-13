@@ -11,6 +11,7 @@ import {
   rateLimitKlingVideo,
 } from "./routes/kling-video.js";
 import { postSoundEffect, rateLimitSoundEffect } from "./routes/sound-effect.js";
+import { postContainerImage } from "./routes/container-image.js";
 import { createWorker } from "./queue/worker.js";
 
 const app = express();
@@ -24,6 +25,7 @@ app.get("/api/card/:jobId", getCard);
 app.post("/api/kling/video", rateLimitKlingVideo, postKlingVideo);
 app.get("/api/kling/video/:taskId", getKlingVideoStatus);
 app.post("/api/sound-effect", rateLimitSoundEffect, postSoundEffect);
+app.post("/api/container-image", postContainerImage);
 
 createWorker();
 

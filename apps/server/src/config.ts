@@ -24,6 +24,10 @@ export const config = {
     /** When set, generated video backgrounds are also written here (0001-slug.mp4, 0001-slug-frame.png, video-background-log.txt). */
     debugOutputDir: process.env.VIDEO_BACKGROUND_DEBUG_OUTPUT_DIR || null,
   },
+  containerImage: {
+    /** When set, generated container background images are also written here (0001-slug.png, …) and container-image-log.txt. */
+    debugOutputDir: process.env.CONTAINER_IMAGE_DEBUG_OUTPUT_DIR || null,
+  },
   kling: {
     /** API key for Kling 3.0 (get from kling3api.com). Required for Kling video endpoints and CLI. */
     apiKey: process.env.KLING_API_KEY ?? null,

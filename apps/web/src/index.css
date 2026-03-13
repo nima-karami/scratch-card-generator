@@ -1,23 +1,39 @@
 @import "tailwindcss";
 
 @theme {
+  /* Timeplay branding */
   --font-display: "Syne", sans-serif;
   --font-body: "DM Sans", sans-serif;
 
-  --color-void: #07070d;
-  --color-surface: #0f0f18;
-  --color-surface-raised: #171723;
-  --color-surface-bright: #1f1f30;
+  /* Backgrounds – deep blue base #050D26 */
+  --color-void: #050d26;
+  --color-surface: #0a1538;
+  --color-surface-raised: #0f1d4a;
+  --color-surface-bright: #162558;
 
-  --color-gold: #f5a623;
-  --color-gold-light: #ffd700;
-  --color-gold-dim: #b8860b;
-  --color-teal: #00e5c7;
-  --color-teal-dim: #00a88f;
+  /* Primary – mid blue to cyan */
+  --color-primary: #0094f7;
+  --color-primary-light: #4ed5fe;
+  --color-primary-dim: #0077c9;
+  /* Legacy gold aliases (map to primary for consistency) */
+  --color-gold: #0094f7;
+  --color-gold-light: #4ed5fe;
+  --color-gold-dim: #0077c9;
+  --color-teal: #4ed5fe;
+  --color-teal-dim: #0094f7;
 
-  --color-text-primary: #eee8d5;
-  --color-text-secondary: #9a917f;
-  --color-text-muted: #5c5647;
+  /* Text on dark blue */
+  --color-text-primary: #e8f4fc;
+  --color-text-secondary: #9ec8e8;
+  --color-text-muted: #5c8fb8;
+
+  /* Landing page – higher contrast for readability */
+  --color-landing-title: #ffffff;
+  --color-landing-accent: #4ed5fe;
+  --color-landing-subtitle: #b8daf5;
+  --color-landing-muted: #8bc4eb;
+  --color-landing-input: #f0f8ff;
+  --color-landing-input-muted: #7aa8d4;
 
   --color-danger: #e53e3e;
 }
@@ -58,27 +74,29 @@ body {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(245, 166, 35, 0.12) 40%,
-    rgba(255, 215, 0, 0.22) 50%,
-    rgba(245, 166, 35, 0.12) 60%,
+    rgba(0, 148, 247, 0.12) 40%,
+    rgba(78, 213, 254, 0.22) 50%,
+    rgba(0, 148, 247, 0.12) 60%,
     transparent 100%
   );
   background-size: 200% 100%;
   animation: shimmer 2.4s ease-in-out infinite;
 }
 
-.glow-gold {
+.glow-gold,
+.glow-primary {
   box-shadow:
-    0 0 20px rgba(245, 166, 35, 0.15),
-    0 0 60px rgba(245, 166, 35, 0.08),
-    inset 0 1px 0 rgba(255, 215, 0, 0.1);
+    0 0 20px rgba(0, 148, 247, 0.15),
+    0 0 60px rgba(78, 213, 254, 0.08),
+    inset 0 1px 0 rgba(78, 213, 254, 0.1);
 }
 
-.glow-gold-strong {
+.glow-gold-strong,
+.glow-primary-strong {
   box-shadow:
-    0 0 30px rgba(245, 166, 35, 0.25),
-    0 0 80px rgba(245, 166, 35, 0.12),
-    inset 0 1px 0 rgba(255, 215, 0, 0.15);
+    0 0 30px rgba(0, 148, 247, 0.25),
+    0 0 80px rgba(78, 213, 254, 0.12),
+    inset 0 1px 0 rgba(78, 213, 254, 0.15);
 }
 
 @keyframes float {

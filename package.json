@@ -12,6 +12,7 @@
     "generate-sound-effect": "tsx apps/server/src/scripts/generate-sound-effect.ts",
     "generate-title-image": "tsx apps/server/src/scripts/generate-title-image.ts",
     "generate-video-background": "tsx apps/server/src/scripts/generate-video-background.ts",
+    "generate-container-image": "tsx apps/server/src/scripts/generate-container-image.ts",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",

@@ -1,0 +1,197 @@
+import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
+import { join } from "path";
+import sharp from "sharp";
+import { config } from "../config.js";
+import { generateImage } from "./gemini.js";
+
+export type ContainerImageType = "solid" | "gradient" | "pattern";
+
+export type GenerateContainerImageParams = {
+  type: ContainerImageType;
+  width?: number;
+  height?: number;
+  /** Hex color for solid; primary for gradient/pattern. Default #1a1a2e */
+  color?: string;
+  /** Second gradient color (hex). Default #16213e */
+  colorEnd?: string;
+  /** Linear gradient angle in degrees. Default 135 */
+  angle?: number;
+  /** Pattern style hint for LLM: dots, lines, grid (used when type=pattern). Default dots */
+  pattern?: "dots" | "lines" | "grid";
+  /** Pattern tile size in px (legacy; used as style hint for procedural solid only). Default 24 */
+  patternScale?: number;
+  /** Optional theme for LLM (e.g. luxury, minimal). Used for gradient and pattern. */
+  theme?: string;
+  /** Optional extra prompt for LLM. Used for gradient and pattern. */
+  prompt?: string;
+};
+
+const DEFAULT_WIDTH = 400;
+const DEFAULT_HEIGHT = 300;
+const DEFAULT_COLOR = "#1a1a2e";
+const DEFAULT_COLOR_END = "#16213e";
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const m = hex.replace(/^#/, "").match(/^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return { r: 26, g: 26, b: 46 };
+  return {
+    r: parseInt(m[1]!, 16),
+    g: parseInt(m[2]!, 16),
+    b: parseInt(m[3]!, 16),
+  };
+}
+
+function solidSvg(width: number, height: number, color: string): string {
+  const { r, g, b } = hexToRgb(color);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+  <rect width="100%" height="100%" fill="rgb(${r},${g},${b})"/>
+</svg>`;
+}
+
+function colorDescription(hex: string | undefined): string {
+  if (!hex) return "";
+  return `Color mood: ${hex}.`;
+}
+
+function buildGradientPrompt(
+  params: GenerateContainerImageParams,
+  width: number,
+  height: number,
+): string {
+  const color = params.color ?? DEFAULT_COLOR;
+  const colorEnd = params.colorEnd ?? DEFAULT_COLOR_END;
+  const theme = params.theme ?? "elegant";
+  const parts = [
+    "Generate a single image that is only a subtle, high-quality gradient background for a game card container.",
+    `Colors: from ${color} to ${colorEnd}. Soft, smooth transition.`,
+    "No text, no objects, no logos. Elegant and premium feel. The image must fill the entire frame with only the gradient.",
+    `Rectangular, suitable for ${width}x${height}. Style: ${theme}.`,
+  ];
+  if (params.prompt) parts.push(params.prompt.trim());
+  return parts.join(" ");
+}
+
+function patternStyleHint(pattern: "dots" | "lines" | "grid" | undefined): string {
+  if (!pattern) return "subtle and sophisticated";
+  const hints: Record<string, string> = {
+    dots: "dot-like or stippled motif",
+    lines: "linear or striped motif",
+    grid: "grid-like or geometric motif",
+  };
+  return hints[pattern] ?? "subtle and sophisticated";
+}
+
+function buildPatternPrompt(
+  params: GenerateContainerImageParams,
+  width: number,
+  height: number,
+): string {
+  const color = colorDescription(params.color);
+  const style = patternStyleHint(params.pattern);
+  const theme = params.theme ?? "elegant";
+  const parts = [
+    "Generate a single image that is only a subtle, sophisticated repeating pattern or texture background for a game card container.",
+    `Style: ${style}. High quality, low contrast.`,
+    "The image should work as a background.",
+    color,
+    `Rectangular, suitable for ${width}x${height}. Overall mood: ${theme}.`,
+  ].filter(Boolean);
+  if (params.prompt) parts.push(params.prompt.trim());
+  return parts.join(" ");
+}
+
+function requireGeminiApiKey(): void {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error(
+      "GEMINI_API_KEY is required for gradient and pattern types. Set it in .env or use type=solid for no API key.",
+    );
+  }
+}
+
+/**
+ * Generate a container background image.
+ * - Solid: procedural (Sharp only, no API key).
+ * - Gradient and pattern: LLM (Gemini); requires GEMINI_API_KEY; then resized to requested dimensions.
+ */
+export async function generateContainerImage(
+  params: GenerateContainerImageParams,
+): Promise<Buffer> {
+  const width = params.width ?? DEFAULT_WIDTH;
+  const height = params.height ?? DEFAULT_HEIGHT;
+
+  if (params.type === "solid") {
+    const svg = solidSvg(width, height, params.color ?? DEFAULT_COLOR);
+    return sharp(Buffer.from(svg)).png().toBuffer();
+  }
+
+  if (params.type === "gradient" || params.type === "pattern") {
+    requireGeminiApiKey();
+    const prompt =
+      params.type === "gradient"
+        ? buildGradientPrompt(params, width, height)
+        : buildPatternPrompt(params, width, height);
+    const buffer = await generateImage(prompt);
+    return sharp(buffer).resize(width, height).png().toBuffer();
+  }
+
+  const svg = solidSvg(width, height, params.color ?? DEFAULT_COLOR);
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+/** Next sequential 4-digit ID for container-image debug (0001, 0002, …). */
+export async function nextContainerImageDebugId(debugDir: string): Promise<string> {
+  const prefixMatch = /^(\d{4})-/;
+  let maxId = 0;
+  try {
+    const files = await readdir(debugDir);
+    for (const name of files) {
+      const m = name.match(prefixMatch);
+      if (m) {
+        const n = parseInt(m[1]!, 10);
+        if (n > maxId) maxId = n;
+      }
+    }
+  } catch {
+    // directory missing or unreadable
+  }
+  return String(maxId + 1).padStart(4, "0");
+}
+
+function slugFromParams(params: GenerateContainerImageParams, maxLen = 50): string {
+  const parts = [
+    params.type,
+    params.pattern ?? "",
+    params.color ?? "",
+    params.colorEnd ?? "",
+  ].filter(Boolean);
+  const slug = parts
+    .join("-")
+    .toLowerCase()
+    .replace(/^#/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+  return slug.slice(0, maxLen) || params.type;
+}
+
+export type WriteContainerImageDebugParams = GenerateContainerImageParams;
+
+/**
+ * When config.containerImage.debugOutputDir is set, write the buffer there as NNNN-slug.png
+ * and append a line to container-image-log.txt. No-op when debug output dir is not set.
+ */
+export async function writeContainerImageDebug(
+  buffer: Buffer,
+  params: WriteContainerImageDebugParams,
+): Promise<void> {
+  const debugDir = config.containerImage.debugOutputDir;
+  if (!debugDir) return;
+  await mkdir(debugDir, { recursive: true });
+  const debugId = await nextContainerImageDebugId(debugDir);
+  const slug = slugFromParams(params);
+  const filename = `${debugId}-${slug}.png`;
+  const filePath = join(debugDir, filename);
+  await writeFile(filePath, buffer);
+  const logPath = join(debugDir, "container-image-log.txt");
+  const line = `${new Date().toISOString()}\t${debugId}\ttype=${params.type}\tpattern=${params.pattern ?? ""}\tcolor=${params.color ?? ""}\ttheme=${params.theme ?? ""}\tfile=${filename}\n`;
+  await appendFile(logPath, line);
+}

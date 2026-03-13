@@ -1,6 +1,6 @@
 # Scratch Card Generator
 
-CLI scripts for generating scratch card assets (spritesheets, videos, sound effects).
+CLI scripts for generating scratch card assets (spritesheets, videos, sound effects, container backgrounds).
 
 ## Prerequisites
 
@@ -158,14 +158,64 @@ npm run generate-video-background -- --image ./frame.png --animation-prompt "sof
 
 ---
 
+### Generate Container Image
+
+Generate a subtle background image for game containers. **Solid** is procedural (Sharp only, no API key). **Gradient** and **pattern** use Gemini for high-quality results and require `GEMINI_API_KEY`. Output can be used as `GameContainer` background via `variant="image"` and `backgroundImageUrl`.
+
+**Solid color (no API key):**
+```bash
+npm run generate-container-image -- --type solid --color "#2d1b4e" --output bg.png
+```
+
+**Gradient (requires GEMINI_API_KEY):**
+```bash
+npm run generate-container-image -- --type gradient --color "#1a1a2e" --color-end "#0f3460" --theme luxury --output gradient.png
+```
+
+**Pattern (requires GEMINI_API_KEY):**
+```bash
+npm run generate-container-image -- --type pattern --pattern dots --theme minimal --color "#1a1a2e" --output pattern.png
+```
+
+| Option           | Description                                                       |
+| ---------------- | ----------------------------------------------------------------- |
+| `--type`         | One of: solid, gradient, pattern (required)                       |
+| `--width`        | Width in pixels. Default: 400                                     |
+| `--height`       | Height in pixels. Default: 300                                    |
+| `--color`        | Primary color (hex, e.g. #1a1a2e). Default: #1a1a2e               |
+| `--color-end`    | End color for gradient. Default: #16213e                         |
+| `--angle`        | Gradient angle in degrees (linear). Default: 135                  |
+| `--pattern`      | For type=pattern: dots, lines, or grid (style hint). Default: dots |
+| `--pattern-scale`| Pattern tile size in px (legacy). Default: 24                       |
+| `--theme`        | Theme for LLM (e.g. luxury, minimal). For gradient/pattern.       |
+| `--prompt`       | Extra prompt for LLM. For gradient/pattern.                        |
+| `--output`       | Output file path. Default: ./container-image.png                  |
+
+**API:** `POST /api/container-image` with JSON body `{ "type": "solid" | "gradient" | "pattern", "width?", "height?", "color?", "colorEnd?", "angle?", "pattern?", "patternScale?", "theme?", "prompt?" }` returns the image as PNG. Gradient and pattern require `GEMINI_API_KEY`. When `CONTAINER_IMAGE_DEBUG_OUTPUT_DIR` is set, each generated image is also written there with sequential IDs and logged to `container-image-log.txt`.
+
+---
+
 ## Environment Variables
 
 | Variable                     | Scripts                      | Description                                |
 | ---------------------------- | ---------------------------- | ------------------------------------------ |
-| `GEMINI_API_KEY`             | generate-spritesheet, generate-title-image, generate-video-background | Gemini API for image and VEO video generation |
+| `GEMINI_API_KEY`             | generate-spritesheet, generate-title-image, generate-video-background, generate-container-image (gradient/pattern) | Gemini API for image and VEO video generation |
 | `KLING_API_KEY`              | generate-kling-video         | Kling 3.0 video generation                 |
 | `ELEVENLABS_API_KEY`         | generate-sound-effect        | Eleven Labs sound effects                  |
 | `SPRITESHEET_QA_DEBUG_OUTPUT_DIR` | generate-spritesheet  | Optional: debug output for QA attempts     |
 | `SOUND_EFFECT_DEBUG_OUTPUT_DIR`   | generate-sound-effect  | Optional: debug output with sequential IDs |
 | `TITLE_IMAGE_DEBUG_OUTPUT_DIR`    | generate-title-image   | Optional: debug output (0001-slug.png, …) and title-image-log.txt |
 | `VIDEO_BACKGROUND_DEBUG_OUTPUT_DIR` | generate-video-background | Optional: debug output (0001-slug.mp4, 0001-slug-frame.png, video-background-log.txt) |
+| `CONTAINER_IMAGE_DEBUG_OUTPUT_DIR` | generate-container-image, POST /api/container-image | Optional: debug output (0001-slug.png, …) and container-image-log.txt |
+
+### Debug output folders
+
+When the optional `*_DEBUG_OUTPUT_DIR` variables are set (e.g. in `.env`), generated assets are written under that directory with sequential IDs and optional log files. Example layout using defaults from [.env.example](.env.example):
+
+- `./debug/sound-effect/` — `0001-slug.mp3`, … and `sound-effect-log.txt`
+- `./debug/title-image/` — `0001-slug.png`, … and `title-image-log.txt`
+- `./debug/video-background/` — `0001-slug.mp4`, `0001-slug-frame.png`, … and `video-background-log.txt`
+- `./debug/container-image/` — `0001-slug.png`, … and `container-image-log.txt`
+- `./debug/spritesheet/` — QA attempt images and `qa-log.txt`
+
+Create the `./debug` directory (or any custom path) as needed; scripts create the target subdirectory recursively.
