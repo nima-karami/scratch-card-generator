@@ -59,7 +59,7 @@ export function ScratchCard({
     return null;
   }
 
-  const videoUrl = cardData.backgroundVideoUrl ?? DEFAULT_BACKGROUND_VIDEO;
+  const videoUrl = cardData.backgroundVideoUrl ?? (cardData.backgroundImageUrl ? undefined : DEFAULT_BACKGROUND_VIDEO);
   const totalWon = getTotalWonPlaceholder(cardData, itemStates);
 
   return (
@@ -69,7 +69,7 @@ export function ScratchCard({
         className,
       )}
     >
-      <ScratchCardBackground videoUrl={videoUrl} />
+      <ScratchCardBackground videoUrl={videoUrl} imageUrl={cardData.backgroundImageUrl} />
 
       <div className="relative z-20 flex flex-col flex-1 min-h-0">
         {variant.id === "variant-1" && <Variant1 cardData={cardData} />}

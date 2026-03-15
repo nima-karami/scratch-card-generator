@@ -171,35 +171,42 @@ npm run generate-title-image -- --text "Win Big" --visual-style "bold typography
 
 ---
 
-### Generate Video Background
+### Generate Background
 
-Generate a looped video background for scratch cards: first a background image is generated with Gemini using `--visual-style`, then VEO 3.1 animates it using the same image as first and last frame for a seamless loop (requires `GEMINI_API_KEY`). Image and video use **portrait (9:16)** by default; use `--aspect-ratio 16:9` for landscape. Same vocabulary as Creative Director `videoBackground.visualStyle` and `videoBackground.animationPrompt`.
+Generate a scratch-card background as **image only** or **image + video**. The image is always produced with Gemini using `--visual-style`. With `--mode video`, the script then attempts a looped video via VEO 3.1 using the same image as first and last frame; **if video generation fails** (e.g. VEO not available), the image is still written so you are not left without an asset. Same vocabulary as Creative Director `videoBackground.visualStyle` and `videoBackground.animationPrompt`. Portrait (9:16) by default; use `--aspect-ratio 16:9` for landscape.
 
-**Image + animation (both required when not using `--image`):**
+**Image only:**
 
 ```bash
-npm run generate-video-background -- --visual-style "luxury, golden particles" --animation-prompt "subtle golden particles drifting" --output ./output/video-background.mp4
+npm run generate-background -- --mode image --visual-style "luxury, golden particles" --output ./output/background.png
+```
+
+**Image + video (fallback to image on VEO failure):**
+
+```bash
+npm run generate-background -- --mode video --visual-style "luxury, golden particles" --animation-prompt "subtle golden particles drifting" --output ./output/background.mp4
 ```
 
 ```bash
-npm run generate-video-background -- --visual-style "underwater, blue gradient" --animation-prompt "gentle bubbles rising" --duration 8 --output ./output/underwater.mp4
+npm run generate-background -- --visual-style "underwater, blue gradient" --animation-prompt "gentle bubbles rising" --duration 8 --output ./output/underwater.mp4
 ```
 
-**From existing image (skip image generation):**
+**From existing image (skip image generation; `--mode video` only):**
 
 ```bash
-npm run generate-video-background -- --image ./frame.png --animation-prompt "soft light flicker" --output loop.mp4
+npm run generate-background -- --image ./frame.png --animation-prompt "soft light flicker" --output ./output/loop.mp4
 ```
 
 
 | Option               | Description                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------- |
+| `--mode`             | `image` = PNG only (default output: `./output/background.png`). `video` = image + attempt VEO video; on failure, only the image is written (as `<output-stem>-frame.png`). Default: `video`. |
 | `--visual-style`     | Style for the background image (required unless `--image`). Same as Creative Director output.  |
-| `--animation-prompt` | Description for video motion (required unless `--image`). Same as Creative Director output.    |
+| `--animation-prompt` | Description for video motion (required for `--mode video` unless `--image`). Same as Creative Director output. |
 | `--duration`         | Video length in seconds: 4, 6, or 8. Default: 6                                                |
 | `--aspect-ratio`     | `9:16` (portrait, default) or `16:9` (landscape)                                               |
-| `--output`           | Output MP4 path. Default: `./output/video-background.mp4`                                      |
-| `--image`            | Use this image as first and last frame (skip image generation)                                 |
+| `--output`           | Output path: for `--mode image` the PNG path; for `--mode video` the MP4 path. Defaults: `./output/background.png` (image) or `./output/background.mp4` (video). |
+| `--image`            | Use this image as first and last frame (skip image generation). Only used when `--mode video`.  |
 
 
 ---
@@ -272,15 +279,39 @@ npm run generate-glyph-sheet -- --input ./base-font.png --visual-style "dinosaur
 
 ---
 
+### Generate Moodboard
+
+Generate a **master moodboard** image from a theme description (requires `GEMINI_API_KEY`). This runs Phase 1 of the Creative Director (meta: artStyle, colorPalette, mood) then generates a single collage image. The moodboard is used to anchor visual style when running the full theme pipeline (`generate-theme`); you can also run this script alone to preview or debug the style anchor.
+
+```bash
+npm run generate-moodboard -- --theme "cookies" --output ./output/cookies/moodboard.png
+```
+
+```bash
+npm run generate-moodboard -- --theme "retro space arcade"
+```
+
+When `MOODBOARD_DEBUG_OUTPUT_DIR` is set, a copy of the moodboard and a log line are written there (e.g. `0001-cookies.png`, `moodboard-log.txt`).
+
+| Option     | Description                                                                 |
+| ---------- | --------------------------------------------------------------------------- |
+| `--theme`  | Theme description (required) (e.g. "cookies", "retro space arcade")         |
+| `--output` | Output file path for the moodboard PNG. Default: `./moodboard.png`          |
+
+
+---
+
 ### Creative Director (theme pipeline)
 
-The Creative Director is an LLM that turns a theme description into a structured manifest, then the orchestrator generates all enabled assets. Technical params (canvas sizes, grid dimensions, enabled/disabled toggles) live in pipeline config; the LLM only decides verbal/creative content (subjects, actions, visualStyle, sounds, etc.).
+The Creative Director turns a theme description into a structured manifest and a **moodboard**, then the orchestrator generates all enabled assets using the moodboard as a style reference so visuals stay consistent. The pipeline is **two-step**: (1) meta (art direction) → (2) moodboard image → (3) element descriptions (written to match the moodboard). Technical params (canvas sizes, grid dimensions, enabled/disabled toggles) live in pipeline config; the LLM only decides verbal/creative content (subjects, actions, visualStyle, sounds, etc.).
 
-**Full pipeline (manifest + all assets):**
+**Full pipeline (meta → moodboard → elements → manifest + all assets):**
 
 ```bash
 npm run generate-theme -- --theme "cookies" --output ./output/cookies
 ```
+
+This writes `manifest.json`, `moodboard.png`, and all generated assets into the output directory. Each visual asset is generated with the moodboard as reference to reduce style drift.
 
 When `THEME_DEBUG_OUTPUT_DIR` is set, a copy of the manifest and a log line are written there (e.g. `0001-cookies-manifest.json`, `theme-log.txt`).
 
@@ -290,6 +321,8 @@ When `THEME_DEBUG_OUTPUT_DIR` is set, a copy of the manifest and a log line are 
 npm run generate-theme-manifest -- --theme "cookies" --output ./output/cookies/manifest.json
 ```
 
+Runs the same two-step flow (meta → moodboard → elements) but only writes the manifest; the moodboard is not saved to disk for this command.
+
 When `THEME_MANIFEST_DEBUG_OUTPUT_DIR` is set, a copy of the manifest and a log line are written there (e.g. `0001-cookies-manifest.json`, `theme-manifest-log.txt`).
 
 **Assets from existing manifest:**
@@ -297,6 +330,8 @@ When `THEME_MANIFEST_DEBUG_OUTPUT_DIR` is set, a copy of the manifest and a log 
 ```bash
 npm run generate-theme-assets -- --manifest ./output/cookies/manifest.json --output ./output/cookies
 ```
+
+Reads an existing manifest and generates assets. **No moodboard is used** (you would need to have run the full pipeline or provide a moodboard separately for style anchoring).
 
 When `THEME_ASSETS_DEBUG_OUTPUT_DIR` is set, a log line is appended to `theme-assets-log.txt` (timestamp, manifest path, output dir, list of generated files).
 
@@ -315,18 +350,19 @@ When `THEME_ASSETS_DEBUG_OUTPUT_DIR` is set, a log line is appended to `theme-as
 
 | Variable                            | Scripts                                                                                                                                                                                                          | Description                                                                           |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `GEMINI_API_KEY`                    | generate-spritesheet, generate-particle-spritesheet, generate-title-image, generate-video-background, generate-container-image (gradient/pattern), generate-glyph-sheet, generate-theme, generate-theme-manifest | Gemini API for image, VEO video, and Creative Director (manifest)                     |
+| `GEMINI_API_KEY`                    | generate-spritesheet, generate-particle-spritesheet, generate-title-image, generate-background, generate-container-image (gradient/pattern), generate-glyph-sheet, generate-moodboard, generate-theme, generate-theme-manifest | Gemini API for image, VEO video, and Creative Director (manifest + moodboard)          |
 | `KLING_API_KEY`                     | generate-kling-video                                                                                                                                                                                             | Kling 3.0 video generation                                                            |
 | `ELEVENLABS_API_KEY`                | generate-sound-effect                                                                                                                                                                                            | Eleven Labs sound effects                                                             |
 | `SPRITESHEET_QA_DEBUG_OUTPUT_DIR`   | generate-spritesheet                                                                                                                                                                                             | Optional: debug output for QA attempts                                                |
 | `SOUND_EFFECT_DEBUG_OUTPUT_DIR`     | generate-sound-effect                                                                                                                                                                                            | Optional: debug output with sequential IDs                                            |
 | `TITLE_IMAGE_DEBUG_OUTPUT_DIR`      | generate-title-image                                                                                                                                                                                             | Optional: debug output (0001-slug.png, …) and title-image-log.txt                     |
-| `VIDEO_BACKGROUND_DEBUG_OUTPUT_DIR` | generate-video-background                                                                                                                                                                                        | Optional: debug output (0001-slug.mp4, 0001-slug-frame.png, video-background-log.txt) |
+| `BACKGROUND_DEBUG_OUTPUT_DIR`      | generate-background                                                                                                                                                                                               | Optional: debug output (0001-slug-frame.png, optional 0001-slug.mp4, background-log.txt) |
 | `CONTAINER_IMAGE_DEBUG_OUTPUT_DIR`  | generate-container-image, POST /api/container-image                                                                                                                                                              | Optional: debug output (0001-slug.png, …) and container-image-log.txt                 |
 | `GLYPH_SHEET_DEBUG_OUTPUT_DIR`      | generate-glyph-sheet                                                                                                                                                                                             | Optional: intermediate white/black and final transparent PNGs and glyph-sheet-log.txt |
 | `THEME_DEBUG_OUTPUT_DIR`            | generate-theme                                                                                                                                                                                                   | Optional: copy of manifest (NNNN-slug-manifest.json) and theme-log.txt                |
 | `THEME_MANIFEST_DEBUG_OUTPUT_DIR`   | generate-theme-manifest                                                                                                                                                                                          | Optional: copy of manifest (NNNN-slug-manifest.json) and theme-manifest-log.txt       |
 | `THEME_ASSETS_DEBUG_OUTPUT_DIR`     | generate-theme-assets                                                                                                                                                                                            | Optional: theme-assets-log.txt (timestamp, manifest path, output dir, asset list)     |
+| `MOODBOARD_DEBUG_OUTPUT_DIR`        | generate-moodboard, generate-theme                                                                                                                                                                                 | Optional: moodboard PNGs (0001-slug.png, …) and moodboard-log.txt                     |
 
 
 ### Debug output folders
@@ -335,12 +371,13 @@ When the optional `*_DEBUG_OUTPUT_DIR` variables are set (e.g. in `.env`), gener
 
 - `./debug/sound-effect/` — `0001-slug.mp3`, … and `sound-effect-log.txt`
 - `./debug/title-image/` — `0001-slug.png`, … and `title-image-log.txt`
-- `./debug/video-background/` — `0001-slug.mp4`, `0001-slug-frame.png`, … and `video-background-log.txt`
+- `./debug/background/` — `0001-slug-frame.png`, optional `0001-slug.mp4`, … and `background-log.txt`
 - `./debug/container-image/` — `0001-slug.png`, … and `container-image-log.txt`
 - `./debug/spritesheet/` — QA attempt images and `qa-log.txt`
 - `./debug/glyph-sheet/` — stylized white, black, transparent PNGs and `glyph-sheet-log.txt`
 - `./debug/theme/` — Creative Director full run: `NNNN-slug-manifest.json`, `theme-log.txt`
 - `./debug/theme-manifest/` — Manifest-only run: `NNNN-slug-manifest.json`, `theme-manifest-log.txt`
 - `./debug/theme-assets/` — Assets-from-manifest run: `theme-assets-log.txt`
+- `./debug/moodboard/` — Moodboard-only run: `0001-slug.png`, … and `moodboard-log.txt`
 
 Create the `./debug` directory (or any custom path) as needed; scripts create the target subdirectory recursively.

@@ -7,13 +7,13 @@ export const PIPELINE_CONFIG = {
   /** Which elements to generate. User toggles these on/off. */
   enabled: {
     gameButtonSpritesheets: true,
-    particleSpritesheet: true,
+    particleSpritesheet: false,
     titleImage: true,
-    containerBackground: true,
-    videoBackground: true,
+    containerBackground: false,
+    background: false,
     backgroundMusic: true,
     revealSound: true,
-    glyphSheet: true,
+    glyphSheet: false,
     winOverlay: true,
   },
 
@@ -40,8 +40,9 @@ export const PIPELINE_CONFIG = {
     height: 300,
   },
 
-  /** Technical params for video background (generate-video-background). */
-  video: {
+  /** Technical params for background (generate-background). */
+  background: {
+    mode: "video" as "image" | "video",
     durationSeconds: 6 as 4 | 6 | 8,
     aspectRatio: "9:16" as const,
   },

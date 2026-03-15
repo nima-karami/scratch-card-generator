@@ -8,7 +8,7 @@ import { getQueueName } from "./queue.js";
 import type { CardData, WinOverlayTheme } from "@repo/shared";
 import { getGameConfigs } from "../config/games/index.js";
 import { generateVariantGames } from "../lib/game-outcomes.js";
-import { generateManifest } from "../lib/creative-director/generate-manifest.js";
+import { runFullDirector } from "../lib/creative-director/generate-manifest.js";
 import { orchestrateThemeAssets } from "../lib/creative-director/orchestrate.js";
 import { PIPELINE_CONFIG } from "../lib/creative-director/pipeline-config.js";
 import type { ThemeAssetResult } from "../lib/creative-director/orchestrate.js";
@@ -35,19 +35,20 @@ export function setJobResult(jobId: string, data: CardData): void {
 /** Progress callback: (event) => void. Worker will call this to stream SSE. */
 export type ProgressCallback = (event: { type: string; [key: string]: unknown }) => void;
 
-/** Step 1 — Creative Director: theme string → Theme Manifest. */
+/** Step 1 — Creative Director: theme string → Theme Manifest + moodboard (two-step: meta → moodboard → elements). */
 async function runDesignStep(
   prompt: string,
   onProgress: ProgressCallback
-): Promise<{ manifest: Awaited<ReturnType<typeof generateManifest>> }> {
+): Promise<{ manifest: Awaited<ReturnType<typeof runFullDirector>>["manifest"]; moodboard: Buffer }> {
   onProgress({ type: "designing", message: "Designing your theme..." });
-  const manifest = await generateManifest(prompt);
-  return { manifest };
+  const { manifest, moodboard } = await runFullDirector(prompt);
+  return { manifest, moodboard };
 }
 
-/** Step 2 — Generate all enabled assets from manifest + config. */
+/** Step 2 — Generate all enabled assets from manifest + config, using moodboard as style reference. */
 async function runAssetStep(
-  manifest: Awaited<ReturnType<typeof generateManifest>>,
+  manifest: Awaited<ReturnType<typeof runFullDirector>>["manifest"],
+  moodboard: Buffer,
   outputDir: string,
   onProgress: ProgressCallback
 ): Promise<ThemeAssetResult> {
@@ -58,7 +59,7 @@ async function runAssetStep(
       index: ev.index,
       total: ev.total,
     });
-  });
+  }, { moodboard });
 }
 
 /** Default variant to generate (prize grid only). Can later be driven by request. */
@@ -71,7 +72,7 @@ const VARIANT_NAMES: Record<typeof DEFAULT_VARIANT_ID | "variant-2" | "variant-3
 
 /** Step 3 — Compose final CardData from manifest + asset result + game outcomes. */
 function runComposeStep(
-  manifest: Awaited<ReturnType<typeof generateManifest>>,
+  manifest: Awaited<ReturnType<typeof runFullDirector>>["manifest"],
   assetResult: ThemeAssetResult,
   jobId: string,
   baseUrl: string
@@ -112,6 +113,9 @@ function runComposeStep(
     titleImageUrl: assetResult.titleImage
       ? `${baseUrl}/${basename(assetResult.titleImage)}`
       : undefined,
+    backgroundImageUrl: assetResult.backgroundImage
+      ? `${baseUrl}/${basename(assetResult.backgroundImage)}`
+      : undefined,
     backgroundVideoUrl: assetResult.videoBackground
       ? `${baseUrl}/${basename(assetResult.videoBackground)}`
       : undefined,
@@ -135,16 +139,16 @@ async function processJob(
 
   const baseUrl = `/api/jobs/${jobId}/assets`;
 
-  // Step 1 — Creative Director
-  const { manifest } = await runDesignStep(prompt, onProgress);
+  // Step 1 — Creative Director (meta → moodboard → elements)
+  const { manifest, moodboard } = await runDesignStep(prompt, onProgress);
   onProgress({
     type: "text-ready",
     title: manifest.elements.titleImage.text,
     tagline: `${manifest.meta.mood} — Scratch to reveal your prize!`,
   });
 
-  // Step 2 — Generate assets
-  const assetResult = await runAssetStep(manifest, outputDir, onProgress);
+  // Step 2 — Generate assets (anchored to moodboard)
+  const assetResult = await runAssetStep(manifest, moodboard, outputDir, onProgress);
 
   // Step 3 — Compose
   onProgress({ type: "composing", message: "Composing your card..." });

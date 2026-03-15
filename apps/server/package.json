@@ -11,8 +11,9 @@
     "type-check": "tsc --noEmit",
     "generate-sound-effect": "tsx src/scripts/generate-sound-effect.ts",
     "generate-title-image": "tsx src/scripts/generate-title-image.ts",
-    "generate-video-background": "tsx src/scripts/generate-video-background.ts",
-    "generate-container-image": "tsx src/scripts/generate-container-image.ts"
+    "generate-background": "tsx src/scripts/generate-background.ts",
+    "generate-container-image": "tsx src/scripts/generate-container-image.ts",
+    "generate-moodboard": "tsx src/scripts/generate-moodboard.ts"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.38.1",

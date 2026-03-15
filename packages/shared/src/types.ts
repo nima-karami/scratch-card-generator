@@ -140,7 +140,9 @@ export interface CardData {
   variant?: ScratchCardVariant;
   /** Optional image URL for the card title (when set, header shows this instead of plain title text) */
   titleImageUrl?: string;
-  /** Optional video URL for the card background (when set, used as looped background; otherwise default asset) */
+  /** Optional image URL for the card background (fallback when video is unavailable or not generated) */
+  backgroundImageUrl?: string;
+  /** Optional video URL for the card background (when set, used as looped background; otherwise use backgroundImageUrl or default) */
   backgroundVideoUrl?: string;
   /** Optional theme for the win overlay (overlay color, particle spritesheet). */
   winOverlayTheme?: WinOverlayTheme;

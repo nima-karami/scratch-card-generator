@@ -21,6 +21,7 @@ async function writeThemeAssetsDebug(
     result.particleSpritesheet,
     result.titleImage,
     result.containerBackground,
+    result.backgroundImage,
     result.videoBackground,
     result.backgroundMusic,
     result.revealSound,
@@ -83,6 +84,7 @@ async function main(): Promise<void> {
   if (result.particleSpritesheet) console.log(" ", result.particleSpritesheet);
   if (result.titleImage) console.log(" ", result.titleImage);
   if (result.containerBackground) console.log(" ", result.containerBackground);
+  if (result.backgroundImage) console.log(" ", result.backgroundImage);
   if (result.videoBackground) console.log(" ", result.videoBackground);
   if (result.backgroundMusic) console.log(" ", result.backgroundMusic);
   if (result.revealSound) console.log(" ", result.revealSound);

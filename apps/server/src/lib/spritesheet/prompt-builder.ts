@@ -13,6 +13,8 @@ export interface SpritesheetPromptParams {
   keyframes: { frame: number; description: string }[];
   visualStyle: string;
   backgroundColor: "white" | "black";
+  /** When set, generation uses this image as style reference (moodboard) via multimodal API. */
+  referenceImage?: Buffer;
 }
 
 function getOrientation(width: number, height: number): string {
@@ -101,6 +103,8 @@ export interface ParticleSpritesheetPromptParams {
   subject: string;
   visualStyle: string;
   backgroundColor: "white" | "black";
+  /** When set, generation uses this image as style reference (moodboard) via multimodal API. */
+  referenceImage?: Buffer;
 }
 
 /**

@@ -2,7 +2,10 @@ import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
 import sharp from "sharp";
 import { config } from "../config.js";
-import { generateImage } from "./gemini.js";
+import { generateImage, editImage } from "./gemini.js";
+
+const REFERENCE_IMAGE_PREFIX =
+  "Using the exact visual style and colors of the provided reference moodboard image, generate the following. Output only the requested new image, not an edit of the reference.\n\n";
 
 export type ContainerImageType = "solid" | "gradient" | "pattern";
 
@@ -22,6 +25,8 @@ export type GenerateContainerImageParams = {
   patternScale?: number;
   /** Single style input for LLM (gradient/pattern). Same as Creative Director containerBackground.visualStyle. */
   visualStyle?: string;
+  /** When set, gradient/pattern generation uses this image as style reference (moodboard) via multimodal API. */
+  referenceImage?: Buffer;
 };
 
 const DEFAULT_WIDTH = 400;
@@ -126,7 +131,10 @@ export async function generateContainerImage(
       params.type === "gradient"
         ? buildGradientPrompt(params, width, height)
         : buildPatternPrompt(params, width, height);
-    const buffer = await generateImage(prompt);
+    const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
+    const buffer = params.referenceImage
+      ? await editImage(params.referenceImage, fullPrompt)
+      : await generateImage(prompt);
     return sharp(buffer).resize(width, height).png().toBuffer();
   }
 

@@ -4,7 +4,7 @@ import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { config } from "../config.js";
 import { parseNamedArgs } from "./cli-utils.js";
-import { generateManifest } from "../lib/creative-director/generate-manifest.js";
+import { runFullDirector } from "../lib/creative-director/generate-manifest.js";
 import { orchestrateThemeAssets } from "../lib/creative-director/orchestrate.js";
 import { PIPELINE_CONFIG } from "../lib/creative-director/pipeline-config.js";
 import type { ThemeManifest } from "../lib/creative-director/types.js";
@@ -95,22 +95,23 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  console.log("Creative Director: designing theme...");
-  const manifest = await generateManifest(theme);
+  console.log("Creative Director: designing theme (meta → moodboard → elements)...");
+  const { manifest, moodboard } = await runFullDirector(theme);
 
   await mkdir(output, { recursive: true });
   const manifestPath = join(output, "manifest.json");
   await writeFile(manifestPath, JSON.stringify(manifest, null, 2), "utf-8");
   console.log("Wrote", manifestPath);
 
-  console.log("Generating assets...");
+  console.log("Generating assets (anchored to moodboard)...");
   const result = await orchestrateThemeAssets(
     manifest,
     PIPELINE_CONFIG,
     output,
     (ev) => {
       if (ev.message) console.log(" ", ev.type + ":", ev.message);
-    }
+    },
+    { moodboard }
   );
 
   console.log("Done. Assets:");

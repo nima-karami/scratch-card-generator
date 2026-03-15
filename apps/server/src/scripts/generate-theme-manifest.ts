@@ -4,7 +4,7 @@ import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
 import { dirname, join } from "path";
 import { config } from "../config.js";
 import { parseNamedArgs } from "./cli-utils.js";
-import { generateManifest } from "../lib/creative-director/generate-manifest.js";
+import { runFullDirector } from "../lib/creative-director/generate-manifest.js";
 import type { ThemeManifest } from "../lib/creative-director/types.js";
 
 async function nextThemeManifestDebugId(debugDir: string): Promise<string> {
@@ -82,8 +82,8 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  console.log("Creative Director: designing theme...");
-  const manifest = await generateManifest(theme);
+  console.log("Creative Director: designing theme (meta → moodboard → elements)...");
+  const { manifest } = await runFullDirector(theme);
 
   await mkdir(dirname(output), { recursive: true });
   await writeFile(output, JSON.stringify(manifest, null, 2), "utf-8");

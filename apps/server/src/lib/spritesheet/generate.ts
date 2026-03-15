@@ -33,6 +33,9 @@ import { config } from "../../config.js";
 import { validateAlgorithmically, validateWithLLM, type QAResult } from "./qa.js";
 import { buildDetailedEditInstruction } from "./build-edit-instruction.js";
 
+const REFERENCE_IMAGE_PREFIX =
+  "Using the exact visual style, colors, lighting, and artistic treatment of the provided reference moodboard image, generate the following. Output only the requested new image content, not an edit of the reference.\n\n";
+
 function buildEditInstructionFromQA(reason: string, params: SpritesheetPromptParams): string {
   return `This image is a spritesheet (${params.cols}x${params.rows}) of: ${params.subject} ${params.animationAction}. It failed QA.
 
@@ -90,7 +93,11 @@ export async function generateSpritesheet(
     attempts++;
     if (attempts === 1) {
       console.log(`Generation attempt ${attempts} of ${maxRetries + 1}...`);
-      whiteBg = await generateImage(prompt);
+      if (params.referenceImage) {
+        whiteBg = await editImage(params.referenceImage, REFERENCE_IMAGE_PREFIX + prompt);
+      } else {
+        whiteBg = await generateImage(prompt);
+      }
     } else {
       console.log(`Edit attempt ${attempts} of ${maxRetries + 1} (fixing from QA feedback)...`);
       let instruction: string;
@@ -249,7 +256,10 @@ export async function generateParticleSpritesheet(
     ...params,
     backgroundColor: "white",
   });
-  const whiteBg = await generateImage(prompt);
+  const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
+  const whiteBg = params.referenceImage
+    ? await editImage(params.referenceImage, fullPrompt)
+    : await generateImage(prompt);
   const blackBg = await swapBackground(whiteBg, "white", "black");
   const workDir = await mkdtemp(join(tmpdir(), `particle-sheet-${randomUUID()}-`));
   const whitePath = join(workDir, "white.png");

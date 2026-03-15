@@ -5,7 +5,8 @@ import { z } from "zod";
  * No enabled flags (those live in pipeline-config). Every visual element uses visualStyle.
  */
 
-const metaSchema = z
+/** Schema for Phase 1: high-level art direction only. */
+export const themeManifestMetaSchema = z
   .object({
     themeDescription: z.string().describe("Original user theme input"),
     generatedAt: z.string().describe("Placeholder; overwritten by system with actual generation time"),
@@ -14,6 +15,8 @@ const metaSchema = z
     mood: z.string().describe("e.g. playful, warm, cozy"),
   })
   .describe("Global creative decisions");
+
+const metaSchema = themeManifestMetaSchema;
 
 const gameButtonSpritesheetVariantSchema = z.object({
   id: z.string().describe("Slug e.g. cookie-crumble"),
@@ -61,7 +64,8 @@ const winOverlaySchema = z.object({
   overlayColor: z.string().describe("e.g. rgba(44,24,16,0.7)"),
 });
 
-const elementsSchema = z
+/** Schema for Phase 2: element-specific content (after moodboard is generated). */
+export const themeManifestElementsSchema = z
   .object({
     gameButtonSpritesheets: z
       .array(gameButtonSpritesheetVariantSchema)
@@ -77,6 +81,8 @@ const elementsSchema = z
   })
   .describe("Creative content per element");
 
+const elementsSchema = themeManifestElementsSchema;
+
 export const themeManifestSchema = z.object({
   meta: metaSchema,
   elements: elementsSchema,
@@ -90,8 +96,19 @@ export const THEME_MANIFEST_RESPONSE_SCHEMA = z.toJSONSchema(themeManifestSchema
   io: "input",
 });
 
+/** For Phase 1: meta-only response. */
+export const THEME_MANIFEST_META_RESPONSE_SCHEMA = z.toJSONSchema(themeManifestMetaSchema, {
+  io: "input",
+});
+
+/** For Phase 2: elements-only response (with moodboard context). */
+export const THEME_MANIFEST_ELEMENTS_RESPONSE_SCHEMA = z.toJSONSchema(themeManifestElementsSchema, {
+  io: "input",
+});
+
 export type ThemeManifest = z.infer<typeof themeManifestSchema>;
-export type ThemeManifestMeta = ThemeManifest["meta"];
+export type ThemeManifestMeta = z.infer<typeof themeManifestMetaSchema>;
+export type ThemeManifestElements = z.infer<typeof themeManifestElementsSchema>;
 export type GameButtonSpritesheetVariant = ThemeManifest["elements"]["gameButtonSpritesheets"][number];
 export type ParticleSpritesheetElement = ThemeManifest["elements"]["particleSpritesheet"];
 export type TitleImageElement = ThemeManifest["elements"]["titleImage"];

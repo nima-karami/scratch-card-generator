@@ -4,7 +4,10 @@ import { appendFile, mkdir, readdir, readFile, unlink, writeFile } from "fs/prom
 import { tmpdir } from "os";
 import { join } from "path";
 import { config } from "../config.js";
-import { generateImage } from "./gemini.js";
+import { generateImage, editImage } from "./gemini.js";
+
+const REFERENCE_IMAGE_PREFIX =
+  "Using the exact visual style, colors, and atmosphere of the provided reference moodboard image, generate the following. Output only the requested new image, not an edit of the reference.\n\n";
 
 const VEO_MODEL = "veo-3.1-generate-preview";
 const DEFAULT_POLL_INTERVAL_MS = 15_000;
@@ -35,6 +38,8 @@ export type GenerateThemeBackgroundImageParams = {
   visualStyle: string;
   /** Aspect ratio for the image, e.g. "9:16" (portrait) or "16:9" (landscape). Default: 9:16 for scratch card. */
   aspectRatio?: string;
+  /** When set, generation uses this image as style reference (moodboard) via multimodal API. */
+  referenceImage?: Buffer;
 };
 
 /**
@@ -44,7 +49,7 @@ export type GenerateThemeBackgroundImageParams = {
 export async function generateThemeBackgroundImage(
   params: GenerateThemeBackgroundImageParams
 ): Promise<Buffer> {
-  const { visualStyle, aspectRatio = "9:16" } = params;
+  const { visualStyle, aspectRatio = "9:16", referenceImage } = params;
   const isPortrait = aspectRatio === "9:16";
   const parts = [
     "Generate a single atmospheric background image suitable for a scratch card.",
@@ -53,7 +58,8 @@ export async function generateThemeBackgroundImage(
     `Aspect ratio ${aspectRatio}, ${isPortrait ? "portrait orientation, taller than wide." : "landscape."} Suitable for subtle looping animation.`,
   ];
   const fullPrompt = parts.join(" ");
-  return generateImage(fullPrompt);
+  const prompt = referenceImage ? REFERENCE_IMAGE_PREFIX + fullPrompt : fullPrompt;
+  return referenceImage ? editImage(referenceImage, prompt) : generateImage(prompt);
 }
 
 export type GenerateLoopedVideoBackgroundParams = {
@@ -134,8 +140,8 @@ export async function generateLoopedVideoBackground(
   throw new Error("VEO video has neither videoBytes nor uri");
 }
 
-/** Next sequential 4-digit ID for video-background debug (0001, 0002, …). */
-export async function nextVideoBackgroundDebugId(debugDir: string): Promise<string> {
+/** Next sequential 4-digit ID for background debug (0001, 0002, …). */
+export async function nextBackgroundDebugId(debugDir: string): Promise<string> {
   const prefixMatch = /^(\d{4})-/;
   let maxId = 0;
   try {
@@ -163,34 +169,37 @@ function slugFromParams(
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
-  return slug.slice(0, maxLen) || "video-background";
+  return slug.slice(0, maxLen) || "background";
 }
 
-export type WriteVideoBackgroundDebugParams = {
+export type WriteBackgroundDebugParams = {
   visualStyle?: string;
   animationPrompt: string;
   durationSeconds: number;
 };
 
 /**
- * When config.debug.videoBackground is set, write the video and frame image
- * as NNNN-slug.mp4 and NNNN-slug-frame.png, and append a line to video-background-log.txt.
+ * When config.debug.background is set, write the frame image and optionally the video
+ * as NNNN-slug-frame.png and (if video provided) NNNN-slug.mp4, and append a line to background-log.txt.
  */
-export async function writeVideoBackgroundDebug(
-  videoBuffer: Buffer,
+export async function writeBackgroundDebug(
   frameBuffer: Buffer,
-  params: WriteVideoBackgroundDebugParams
+  params: WriteBackgroundDebugParams,
+  videoBuffer?: Buffer
 ): Promise<void> {
-  const debugDir = config.debug.videoBackground;
+  const debugDir = config.debug.background;
   if (!debugDir) return;
   await mkdir(debugDir, { recursive: true });
-  const debugId = await nextVideoBackgroundDebugId(debugDir);
+  const debugId = await nextBackgroundDebugId(debugDir);
   const slug = slugFromParams(params);
-  const videoFilename = `${debugId}-${slug}.mp4`;
   const frameFilename = `${debugId}-${slug}-frame.png`;
-  await writeFile(join(debugDir, videoFilename), videoBuffer);
   await writeFile(join(debugDir, frameFilename), frameBuffer);
-  const logPath = join(debugDir, "video-background-log.txt");
-  const line = `${new Date().toISOString()}\t${debugId}\tvisualStyle="${params.visualStyle ?? ""}"\tanimationPrompt="${params.animationPrompt}"\tduration=${params.durationSeconds}\tfile=${videoFilename}\tframe=${frameFilename}\n`;
+  let videoFilename: string | undefined;
+  if (videoBuffer) {
+    videoFilename = `${debugId}-${slug}.mp4`;
+    await writeFile(join(debugDir, videoFilename), videoBuffer);
+  }
+  const logPath = join(debugDir, "background-log.txt");
+  const line = `${new Date().toISOString()}\t${debugId}\tvisualStyle="${params.visualStyle ?? ""}"\tanimationPrompt="${params.animationPrompt}"\tduration=${params.durationSeconds}\tframe=${frameFilename}${videoFilename ? `\tfile=${videoFilename}` : "\timage-only"}\n`;
   await appendFile(logPath, line);
 }

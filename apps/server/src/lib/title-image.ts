@@ -2,18 +2,23 @@ import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { config } from "../config.js";
 import { extractAlphaTwoPassFromBuffers } from "./extractAlpha.js";
-import { generateImage } from "./gemini.js";
+import { generateImage, editImage } from "./gemini.js";
 import { swapBackground } from "./spritesheet/swap-background.js";
+
+const REFERENCE_IMAGE_PREFIX =
+  "Using the exact visual style, colors, and treatment of the provided reference moodboard image, generate the following. Output only the requested new image, not an edit of the reference.\n\n";
 
 export type GenerateTitleImageParams = {
   text: string;
   visualStyle: string;
+  /** When set, generation uses this image as style reference (moodboard) via multimodal API. */
+  referenceImage?: Buffer;
 };
 
 function buildPrompt(params: GenerateTitleImageParams): string {
   const { text, visualStyle } = params;
   const parts = [
-    `Generate a single image that displays the following title text prominently and clearly: «${text}».`,
+    `Generate a single image that displays the following title text prominently and clearly: "${text}". The text should not contain any other text or elements.`,
     visualStyle.trim(),
     "The image must be on a pure solid white #FFFFFF background with no other background elements.",
   ];
@@ -27,7 +32,10 @@ function buildPrompt(params: GenerateTitleImageParams): string {
  */
 export async function generateTitleImage(params: GenerateTitleImageParams): Promise<Buffer> {
   const prompt = buildPrompt(params);
-  const whiteBuffer = await generateImage(prompt);
+  const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
+  const whiteBuffer = params.referenceImage
+    ? await editImage(params.referenceImage, fullPrompt)
+    : await generateImage(prompt);
   const blackBuffer = await swapBackground(whiteBuffer, "white", "black");
   return extractAlphaTwoPassFromBuffers(whiteBuffer, blackBuffer);
 }

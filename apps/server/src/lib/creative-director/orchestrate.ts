@@ -8,10 +8,7 @@ import type { SpritesheetPromptParams } from "../spritesheet/prompt-builder.js";
 import { generateParticleSpritesheet } from "../spritesheet/generate.js";
 import { generateTitleImage } from "../title-image.js";
 import { generateContainerImage } from "../container-image.js";
-import {
-  generateThemeBackgroundImage,
-  generateLoopedVideoBackground,
-} from "../veo.js";
+import { generateBackground } from "../background.js";
 import { generateSoundEffect } from "../elevenlabs.js";
 import { generateGlyphSheet } from "../glyph-sheet/generate.js";
 
@@ -27,6 +24,7 @@ export interface ThemeAssetResult {
   particleSpritesheet?: string;
   titleImage?: string;
   containerBackground?: string;
+  backgroundImage?: string;
   videoBackground?: string;
   backgroundMusic?: string;
   revealSound?: string;
@@ -61,15 +59,23 @@ function slug(s: string): string {
     .slice(0, 40);
 }
 
+export interface OrchestrateOptions {
+  /** When set, saved to outputDir as moodboard.png and passed to all visual asset generators as style reference. */
+  moodboard?: Buffer;
+}
+
 /**
- * Merges manifest (creative) with config (technical), runs all enabled generators,
- * writes assets to outputDir, and returns paths. Emits progress via onProgress.
+ * Merges manifest (creative) with config (technical), runs all enabled generators
+ * in parallel, writes assets to outputDir, and returns paths. Emits progress via onProgress.
+ * Video background runs image-then-video sequentially within its own task.
+ * When options.moodboard is provided, it is written to outputDir and used as style reference for all visual generators.
  */
 export async function orchestrateThemeAssets(
   manifest: ThemeManifest,
   pipelineConfig: PipelineConfig,
   outputDir: string,
-  onProgress?: (event: ProgressEvent) => void
+  onProgress?: (event: ProgressEvent) => void,
+  options?: OrchestrateOptions
 ): Promise<ThemeAssetResult> {
   await mkdir(outputDir, { recursive: true });
 
@@ -79,161 +85,198 @@ export async function orchestrateThemeAssets(
 
   const { elements } = manifest;
   const { enabled } = pipelineConfig;
+  const moodboard = options?.moodboard;
 
-  // ---- Game button spritesheets ----
+  if (moodboard) {
+    const moodboardPath = join(outputDir, "moodboard.png");
+    await writeFile(moodboardPath, moodboard);
+  }
+
+  const tasks: Promise<void>[] = [];
+
+  // ---- Game button spritesheets (one task per variant) ----
   if (enabled.gameButtonSpritesheets && elements.gameButtonSpritesheets.length > 0) {
     const total = elements.gameButtonSpritesheets.length;
+    result.gameButtonSpritesheets = new Array(total);
     const { canvasWidth, canvasHeight, cols, rows } = pipelineConfig.spritesheet;
-    for (let i = 0; i < elements.gameButtonSpritesheets.length; i++) {
-      const variant = elements.gameButtonSpritesheets[i]!;
-      onProgress?.({
-        type: "generating-spritesheet",
-        message: `Spritesheet ${variant.id}`,
-        index: i + 1,
-        total,
-      });
-      const totalFrames = cols * rows;
-      const keyframes = defaultKeyframes(totalFrames, variant.subject, variant.action);
-      const params: SpritesheetPromptParams = {
-        canvasWidth,
-        canvasHeight,
-        cols,
-        rows,
-        subject: variant.subject,
-        animationAction: variant.action,
-        keyframes,
-        visualStyle: variant.visualStyle,
-        backgroundColor: "white",
-      };
-      const { transparent } = await generateSpritesheet(params);
-      const filename = `spritesheet-${slug(variant.id)}.png`;
-      const path = join(outputDir, filename);
-      await writeFile(path, transparent);
-      result.gameButtonSpritesheets.push(path);
-    }
+    elements.gameButtonSpritesheets.forEach((variant, i) => {
+      tasks.push(
+        (async () => {
+          onProgress?.({
+            type: "generating-spritesheet",
+            message: `Spritesheet ${variant.id}`,
+            index: i + 1,
+            total,
+          });
+          const totalFrames = cols * rows;
+          const keyframes = defaultKeyframes(totalFrames, variant.subject, variant.action);
+          const params: SpritesheetPromptParams = {
+            canvasWidth,
+            canvasHeight,
+            cols,
+            rows,
+            subject: variant.subject,
+            animationAction: variant.action,
+            keyframes,
+            visualStyle: variant.visualStyle,
+            backgroundColor: "white",
+            ...(moodboard && { referenceImage: moodboard }),
+          };
+          const { transparent } = await generateSpritesheet(params);
+          const filename = `spritesheet-${slug(variant.id)}.png`;
+          const path = join(outputDir, filename);
+          await writeFile(path, transparent);
+          result.gameButtonSpritesheets[i] = path;
+        })()
+      );
+    });
   }
 
   // ---- Particle spritesheet ----
   if (enabled.particleSpritesheet) {
-    onProgress?.({ type: "generating-particles", message: "Particle spritesheet" });
-    const { canvasWidth, canvasHeight, cols, rows } = pipelineConfig.particles;
-    const { transparent } = await generateParticleSpritesheet({
-      canvasWidth,
-      canvasHeight,
-      cols,
-      rows,
-      subject: elements.particleSpritesheet.subject,
-      visualStyle: elements.particleSpritesheet.visualStyle,
-      backgroundColor: "white",
-    });
-    const path = join(outputDir, "particles.png");
-    await writeFile(path, transparent);
-    result.particleSpritesheet = path;
+    tasks.push(
+      (async () => {
+        onProgress?.({ type: "generating-particles", message: "Particle spritesheet" });
+        const { canvasWidth, canvasHeight, cols, rows } = pipelineConfig.particles;
+        const { transparent } = await generateParticleSpritesheet({
+          canvasWidth,
+          canvasHeight,
+          cols,
+          rows,
+          subject: elements.particleSpritesheet.subject,
+          visualStyle: elements.particleSpritesheet.visualStyle,
+          backgroundColor: "white",
+          ...(moodboard && { referenceImage: moodboard }),
+        });
+        const path = join(outputDir, "particles.png");
+        await writeFile(path, transparent);
+        result.particleSpritesheet = path;
+      })()
+    );
   }
 
   // ---- Title image ----
   if (enabled.titleImage) {
-    onProgress?.({ type: "generating-title", message: "Title image" });
-    const buffer = await generateTitleImage({
-      text: elements.titleImage.text,
-      visualStyle: elements.titleImage.visualStyle,
-    });
-    const path = join(outputDir, "title.png");
-    await writeFile(path, buffer);
-    result.titleImage = path;
+    tasks.push(
+      (async () => {
+        onProgress?.({ type: "generating-title", message: "Title image" });
+        const buffer = await generateTitleImage({
+          text: elements.titleImage.text,
+          visualStyle: elements.titleImage.visualStyle,
+          ...(moodboard && { referenceImage: moodboard }),
+        });
+        const path = join(outputDir, "title.png");
+        await writeFile(path, buffer);
+        result.titleImage = path;
+      })()
+    );
   }
 
   // ---- Container background ----
   if (enabled.containerBackground) {
-    onProgress?.({ type: "generating-container", message: "Container background" });
-    const buffer = await generateContainerImage({
-      type: elements.containerBackground.type,
-      width: pipelineConfig.container.width,
-      height: pipelineConfig.container.height,
-      color: elements.containerBackground.color,
-      colorEnd: elements.containerBackground.colorEnd,
-      pattern: elements.containerBackground.pattern,
-      visualStyle: elements.containerBackground.visualStyle,
-    });
-    const path = join(outputDir, "container-bg.png");
-    await writeFile(path, buffer);
-    result.containerBackground = path;
+    tasks.push(
+      (async () => {
+        onProgress?.({ type: "generating-container", message: "Container background" });
+        const buffer = await generateContainerImage({
+          type: elements.containerBackground.type,
+          width: pipelineConfig.container.width,
+          height: pipelineConfig.container.height,
+          color: elements.containerBackground.color,
+          colorEnd: elements.containerBackground.colorEnd,
+          pattern: elements.containerBackground.pattern,
+          visualStyle: elements.containerBackground.visualStyle,
+          ...(moodboard && { referenceImage: moodboard }),
+        });
+        const path = join(outputDir, "container-bg.png");
+        await writeFile(path, buffer);
+        result.containerBackground = path;
+      })()
+    );
   }
 
   // ---- Glyph sheet ----
   if (enabled.glyphSheet) {
-    onProgress?.({ type: "generating-glyph-sheet", message: "Glyph sheet" });
     const inputPath = resolve(process.cwd(), pipelineConfig.glyphSheet.inputPath);
     if (!existsSync(inputPath)) {
       throw new Error(
         `Glyph sheet base image not found at ${inputPath}. Set pipelineConfig.glyphSheet.inputPath to a valid path.`
       );
     }
-    const baseImageBuffer = await readFile(inputPath);
-    const { transparent } = await generateGlyphSheet({
-      baseImageBuffer,
-      visualStyle: elements.glyphSheet.visualStyle,
-      cols: pipelineConfig.glyphSheet.cols,
-      rows: pipelineConfig.glyphSheet.rows,
-    });
-    const path = join(outputDir, "glyph-sheet.png");
-    await writeFile(path, transparent);
-    result.glyphSheet = path;
+    tasks.push(
+      (async () => {
+        onProgress?.({ type: "generating-glyph-sheet", message: "Glyph sheet" });
+        const baseImageBuffer = await readFile(inputPath);
+        const { transparent } = await generateGlyphSheet({
+          baseImageBuffer,
+          visualStyle: elements.glyphSheet.visualStyle,
+          cols: pipelineConfig.glyphSheet.cols,
+          rows: pipelineConfig.glyphSheet.rows,
+        });
+        const path = join(outputDir, "glyph-sheet.png");
+        await writeFile(path, transparent);
+        result.glyphSheet = path;
+      })()
+    );
   }
 
-  // ---- Sound effects (parallel) ----
-  if (enabled.backgroundMusic || enabled.revealSound) {
-    const tasks: Promise<void>[] = [];
-    if (enabled.backgroundMusic) {
-      onProgress?.({ type: "generating-bgm", message: "Background music" });
-      tasks.push(
-        (async () => {
-          const buffer = await generateSoundEffect({
-            prompt: elements.backgroundMusic.prompt,
-            durationSeconds: pipelineConfig.backgroundMusic.durationSeconds,
-            loop: pipelineConfig.backgroundMusic.loop,
-          });
-          const path = join(outputDir, "bgm.mp3");
-          await writeFile(path, buffer);
-          result.backgroundMusic = path;
-        })()
-      );
-    }
-    if (enabled.revealSound) {
-      onProgress?.({ type: "generating-reveal-sound", message: "Reveal sound" });
-      tasks.push(
-        (async () => {
-          const buffer = await generateSoundEffect({
-            prompt: elements.revealSound.prompt,
-            durationSeconds: pipelineConfig.revealSound.durationSeconds,
-          });
-          const path = join(outputDir, "reveal-sfx.mp3");
-          await writeFile(path, buffer);
-          result.revealSound = path;
-        })()
-      );
-    }
-    await Promise.all(tasks);
+  // ---- Sound effects ----
+  if (enabled.backgroundMusic) {
+    tasks.push(
+      (async () => {
+        onProgress?.({ type: "generating-bgm", message: "Background music" });
+        const buffer = await generateSoundEffect({
+          prompt: elements.backgroundMusic.prompt,
+          durationSeconds: pipelineConfig.backgroundMusic.durationSeconds,
+          loop: pipelineConfig.backgroundMusic.loop,
+        });
+        const path = join(outputDir, "bgm.mp3");
+        await writeFile(path, buffer);
+        result.backgroundMusic = path;
+      })()
+    );
+  }
+  if (enabled.revealSound) {
+    tasks.push(
+      (async () => {
+        onProgress?.({ type: "generating-reveal-sound", message: "Reveal sound" });
+        const buffer = await generateSoundEffect({
+          prompt: elements.revealSound.prompt,
+          durationSeconds: pipelineConfig.revealSound.durationSeconds,
+        });
+        const path = join(outputDir, "reveal-sfx.mp3");
+        await writeFile(path, buffer);
+        result.revealSound = path;
+      })()
+    );
   }
 
-  // ---- Video background (image then video) ----
-  if (enabled.videoBackground) {
-    onProgress?.({ type: "generating-video-image", message: "Video background image" });
-    const frameBuffer = await generateThemeBackgroundImage({
-      visualStyle: elements.videoBackground.visualStyle,
-      aspectRatio: pipelineConfig.video.aspectRatio,
-    });
-    onProgress?.({ type: "generating-video", message: "Video background loop" });
-    const videoBuffer = await generateLoopedVideoBackground({
-      animationPrompt: elements.videoBackground.animationPrompt,
-      firstAndLastFrameImage: frameBuffer,
-      durationSeconds: pipelineConfig.video.durationSeconds,
-      aspectRatio: pipelineConfig.video.aspectRatio,
-    });
-    const path = join(outputDir, "video-background.mp4");
-    await writeFile(path, videoBuffer);
-    result.videoBackground = path;
+  // ---- Background (image always; video attempted with fallback) ----
+  if (enabled.background) {
+    tasks.push(
+      (async () => {
+        onProgress?.({ type: "generating-background-image", message: "Background image" });
+        const { image, video } = await generateBackground({
+          visualStyle: elements.videoBackground.visualStyle,
+          animationPrompt: elements.videoBackground.animationPrompt,
+          mode: pipelineConfig.background.mode,
+          durationSeconds: pipelineConfig.background.durationSeconds,
+          aspectRatio: pipelineConfig.background.aspectRatio,
+          ...(moodboard && { referenceImage: moodboard }),
+        });
+        const imagePath = join(outputDir, "background.png");
+        await writeFile(imagePath, image);
+        result.backgroundImage = imagePath;
+        if (video) {
+          onProgress?.({ type: "generating-video", message: "Video background loop" });
+          const videoPath = join(outputDir, "video-background.mp4");
+          await writeFile(videoPath, video);
+          result.videoBackground = videoPath;
+        }
+      })()
+    );
   }
+
+  await Promise.all(tasks);
 
   // ---- Win overlay (config only) ----
   if (enabled.winOverlay) {
