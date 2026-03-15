@@ -58,6 +58,27 @@ npm run generate-spritesheet -- --subject "Dinosaur" --action "walking" --cols 4
 
 ---
 
+### Generate Particle Spritesheet
+
+Generate a **particle spritesheet** (grid of static variants) for confetti/particles in the win overlay (requires `GEMINI_API_KEY`). Each cell is a different static variant of the subject (e.g. many small cookie crumbs), not an animation timeline.
+
+```bash
+npm run generate-particle-spritesheet -- --subject "small chocolate chip cookie crumb" --cols 4 --rows 2 --width 512 --height 256 --output ./particles-cookie.png
+```
+
+| Option           | Description                                                                                          |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `--subject`      | Subject for each cell (e.g. "small cookie crumb", "coin")                                           |
+| `--cols`         | Number of columns                                                                                    |
+| `--rows`         | Number of rows                                                                                       |
+| `--width`        | Canvas width in pixels                                                                               |
+| `--height`       | Canvas height in pixels                                                                              |
+| `--output`       | Output path for transparent PNG                                                                      |
+| `--visual-style` | Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Optional |
+
+
+---
+
 ### Generate Kling Video
 
 Generate video from text and/or images using Kling 3.0 (requires `KLING_API_KEY`).
@@ -259,7 +280,7 @@ npm run generate-glyph-sheet -- --input ./base-font.png --theme "dinosaur theme"
 
 | Variable                            | Scripts                                                                                                            | Description                                                                           |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `GEMINI_API_KEY`                    | generate-spritesheet, generate-title-image, generate-video-background, generate-container-image (gradient/pattern), generate-glyph-sheet | Gemini API for image and VEO video generation                                         |
+| `GEMINI_API_KEY`                    | generate-spritesheet, generate-particle-spritesheet, generate-title-image, generate-video-background, generate-container-image (gradient/pattern), generate-glyph-sheet | Gemini API for image and VEO video generation                                         |
 | `KLING_API_KEY`                     | generate-kling-video                                                                                               | Kling 3.0 video generation                                                            |
 | `ELEVENLABS_API_KEY`                | generate-sound-effect                                                                                              | Eleven Labs sound effects                                                             |
 | `SPRITESHEET_QA_DEBUG_OUTPUT_DIR`   | generate-spritesheet                                                                                               | Optional: debug output for QA attempts                                                |

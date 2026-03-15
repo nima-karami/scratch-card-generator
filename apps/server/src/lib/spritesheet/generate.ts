@@ -24,8 +24,11 @@ async function nextSequentialDebugId(debugDir: string): Promise<string> {
 import { extractAlphaTwoPass } from "../extractAlpha.js";
 import { generateImage, editImage } from "../gemini.js";
 import { swapBackground } from "./swap-background.js";
-import { buildSpritesheetPrompt } from "./prompt-builder.js";
-import type { SpritesheetPromptParams } from "./prompt-builder.js";
+import { buildSpritesheetPrompt, buildParticleSpritesheetPrompt } from "./prompt-builder.js";
+import type {
+  SpritesheetPromptParams,
+  ParticleSpritesheetPromptParams,
+} from "./prompt-builder.js";
 import { config } from "../../config.js";
 import { validateAlgorithmically, validateWithLLM, type QAResult } from "./qa.js";
 import { buildDetailedEditInstruction } from "./build-edit-instruction.js";
@@ -229,6 +232,34 @@ export async function generateSpritesheet(
       );
     }
 
+    return { whiteBg, blackBg, transparent };
+  } finally {
+    await rm(workDir, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Generates a particle spritesheet (grid of N static variants for confetti/particles).
+ * Same pipeline as animation spritesheet but with a different prompt and no QA loop.
+ */
+export async function generateParticleSpritesheet(
+  params: ParticleSpritesheetPromptParams
+): Promise<GenerateSpritesheetResult> {
+  const prompt = buildParticleSpritesheetPrompt({
+    ...params,
+    backgroundColor: "white",
+  });
+  const whiteBg = await generateImage(prompt);
+  const blackBg = await swapBackground(whiteBg, "white", "black");
+  const workDir = await mkdtemp(join(tmpdir(), `particle-sheet-${randomUUID()}-`));
+  const whitePath = join(workDir, "white.png");
+  const blackPath = join(workDir, "black.png");
+  const outputPath = join(workDir, "transparent.png");
+  try {
+    await writeFile(whitePath, whiteBg);
+    await writeFile(blackPath, blackBg);
+    await extractAlphaTwoPass(whitePath, blackPath, outputPath);
+    const transparent = await readFile(outputPath);
     return { whiteBg, blackBg, transparent };
   } finally {
     await rm(workDir, { recursive: true, force: true });

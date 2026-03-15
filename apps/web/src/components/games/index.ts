@@ -24,3 +24,5 @@ export { SpriteSheetRenderer } from "./sprite-sheet-renderer";
 export type { SpriteSheetRendererProps } from "./sprite-sheet-renderer";
 export { WinAnimation } from "./win-animation";
 export type { WinAnimationProps } from "./win-animation";
+export { WinParticles } from "./win-particles";
+export type { WinParticlesProps } from "./win-particles";

@@ -12,6 +12,12 @@
   },
   "dependencies": {
     "@repo/shared": "*",
+    "@tsparticles/engine": "^3.9.1",
+    "@tsparticles/plugin-emitters": "^3.9.1",
+    "@tsparticles/plugin-emitters-shape-square": "^3.9.1",
+    "@tsparticles/react": "^3.0.0",
+    "@tsparticles/shape-image": "^3.9.1",
+    "@tsparticles/slim": "^3.9.1",
     "clsx": "^2.1.1",
     "motion": "^12.34.3",
     "react": "^19.0.0",

@@ -90,3 +90,69 @@ export function buildSpritesheetPrompt(params: SpritesheetPromptParams): string 
 
   return sections.join("\n\n");
 }
+
+/** Parameters for particle spritesheet: grid of N static variants (no animation timeline). */
+export interface ParticleSpritesheetPromptParams {
+  canvasWidth: number;
+  canvasHeight: number;
+  cols: number;
+  rows: number;
+  /** Subject for each cell (e.g. "small cookie crumb", "coin"). */
+  subject: string;
+  visualStyle: string;
+  backgroundColor: "white" | "black";
+}
+
+/**
+ * Builds a prompt for a spritesheet where each cell is a different static variant of the subject
+ * (for use as confetti/particle sprites). No animation; cells are independent.
+ */
+export function buildParticleSpritesheetPrompt(
+  params: ParticleSpritesheetPromptParams
+): string {
+  const {
+    canvasWidth,
+    canvasHeight,
+    cols,
+    rows,
+    subject,
+    visualStyle,
+    backgroundColor,
+  } = params;
+
+  const totalCells = cols * rows;
+  const cellWidth = Math.round(canvasWidth / cols);
+  const cellHeight = Math.round(canvasHeight / rows);
+  const orientation =
+    canvasWidth > canvasHeight ? "landscape" : canvasHeight > canvasWidth ? "portrait" : "square";
+  const bgHex = backgroundColor === "white" ? "#FFFFFF" : "#000000";
+  const bgName = backgroundColor === "white" ? "white" : "black";
+
+  const sections: string[] = [];
+
+  sections.push(
+    `Generate a single image that is a grid on a pure solid ${bgName} ${bgHex} background. The image must be exactly ${canvasWidth}x${canvasHeight} pixels (${canvasWidth} wide × ${canvasHeight} tall). This is a ${orientation} rectangle. The grid has exactly ${totalCells} cells in ${cols} columns and ${rows} rows. Each cell is exactly ${cellWidth}x${cellHeight} pixels. No extra rows or columns.`
+  );
+
+  sections.push(
+    `There must be NO grid lines, NO borders, NO dividers between cells. Cells sit directly adjacent on the shared ${bgName} background.`
+  );
+
+  sections.push(
+    `CONTENT: Each cell contains a DIFFERENT static variant of: ${subject}. Reading order is left-to-right, top-to-bottom (cell 1 = top-left, cell ${totalCells} = bottom-right). Each cell must show a distinct variant — different shape, size, or orientation — so there is visible variety across the grid. Same subject and same visual style in every cell; no animation, no sequence. Every cell must contain clear visible content.`
+  );
+
+  sections.push(`VISUAL STYLE:\n${visualStyle}`);
+
+  sections.push(`CRITICAL CONSTRAINTS:
+- Exact canvas: ${canvasWidth}px × ${canvasHeight}px
+- Exact cell size: ${cellWidth}x${cellHeight}px
+- Grid: ${cols} columns × ${rows} rows = ${totalCells} cells
+- Each cell: one static variant of ${subject}, centered in its cell
+- Pure solid ${bgName} ${bgHex} background
+- NO grid lines, NO borders, NO separators
+- Consistent art style across all cells
+- No text, labels, or annotations
+- Variety: no two cells should look identical`);
+  return sections.join("\n\n");
+}

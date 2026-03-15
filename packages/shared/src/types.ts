@@ -120,6 +120,17 @@ export interface ScratchCardVariant {
   games: ScratchCardGame[];
 }
 
+/** Theme for the win overlay: overlay color and optional particle spritesheet for confetti */
+export interface WinOverlayTheme {
+  /** Optional overlay color (e.g. "rgba(0,0,0,0.5)" or theme key). */
+  overlayColor?: string;
+  /** URL of spritesheet image for confetti particles (grid of N variants). */
+  particleSpriteSheetUrl?: string;
+  /** Spritesheet grid: cols x rows = number of particle variants. */
+  particleSpriteSheetCols?: number;
+  particleSpriteSheetRows?: number;
+}
+
 /** Final composed card data for the scratch-card layout */
 export interface CardData {
   title: string;
@@ -131,6 +142,8 @@ export interface CardData {
   titleImageUrl?: string;
   /** Optional video URL for the card background (when set, used as looped background; otherwise default asset) */
   backgroundVideoUrl?: string;
+  /** Optional theme for the win overlay (overlay color, particle spritesheet). */
+  winOverlayTheme?: WinOverlayTheme;
 }
 
 /** Job status for internal/SSE use */

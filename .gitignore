@@ -16,6 +16,8 @@ dist/
 *.swp
 .vscode/
 .idea/
+.VSCodeCounter/
+.cursor/
 
 # Debug
 npm-debug.log*
