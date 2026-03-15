@@ -54,6 +54,13 @@ export const useGameStore = create<GameState>((set) => ({
   applySSEEvent: (e) =>
     set((state) => {
       switch (e.type) {
+        case "designing":
+          return {
+            progress: {
+              ...state.progress,
+              stage: e.message ?? "Designing your theme...",
+            },
+          };
         case "text-ready":
           return {
             progress: {
@@ -64,10 +71,19 @@ export const useGameStore = create<GameState>((set) => ({
             },
           };
         case "image-progress":
+        case "generating-spritesheet":
+        case "generating-particles":
+        case "generating-title":
+        case "generating-container":
+        case "generating-glyph-sheet":
+        case "generating-bgm":
+        case "generating-reveal-sound":
+        case "generating-video-image":
+        case "generating-video":
           return {
             progress: {
               ...state.progress,
-              stage: e.message ?? `Image ${e.index + 1} of ${e.total}...`,
+              stage: e.message ?? "Generating assets...",
             },
           };
         case "image-ready":

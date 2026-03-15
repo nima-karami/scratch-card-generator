@@ -47,5 +47,8 @@ export const config = {
     containerImage: process.env.CONTAINER_IMAGE_DEBUG_OUTPUT_DIR || null,
     spritesheetQa: process.env.SPRITESHEET_QA_DEBUG_OUTPUT_DIR || null,
     glyphSheet: process.env.GLYPH_SHEET_DEBUG_OUTPUT_DIR || null,
+    theme: process.env.THEME_DEBUG_OUTPUT_DIR || null,
+    themeManifest: process.env.THEME_MANIFEST_DEBUG_OUTPUT_DIR || null,
+    themeAssets: process.env.THEME_ASSETS_DEBUG_OUTPUT_DIR || null,
   },
 };

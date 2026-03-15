@@ -275,12 +275,48 @@ npm run generate-glyph-sheet -- --input ./base-font.png --theme "dinosaur theme"
 
 ---
 
+### Creative Director (theme pipeline)
+
+The Creative Director is an LLM that turns a theme description into a structured manifest, then the orchestrator generates all enabled assets. Technical params (canvas sizes, grid dimensions, enabled/disabled toggles) live in pipeline config; the LLM only decides verbal/creative content (subjects, actions, visualStyle, sounds, etc.).
+
+**Full pipeline (manifest + all assets):**
+
+```bash
+npm run generate-theme -- --theme "cookies" --output ./output/cookies
+```
+
+When `THEME_DEBUG_OUTPUT_DIR` is set, a copy of the manifest and a log line are written there (e.g. `0001-cookies-manifest.json`, `theme-log.txt`).
+
+**Manifest only (for review and edit before generating assets):**
+
+```bash
+npm run generate-theme-manifest -- --theme "cookies" --output ./output/cookies/manifest.json
+```
+
+When `THEME_MANIFEST_DEBUG_OUTPUT_DIR` is set, a copy of the manifest and a log line are written there (e.g. `0001-cookies-manifest.json`, `theme-manifest-log.txt`).
+
+**Assets from existing manifest:**
+
+```bash
+npm run generate-theme-assets -- --manifest ./output/cookies/manifest.json --output ./output/cookies
+```
+
+When `THEME_ASSETS_DEBUG_OUTPUT_DIR` is set, a log line is appended to `theme-assets-log.txt` (timestamp, manifest path, output dir, list of generated files).
+
+| Option      | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| `--theme`   | Theme description (e.g. "cookies", "retro space arcade") |
+| `--output`  | Output directory (generate-theme, generate-theme-assets) or path to manifest.json (generate-theme-manifest) |
+| `--manifest` | Path to manifest.json (generate-theme-assets only)       |
+
+---
+
 ## Environment Variables
 
 
 | Variable                            | Scripts                                                                                                            | Description                                                                           |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `GEMINI_API_KEY`                    | generate-spritesheet, generate-particle-spritesheet, generate-title-image, generate-video-background, generate-container-image (gradient/pattern), generate-glyph-sheet | Gemini API for image and VEO video generation                                         |
+| `GEMINI_API_KEY`                    | generate-spritesheet, generate-particle-spritesheet, generate-title-image, generate-video-background, generate-container-image (gradient/pattern), generate-glyph-sheet, generate-theme, generate-theme-manifest | Gemini API for image, VEO video, and Creative Director (manifest)                     |
 | `KLING_API_KEY`                     | generate-kling-video                                                                                               | Kling 3.0 video generation                                                            |
 | `ELEVENLABS_API_KEY`                | generate-sound-effect                                                                                              | Eleven Labs sound effects                                                             |
 | `SPRITESHEET_QA_DEBUG_OUTPUT_DIR`   | generate-spritesheet                                                                                               | Optional: debug output for QA attempts                                                |
@@ -289,6 +325,9 @@ npm run generate-glyph-sheet -- --input ./base-font.png --theme "dinosaur theme"
 | `VIDEO_BACKGROUND_DEBUG_OUTPUT_DIR` | generate-video-background                                                                                          | Optional: debug output (0001-slug.mp4, 0001-slug-frame.png, video-background-log.txt) |
 | `CONTAINER_IMAGE_DEBUG_OUTPUT_DIR`  | generate-container-image, POST /api/container-image                                                                | Optional: debug output (0001-slug.png, …) and container-image-log.txt                 |
 | `GLYPH_SHEET_DEBUG_OUTPUT_DIR`     | generate-glyph-sheet                                                                                                 | Optional: intermediate white/black and final transparent PNGs and glyph-sheet-log.txt |
+| `THEME_DEBUG_OUTPUT_DIR`           | generate-theme                                                                                                        | Optional: copy of manifest (NNNN-slug-manifest.json) and theme-log.txt               |
+| `THEME_MANIFEST_DEBUG_OUTPUT_DIR`  | generate-theme-manifest                                                                                               | Optional: copy of manifest (NNNN-slug-manifest.json) and theme-manifest-log.txt        |
+| `THEME_ASSETS_DEBUG_OUTPUT_DIR`    | generate-theme-assets                                                                                                 | Optional: theme-assets-log.txt (timestamp, manifest path, output dir, asset list)     |
 
 
 ### Debug output folders
@@ -301,5 +340,8 @@ When the optional `*_DEBUG_OUTPUT_DIR` variables are set (e.g. in `.env`), gener
 - `./debug/container-image/` — `0001-slug.png`, … and `container-image-log.txt`
 - `./debug/spritesheet/` — QA attempt images and `qa-log.txt`
 - `./debug/glyph-sheet/` — stylized white, black, transparent PNGs and `glyph-sheet-log.txt`
+- `./debug/theme/` — Creative Director full run: `NNNN-slug-manifest.json`, `theme-log.txt`
+- `./debug/theme-manifest/` — Manifest-only run: `NNNN-slug-manifest.json`, `theme-manifest-log.txt`
+- `./debug/theme-assets/` — Assets-from-manifest run: `theme-assets-log.txt`
 
 Create the `./debug` directory (or any custom path) as needed; scripts create the target subdirectory recursively.

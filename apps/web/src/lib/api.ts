@@ -20,9 +20,19 @@ export async function submitPrompt(prompt: string): Promise<GenerateResult> {
 }
 
 export type SSEEvent =
+  | { type: "designing"; message?: string }
   | { type: "text-ready"; title: string; tagline: string }
   | { type: "image-progress"; index: number; total: number; message?: string }
   | { type: "image-ready"; index: number; url: string; id: string }
+  | { type: "generating-spritesheet"; message?: string; index?: number; total?: number }
+  | { type: "generating-particles"; message?: string }
+  | { type: "generating-title"; message?: string }
+  | { type: "generating-container"; message?: string }
+  | { type: "generating-glyph-sheet"; message?: string }
+  | { type: "generating-bgm"; message?: string }
+  | { type: "generating-reveal-sound"; message?: string }
+  | { type: "generating-video-image"; message?: string }
+  | { type: "generating-video"; message?: string }
   | { type: "composing"; message?: string }
   | { type: "complete"; jobId: string }
   | { type: "error"; message: string; code?: string };
@@ -47,7 +57,24 @@ export function subscribeToStatus(
     }
   };
 
-  for (const name of ["text-ready", "image-progress", "image-ready", "composing", "complete"]) {
+  const eventNames = [
+    "designing",
+    "text-ready",
+    "image-progress",
+    "image-ready",
+    "generating-spritesheet",
+    "generating-particles",
+    "generating-title",
+    "generating-container",
+    "generating-glyph-sheet",
+    "generating-bgm",
+    "generating-reveal-sound",
+    "generating-video-image",
+    "generating-video",
+    "composing",
+    "complete",
+  ];
+  for (const name of eventNames) {
     es.addEventListener(name, handleData);
   }
   es.addEventListener("error", () => {
