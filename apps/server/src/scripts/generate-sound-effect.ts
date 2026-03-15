@@ -42,7 +42,7 @@ async function main(): Promise<void> {
   try {
     console.log("Generating sound effect...");
     const buffer = await generateSoundEffect({
-      text: prompt,
+      prompt,
       durationSeconds,
       loop: loopFlag,
       outputFormat: "mp3_44100_128",

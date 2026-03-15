@@ -20,10 +20,8 @@ export type GenerateContainerImageParams = {
   pattern?: "dots" | "lines" | "grid";
   /** Pattern tile size in px (legacy; used as style hint for procedural solid only). Default 24 */
   patternScale?: number;
-  /** Optional theme for LLM (e.g. luxury, minimal). Used for gradient and pattern. */
-  theme?: string;
-  /** Optional extra prompt for LLM. Used for gradient and pattern. */
-  prompt?: string;
+  /** Single style input for LLM (gradient/pattern). Same as Creative Director containerBackground.visualStyle. */
+  visualStyle?: string;
 };
 
 const DEFAULT_WIDTH = 400;
@@ -60,14 +58,13 @@ function buildGradientPrompt(
 ): string {
   const color = params.color ?? DEFAULT_COLOR;
   const colorEnd = params.colorEnd ?? DEFAULT_COLOR_END;
-  const theme = params.theme ?? "elegant";
+  const visualStyle = params.visualStyle?.trim() ?? "elegant, subtle gradient";
   const parts = [
     "Generate a single image that is only a subtle, high-quality gradient background for a game card container.",
     `Colors: from ${color} to ${colorEnd}. Soft, smooth transition.`,
-    "No text, no objects, no logos. Elegant and premium feel. The image must fill the entire frame with only the gradient.",
-    `Rectangular, suitable for ${width}x${height}. Style: ${theme}.`,
+    "No text, no objects, no logos. The image must fill the entire frame with only the gradient.",
+    `Rectangular, suitable for ${width}x${height}. ${visualStyle}.`,
   ];
-  if (params.prompt) parts.push(params.prompt.trim());
   return parts.join(" ");
 }
 
@@ -88,15 +85,14 @@ function buildPatternPrompt(
 ): string {
   const color = colorDescription(params.color);
   const style = patternStyleHint(params.pattern);
-  const theme = params.theme ?? "elegant";
+  const visualStyle = params.visualStyle?.trim() ?? "elegant, subtle and sophisticated";
   const parts = [
     "Generate a single image that is only a subtle, sophisticated repeating pattern or texture background for a game card container.",
-    `Style: ${style}. High quality, low contrast.`,
+    `Pattern: ${style}. High quality, low contrast.`,
     "The image should work as a background.",
     color,
-    `Rectangular, suitable for ${width}x${height}. Overall mood: ${theme}.`,
+    `Rectangular, suitable for ${width}x${height}. ${visualStyle}.`,
   ].filter(Boolean);
-  if (params.prompt) parts.push(params.prompt.trim());
   return parts.join(" ");
 }
 
@@ -192,6 +188,6 @@ export async function writeContainerImageDebug(
   const filePath = join(debugDir, filename);
   await writeFile(filePath, buffer);
   const logPath = join(debugDir, "container-image-log.txt");
-  const line = `${new Date().toISOString()}\t${debugId}\ttype=${params.type}\tpattern=${params.pattern ?? ""}\tcolor=${params.color ?? ""}\ttheme=${params.theme ?? ""}\tfile=${filename}\n`;
+  const line = `${new Date().toISOString()}\t${debugId}\ttype=${params.type}\tpattern=${params.pattern ?? ""}\tcolor=${params.color ?? ""}\tvisualStyle="${params.visualStyle ?? ""}"\tfile=${filename}\n`;
   await appendFile(logPath, line);
 }

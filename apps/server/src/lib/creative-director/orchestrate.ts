@@ -77,7 +77,7 @@ export async function orchestrateThemeAssets(
     gameButtonSpritesheets: [],
   };
 
-  const { meta, elements } = manifest;
+  const { elements } = manifest;
   const { enabled } = pipelineConfig;
 
   // ---- Game button spritesheets ----
@@ -136,9 +136,7 @@ export async function orchestrateThemeAssets(
     onProgress?.({ type: "generating-title", message: "Title image" });
     const buffer = await generateTitleImage({
       text: elements.titleImage.text,
-      theme: "themed",
-      colors: meta.colorPalette.join(", "),
-      prompt: elements.titleImage.visualStyle,
+      visualStyle: elements.titleImage.visualStyle,
     });
     const path = join(outputDir, "title.png");
     await writeFile(path, buffer);
@@ -155,8 +153,7 @@ export async function orchestrateThemeAssets(
       color: elements.containerBackground.color,
       colorEnd: elements.containerBackground.colorEnd,
       pattern: elements.containerBackground.pattern,
-      theme: elements.containerBackground.visualStyle,
-      prompt: elements.containerBackground.visualStyle,
+      visualStyle: elements.containerBackground.visualStyle,
     });
     const path = join(outputDir, "container-bg.png");
     await writeFile(path, buffer);
@@ -175,7 +172,7 @@ export async function orchestrateThemeAssets(
     const baseImageBuffer = await readFile(inputPath);
     const { transparent } = await generateGlyphSheet({
       baseImageBuffer,
-      theme: elements.glyphSheet.visualStyle,
+      visualStyle: elements.glyphSheet.visualStyle,
       cols: pipelineConfig.glyphSheet.cols,
       rows: pipelineConfig.glyphSheet.rows,
     });
@@ -192,7 +189,7 @@ export async function orchestrateThemeAssets(
       tasks.push(
         (async () => {
           const buffer = await generateSoundEffect({
-            text: elements.backgroundMusic.prompt,
+            prompt: elements.backgroundMusic.prompt,
             durationSeconds: pipelineConfig.backgroundMusic.durationSeconds,
             loop: pipelineConfig.backgroundMusic.loop,
           });
@@ -207,7 +204,7 @@ export async function orchestrateThemeAssets(
       tasks.push(
         (async () => {
           const buffer = await generateSoundEffect({
-            text: elements.revealSound.prompt,
+            prompt: elements.revealSound.prompt,
             durationSeconds: pipelineConfig.revealSound.durationSeconds,
           });
           const path = join(outputDir, "reveal-sfx.mp3");
@@ -223,13 +220,12 @@ export async function orchestrateThemeAssets(
   if (enabled.videoBackground) {
     onProgress?.({ type: "generating-video-image", message: "Video background image" });
     const frameBuffer = await generateThemeBackgroundImage({
-      theme: elements.videoBackground.visualStyle,
-      prompt: elements.videoBackground.visualStyle,
+      visualStyle: elements.videoBackground.visualStyle,
       aspectRatio: pipelineConfig.video.aspectRatio,
     });
     onProgress?.({ type: "generating-video", message: "Video background loop" });
     const videoBuffer = await generateLoopedVideoBackground({
-      prompt: elements.videoBackground.animationPrompt,
+      animationPrompt: elements.videoBackground.animationPrompt,
       firstAndLastFrameImage: frameBuffer,
       durationSeconds: pipelineConfig.video.durationSeconds,
       aspectRatio: pipelineConfig.video.aspectRatio,

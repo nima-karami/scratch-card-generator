@@ -17,22 +17,21 @@ Generates a subtle background image for game containers. Solid is procedural (no
 Gradient and pattern use Gemini (require GEMINI_API_KEY) for high-quality results.
 
 Options:
-  --type <type>       One of: solid, gradient, pattern (required)
-  --width <px>        Width in pixels. Default: 400
-  --height <px>       Height in pixels. Default: 300
-  --color <hex>       Primary color (e.g. #1a1a2e). Default: #1a1a2e
-  --color-end <hex>   End color for gradient. Default: #16213e
-  --angle <degrees>  Gradient angle (linear). Default: 135
-  --pattern <name>   For type=pattern: dots, lines, or grid (style hint). Default: dots
-  --pattern-scale <px> Tile size for pattern (legacy). Default: 24
-  --theme <text>     Theme for LLM (e.g. luxury, minimal). For gradient/pattern.
-  --prompt <text>    Extra prompt for LLM. For gradient/pattern.
-  --output <path>    Output file path. Default: ./container-image.png
+  --type <type>         One of: solid, gradient, pattern (required)
+  --width <px>          Width in pixels. Default: 400
+  --height <px>         Height in pixels. Default: 300
+  --color <hex>         Primary color (e.g. #1a1a2e). Default: #1a1a2e
+  --color-end <hex>     End color for gradient. Default: #16213e
+  --angle <degrees>     Gradient angle (linear). Default: 135
+  --pattern <name>      For type=pattern: dots, lines, or grid. Default: dots
+  --pattern-scale <px>  Tile size for pattern (legacy). Default: 24
+  --visual-style <text> Style for LLM (gradient/pattern). Same as Creative Director containerBackground.visualStyle.
+  --output <path>       Output file path. Default: ./container-image.png
 
 Examples:
   npm run generate-container-image -- --type solid --color "#2d1b4e" --output bg.png
-  npm run generate-container-image -- --type gradient --color "#1a1a2e" --color-end "#0f3460" --theme luxury
-  npm run generate-container-image -- --type pattern --pattern dots --theme minimal --output pattern.png
+  npm run generate-container-image -- --type gradient --color "#1a1a2e" --color-end "#0f3460" --visual-style "luxury, elegant"
+  npm run generate-container-image -- --type pattern --pattern dots --visual-style "minimal, subtle" --output pattern.png
 `;
 
 function parseType(s: string): ContainerImageType {
@@ -68,8 +67,7 @@ async function main(): Promise<void> {
     angle: opts.angle ? parseInt(opts.angle, 10) : undefined,
     pattern: opts.pattern as GenerateContainerImageParams["pattern"],
     patternScale: opts["pattern-scale"] ? parseInt(opts["pattern-scale"], 10) : undefined,
-    theme: opts.theme,
-    prompt: opts.prompt,
+    visualStyle: opts["visual-style"],
   };
 
   const outputPath = opts.output ?? "./container-image.png";

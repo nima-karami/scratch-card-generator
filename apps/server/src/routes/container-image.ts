@@ -39,8 +39,12 @@ export async function postContainerImage(req: Request, res: Response): Promise<v
     angle: typeof body.angle === "number" ? body.angle : undefined,
     pattern: pattern as GenerateContainerImageParams["pattern"],
     patternScale: typeof body.patternScale === "number" ? body.patternScale : undefined,
-    theme: typeof body.theme === "string" ? body.theme : undefined,
-    prompt: typeof body.prompt === "string" ? body.prompt : undefined,
+    visualStyle:
+      typeof body.visualStyle === "string"
+        ? body.visualStyle
+        : typeof (body as { visual_style?: string }).visual_style === "string"
+          ? (body as { visual_style: string }).visual_style
+          : undefined,
   };
 
   try {

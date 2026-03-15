@@ -7,22 +7,16 @@ import { swapBackground } from "./spritesheet/swap-background.js";
 
 export type GenerateTitleImageParams = {
   text: string;
-  prompt?: string;
-  theme?: string;
-  colors?: string;
+  visualStyle: string;
 };
 
 function buildPrompt(params: GenerateTitleImageParams): string {
-  const { text, prompt = "", theme = "elegant", colors = "gold and dark" } = params;
+  const { text, visualStyle } = params;
   const parts = [
     `Generate a single image that displays the following title text prominently and clearly: «${text}».`,
-    `Style: ${theme}.`,
-  ];
-  if (prompt) parts.push(prompt.trim());
-  parts.push(`Color palette: ${colors}.`);
-  parts.push(
+    visualStyle.trim(),
     "The image must be on a pure solid white #FFFFFF background with no other background elements.",
-  );
+  ];
   return parts.join(" ");
 }
 
@@ -58,7 +52,7 @@ export async function nextTitleImageDebugId(debugDir: string): Promise<string> {
 }
 
 function slugFromParams(params: GenerateTitleImageParams, maxLen = 40): string {
-  const s = [params.text, params.theme, params.prompt].filter(Boolean).join(" ");
+  const s = [params.text, params.visualStyle].filter(Boolean).join(" ");
   const slug = s
     .trim()
     .toLowerCase()
@@ -86,6 +80,6 @@ export async function writeTitleImageDebug(
   const filePath = join(debugDir, filename);
   await writeFile(filePath, buffer);
   const logPath = join(debugDir, "title-image-log.txt");
-  const line = `${new Date().toISOString()}\t${debugId}\ttext="${params.text}"\ttheme=${params.theme ?? ""}\tprompt="${params.prompt ?? ""}"\tcolors="${params.colors ?? ""}"\tfile=${filename}\n`;
+  const line = `${new Date().toISOString()}\t${debugId}\ttext="${params.text}"\tvisualStyle="${params.visualStyle}"\tfile=${filename}\n`;
   await appendFile(logPath, line);
 }

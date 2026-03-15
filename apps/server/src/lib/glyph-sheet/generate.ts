@@ -13,8 +13,8 @@ export const GLYPH_COUNT = GLYPH_ORDER.length;
 export interface GenerateGlyphSheetParams {
   /** Predefined glyph sheet image (12 glyphs on solid background, e.g. white). */
   baseImageBuffer: Buffer;
-  /** Theme for stylization (e.g. "cookie theme: warm browns, cream, chocolate chip aesthetic"). */
-  theme: string;
+  /** Style for stylization. Same as Creative Director glyphSheet.visualStyle. */
+  visualStyle: string;
   cols: number;
   rows: number;
 }
@@ -26,12 +26,12 @@ export interface GenerateGlyphSheetResult {
   slices?: Buffer[];
 }
 
-function buildStylizePrompt(theme: string): string {
-  return `Restyle this glyph sheet image to match the following theme: ${theme}.
+function buildStylizePrompt(visualStyle: string): string {
+  return `Restyle this glyph sheet image to match the following style: ${visualStyle}.
 
 Rules:
 - Preserve the exact layout and character positions. Do not move, resize, or rearrange any glyph.
-- Only change colors and texture to match the theme. Keep each character readable and recognizable.
+- Only change colors and texture to match the style. Keep each character readable and recognizable.
 - Keep the background pure solid white #FFFFFF.`;
 }
 
@@ -54,8 +54,8 @@ async function nextGlyphSheetDebugId(debugDir: string): Promise<string> {
   return String(maxId + 1).padStart(4, "0");
 }
 
-function themeSlug(theme: string, maxLen = 30): string {
-  return theme
+function visualStyleSlug(visualStyle: string, maxLen = 30): string {
+  return visualStyle
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "-")
@@ -67,19 +67,19 @@ async function writeGlyphSheetDebug(
   whiteBuffer: Buffer,
   blackBuffer: Buffer,
   transparentBuffer: Buffer,
-  params: { theme: string; inputPath?: string },
+  params: { visualStyle: string; inputPath?: string },
   success: boolean,
 ): Promise<void> {
   const debugDir = config.debug.glyphSheet;
   if (!debugDir) return;
   await mkdir(debugDir, { recursive: true });
   const debugId = await nextGlyphSheetDebugId(debugDir);
-  const slug = themeSlug(params.theme);
+  const slug = visualStyleSlug(params.visualStyle);
   await writeFile(join(debugDir, `${debugId}-${slug}-white.png`), whiteBuffer);
   await writeFile(join(debugDir, `${debugId}-${slug}-black.png`), blackBuffer);
   await writeFile(join(debugDir, `${debugId}-${slug}-transparent.png`), transparentBuffer);
   const logPath = join(debugDir, "glyph-sheet-log.txt");
-  const line = `${new Date().toISOString()}\t${debugId}\ttheme="${params.theme}"\tinput=${params.inputPath ?? ""}\tsuccess=${success}\n`;
+  const line = `${new Date().toISOString()}\t${debugId}\tvisualStyle="${params.visualStyle}"\tinput=${params.inputPath ?? ""}\tsuccess=${success}\n`;
   await appendFile(logPath, line);
 }
 
@@ -91,8 +91,8 @@ export async function generateGlyphSheet(
   params: GenerateGlyphSheetParams,
   options?: { slice?: boolean; inputPath?: string },
 ): Promise<GenerateGlyphSheetResult> {
-  const { baseImageBuffer, theme, cols, rows } = params;
-  const prompt = buildStylizePrompt(theme);
+  const { baseImageBuffer, visualStyle, cols, rows } = params;
+  const prompt = buildStylizePrompt(visualStyle);
   const whiteBuffer = await editImage(baseImageBuffer, prompt);
   const blackBuffer = await swapBackground(whiteBuffer, "white", "black");
   const transparent = await extractAlphaTwoPassFromBuffers(whiteBuffer, blackBuffer);
@@ -102,7 +102,7 @@ export async function generateGlyphSheet(
       whiteBuffer,
       blackBuffer,
       transparent,
-      { theme, inputPath: options?.inputPath },
+      { visualStyle, inputPath: options?.inputPath },
       true,
     );
   }

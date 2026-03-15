@@ -31,8 +31,8 @@ function bufferToImage(buffer: Buffer): Image {
 }
 
 export type GenerateThemeBackgroundImageParams = {
-  theme?: string;
-  prompt?: string;
+  /** Style for the background image. Same as Creative Director videoBackground.visualStyle. */
+  visualStyle: string;
   /** Aspect ratio for the image, e.g. "9:16" (portrait) or "16:9" (landscape). Default: 9:16 for scratch card. */
   aspectRatio?: string;
 };
@@ -44,27 +44,21 @@ export type GenerateThemeBackgroundImageParams = {
 export async function generateThemeBackgroundImage(
   params: GenerateThemeBackgroundImageParams
 ): Promise<Buffer> {
-  const { theme = "elegant", prompt = "", aspectRatio = "9:16" } = params;
+  const { visualStyle, aspectRatio = "9:16" } = params;
+  const isPortrait = aspectRatio === "9:16";
   const parts = [
     "Generate a single atmospheric background image suitable for a scratch card.",
-    "No text or text overlays. Style:",
-    theme.trim() || "elegant",
-    ".",
+    "No text or text overlays.",
+    visualStyle.trim(),
+    `Aspect ratio ${aspectRatio}, ${isPortrait ? "portrait orientation, taller than wide." : "landscape."} Suitable for subtle looping animation.`,
   ];
-  if (prompt.trim()) {
-    parts.push(prompt.trim());
-  }
-  const isPortrait = aspectRatio === "9:16";
-  parts.push(
-    `Aspect ratio ${aspectRatio}, ${isPortrait ? "portrait orientation, taller than wide." : "landscape."} Suitable for subtle looping animation.`
-  );
   const fullPrompt = parts.join(" ");
   return generateImage(fullPrompt);
 }
 
 export type GenerateLoopedVideoBackgroundParams = {
-  /** Animation description (e.g. "subtle clouds drifting, soft light changes"). */
-  prompt: string;
+  /** Animation description. Same as Creative Director videoBackground.animationPrompt. */
+  animationPrompt: string;
   /** Same image used as first and last frame for a seamless loop. */
   firstAndLastFrameImage: Buffer;
   /** Duration in seconds: 4, 6, or 8. */
@@ -81,7 +75,7 @@ export async function generateLoopedVideoBackground(
   params: GenerateLoopedVideoBackgroundParams
 ): Promise<Buffer> {
   const {
-    prompt,
+    animationPrompt,
     firstAndLastFrameImage,
     durationSeconds = 6,
     aspectRatio = "9:16",
@@ -97,7 +91,7 @@ export async function generateLoopedVideoBackground(
   const ai = getClient();
   let operation: GenerateVideosOperation = await ai.models.generateVideos({
     model: VEO_MODEL,
-    prompt,
+    prompt: animationPrompt,
     image,
     config: veoConfig,
   });
@@ -160,14 +154,10 @@ export async function nextVideoBackgroundDebugId(debugDir: string): Promise<stri
 }
 
 function slugFromParams(
-  params: {
-    theme?: string;
-    prompt?: string;
-    animationPrompt?: string;
-  },
+  params: { visualStyle?: string; animationPrompt?: string },
   maxLen = 40
 ): string {
-  const s = [params.theme, params.prompt, params.animationPrompt].filter(Boolean).join(" ");
+  const s = [params.visualStyle, params.animationPrompt].filter(Boolean).join(" ");
   const slug = s
     .trim()
     .toLowerCase()
@@ -177,8 +167,7 @@ function slugFromParams(
 }
 
 export type WriteVideoBackgroundDebugParams = {
-  theme?: string;
-  prompt?: string;
+  visualStyle?: string;
   animationPrompt: string;
   durationSeconds: number;
 };
@@ -202,6 +191,6 @@ export async function writeVideoBackgroundDebug(
   await writeFile(join(debugDir, videoFilename), videoBuffer);
   await writeFile(join(debugDir, frameFilename), frameBuffer);
   const logPath = join(debugDir, "video-background-log.txt");
-  const line = `${new Date().toISOString()}\t${debugId}\ttheme="${params.theme ?? ""}"\tprompt="${params.prompt ?? ""}"\tanimationPrompt="${params.animationPrompt}"\tduration=${params.durationSeconds}\tfile=${videoFilename}\tframe=${frameFilename}\n`;
+  const line = `${new Date().toISOString()}\t${debugId}\tvisualStyle="${params.visualStyle ?? ""}"\tanimationPrompt="${params.animationPrompt}"\tduration=${params.durationSeconds}\tfile=${videoFilename}\tframe=${frameFilename}\n`;
   await appendFile(logPath, line);
 }

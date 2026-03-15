@@ -17,7 +17,8 @@ function clampDuration(duration: number): number {
 }
 
 export type GenerateSoundEffectParams = {
-  text: string;
+  /** Sound description. Same as Creative Director backgroundMusic.prompt or revealSound.prompt. */
+  prompt: string;
   durationSeconds?: number;
   loop?: boolean;
   outputFormat?: string;
@@ -59,7 +60,7 @@ export async function generateSoundEffect(params: GenerateSoundEffectParams): Pr
   const client = new ElevenLabsClient({ apiKey });
   type SoundEffectRequest = Parameters<ElevenLabsClient["textToSoundEffects"]["convert"]>[0];
   const request: SoundEffectRequest = {
-    text: params.text,
+    text: params.prompt,
     ...(durationSeconds != null && { durationSeconds }),
     ...(params.loop != null && { loop: params.loop }),
   };

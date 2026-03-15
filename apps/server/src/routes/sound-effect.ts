@@ -21,7 +21,7 @@ export async function postSoundEffect(req: Request, res: Response): Promise<void
 
   try {
     const buffer = await generateSoundEffect({
-      text: prompt,
+      prompt,
       durationSeconds,
       loop,
       outputFormat: "mp3_44100_128",
