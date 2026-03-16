@@ -7,7 +7,7 @@ import { config } from "../config/index.js";
 import { generateImage } from "./gemini.js";
 
 const REFERENCE_IMAGE_PREFIX =
-  "Using the exact visual style, colors, and atmosphere of the provided reference moodboard image, generate the following. Output only the requested new image, not an edit of the reference.\n\n";
+  "The attached image is a tagged moodboard with sections: Graphic Style, Typography, Color Palette, Background Style. For this task use ONLY the BACKGROUND STYLE section as your style reference (the patterned or textured background area). Ignore the other sections. Match that section's visual style, colors, and atmosphere. Output only the requested new image, not an edit of the reference.\n\n";
 
 const VEO_MODEL = "veo-3.1-generate-preview";
 const DEFAULT_POLL_INTERVAL_MS = 15_000;

@@ -6,7 +6,7 @@ import { generateImage } from "./gemini.js";
 import { swapBackground } from "./spritesheet/swap-background.js";
 
 const REFERENCE_IMAGE_PREFIX =
-  "The attached image is a full scratch card game (it may show game boards, grids, coins, scratch areas, borders, and other UI). You are NOT generating a scratch card. You are ONLY generating a standalone TITLE GRAPHIC: the title words as styled text. Use the attached image PURELY as a style guide for the typography's colors, lighting, and textures. DO NOT include game boards, grids, coins, scratch areas, borders, or any other UI elements from the reference. Output ONLY the title graphic.\n\n";
+  "The attached image is a tagged moodboard with sections: Graphic Style, Typography, Color Palette, Background Style. For this task use ONLY the TYPOGRAPHY section as your style reference (the sample title/h headline treatment). Ignore all other sections. You are generating a standalone TITLE GRAPHIC: the title words as styled text. Match the typography's colors, lighting, textures, and treatment from the Typography section only. Do not copy the layout of the full moodboard. Output ONLY the title graphic.\n\n";
 
 export type GenerateTitleImageParams = {
   text: string;

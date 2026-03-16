@@ -1,15 +1,15 @@
 import { mkdir } from "fs/promises";
-import { join } from "path";
-import { basename } from "path";
+import { join, basename } from "path";
 import { Worker, Job } from "bullmq";
 import { config } from "../config/index.js";
 import { createRedisConnection } from "./connection.js";
 import { getQueueName } from "./queue.js";
-import type { CardData, WinOverlayTheme } from "@repo/shared";
+import type { CardData, SSEEvent, WinOverlayTheme } from "@repo/shared";
 import { getGameConfigs } from "../config/games/index.js";
 import { generateVariantGames } from "../lib/game-outcomes.js";
 import { runFullDirector } from "../lib/creative-director/generate-manifest.js";
 import { orchestrateThemeAssets } from "../lib/creative-director/orchestrate.js";
+import { writeThemeManifestDebug } from "../lib/creative-director/theme-manifest-debug.js";
 import { PIPELINE_CONFIG } from "../lib/creative-director/pipeline-config.js";
 import type { ThemeAssetResult } from "../lib/creative-director/orchestrate.js";
 
@@ -33,7 +33,7 @@ export function setJobResult(jobId: string, data: CardData): void {
 }
 
 /** Progress callback: (event) => void. Worker will call this to stream SSE. */
-export type ProgressCallback = (event: { type: string; [key: string]: unknown }) => void;
+export type ProgressCallback = (event: SSEEvent) => void;
 
 /** Step 1 — Creative Director: theme string → Theme Manifest + moodboard (two-step: meta → moodboard → elements). */
 async function runDesignStep(
@@ -58,7 +58,7 @@ async function runAssetStep(
       message: ev.message,
       index: ev.index,
       total: ev.total,
-    });
+    } as SSEEvent);
   }, { moodboard });
 }
 
@@ -141,6 +141,9 @@ async function processJob(
 
   // Step 1 — Creative Director (meta → moodboard → elements)
   const { manifest, moodboard } = await runDesignStep(prompt, onProgress);
+  if (config.debug.themeManifest) {
+    await writeThemeManifestDebug(manifest, prompt, join(outputDir, "manifest.json"));
+  }
   onProgress({
     type: "text-ready",
     title: manifest.elements.titleImage.text,

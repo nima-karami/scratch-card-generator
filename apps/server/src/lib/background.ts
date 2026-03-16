@@ -1,4 +1,4 @@
-import { generateThemeBackgroundImage } from "./veo.js";
+import { generateThemeBackgroundImage, writeBackgroundDebug } from "./veo.js";
 import { generateLoopedVideoBackground } from "./veo.js";
 
 export type GenerateBackgroundParams = {
@@ -46,11 +46,19 @@ export async function generateBackground(
     referenceImage,
   });
 
+  const debugParams = {
+    visualStyle,
+    animationPrompt: animationPrompt ?? "",
+    durationSeconds,
+  };
+
   if (mode === "image") {
+    await writeBackgroundDebug(image, debugParams);
     return { image };
   }
 
   if (!animationPrompt?.trim()) {
+    await writeBackgroundDebug(image, debugParams);
     return { image };
   }
 
@@ -61,12 +69,14 @@ export async function generateBackground(
       durationSeconds,
       aspectRatio,
     });
+    await writeBackgroundDebug(image, debugParams, video);
     return { image, video };
   } catch (err) {
     console.warn(
       "VEO video generation failed, returning background image only:",
       err instanceof Error ? err.message : String(err)
     );
+    await writeBackgroundDebug(image, debugParams);
     return { image };
   }
 }

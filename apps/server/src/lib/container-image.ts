@@ -5,7 +5,7 @@ import { config } from "../config/index.js";
 import { generateImage } from "./gemini.js";
 
 const REFERENCE_IMAGE_PREFIX =
-  "Using the exact visual style and colors of the provided reference moodboard image, generate the following. Output only the requested new image, not an edit of the reference.\n\n";
+  "The attached image is a tagged moodboard with sections: Graphic Style, Typography, Color Palette, Background Style. For this task use the BACKGROUND STYLE and COLOR PALETTE sections as style reference (pattern, texture, colors). Ignore Typography and Graphic Style. Match the visual style and colors. Output only the requested new image, not an edit of the reference.\n\n";
 
 export type ContainerImageType = "solid" | "gradient" | "pattern";
 

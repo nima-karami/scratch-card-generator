@@ -83,6 +83,7 @@ export function buildSpritesheetPrompt(params: SpritesheetPromptParams): string 
 - Grid: ${cols} columns × ${rows} rows = ${totalFrames} frames total. ${rows} row${rows > 1 ? "s" : ""} only.
 - Each frame's content centered within its ${cellWidth}x${cellHeight} cell
 - Pure solid ${bgName} ${bgHex} background everywhere
+- Keep the background absolutely pristine and solid; do not add glows, shadows, or ambient particles into the empty space; semi-transparent pixels only at the direct edges of the subject
 - NO grid lines, NO borders, NO separators, NO dividers between frames
 - Consistent art style and color palette across all ${totalFrames} frames
 - No text, labels, or annotations

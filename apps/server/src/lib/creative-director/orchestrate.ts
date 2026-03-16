@@ -6,10 +6,10 @@ import type { PipelineConfig } from "./pipeline-config.js";
 import { generateSpritesheet } from "../spritesheet/generate.js";
 import type { SpritesheetPromptParams } from "../spritesheet/prompt-builder.js";
 import { generateParticleSpritesheet } from "../spritesheet/generate.js";
-import { generateTitleImage } from "../title-image.js";
+import { generateTitleImage, writeTitleImageDebug } from "../title-image.js";
 import { generateContainerImage } from "../container-image.js";
 import { generateBackground } from "../background.js";
-import { generateSoundEffect } from "../elevenlabs.js";
+import { generateSoundEffect, writeSoundEffectDebug } from "../elevenlabs.js";
 import { generateGlyphSheet } from "../glyph-sheet/generate.js";
 
 export interface ProgressEvent {
@@ -160,13 +160,15 @@ export async function orchestrateThemeAssets(
     tasks.push(
       (async () => {
         onProgress?.({ type: "generating-title", message: "Title image" });
-        const buffer = await generateTitleImage({
+        const params = {
           text: elements.titleImage.text,
           visualStyle: elements.titleImage.visualStyle,
           ...(moodboard && { referenceImage: moodboard }),
-        });
+        };
+        const buffer = await generateTitleImage(params);
         const path = join(outputDir, "title.png");
         await writeFile(path, buffer);
+        await writeTitleImageDebug(buffer, params);
         result.titleImage = path;
       })()
     );
@@ -224,13 +226,15 @@ export async function orchestrateThemeAssets(
     tasks.push(
       (async () => {
         onProgress?.({ type: "generating-bgm", message: "Background music" });
-        const buffer = await generateSoundEffect({
+        const params = {
           prompt: elements.backgroundMusic.prompt,
           durationSeconds: pipelineConfig.backgroundMusic.durationSeconds,
           loop: pipelineConfig.backgroundMusic.loop,
-        });
+        };
+        const buffer = await generateSoundEffect(params);
         const path = join(outputDir, "bgm.mp3");
         await writeFile(path, buffer);
+        await writeSoundEffectDebug(buffer, params);
         result.backgroundMusic = path;
       })()
     );
@@ -239,12 +243,17 @@ export async function orchestrateThemeAssets(
     tasks.push(
       (async () => {
         onProgress?.({ type: "generating-reveal-sound", message: "Reveal sound" });
-        const buffer = await generateSoundEffect({
+        const params = {
           prompt: elements.revealSound.prompt,
           durationSeconds: pipelineConfig.revealSound.durationSeconds,
-        });
+        };
+        const buffer = await generateSoundEffect(params);
         const path = join(outputDir, "reveal-sfx.mp3");
         await writeFile(path, buffer);
+        await writeSoundEffectDebug(buffer, {
+          ...params,
+          loop: false,
+        });
         result.revealSound = path;
       })()
     );

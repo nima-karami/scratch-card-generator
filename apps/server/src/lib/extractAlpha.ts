@@ -31,8 +31,12 @@ export async function extractAlphaTwoPass(
 
   const outputBuffer = Buffer.alloc(dataWhite.length);
   const bgDist = Math.sqrt(3 * 255 * 255);
-  /** Pixels on white background above this are treated as empty (fully transparent) to avoid artifacts on blank/white frames. */
-  const nearWhiteThreshold = 250;
+  /** Pixels on white background above this are treated as empty (fully transparent) to avoid artifacts. */
+  const nearWhiteThreshold = 240;
+  /** Pixels on black background below this are treated as empty (fully transparent) when white side is also background. */
+  const nearBlackThreshold = 15;
+  /** Alpha below this is clamped to 0 to eliminate dust/noise artifacts. */
+  const alphaFloor = 0.05;
 
   for (let i = 0; i < metaWhite.width * metaWhite.height; i++) {
     const offset = i * 4;
@@ -45,20 +49,23 @@ export async function extractAlphaTwoPass(
     const gB = dataBlack[offset + 1];
     const bB = dataBlack[offset + 2];
 
-    // Empty/white regions: treat as fully transparent so last (white) frames don't get greenish/dim artifacts from Gemini swap
     const isNearWhite =
       rW >= nearWhiteThreshold && gW >= nearWhiteThreshold && bW >= nearWhiteThreshold;
+    const isNearBlack =
+      rB <= nearBlackThreshold && gB <= nearBlackThreshold && bB <= nearBlackThreshold;
 
     const pixelDist = Math.sqrt(Math.pow(rW - rB, 2) + Math.pow(gW - gB, 2) + Math.pow(bW - bB, 2));
 
     let alpha = 1 - pixelDist / bgDist;
     alpha = Math.max(0, Math.min(1, alpha));
     if (isNearWhite) alpha = 0;
+    if (isNearWhite && isNearBlack) alpha = 0;
+    if (alpha < alphaFloor) alpha = 0;
 
     let rOut = 0,
       gOut = 0,
       bOut = 0;
-    if (alpha > 0.01) {
+    if (alpha > alphaFloor) {
       rOut = rB / alpha;
       gOut = gB / alpha;
       bOut = bB / alpha;
@@ -105,7 +112,9 @@ export async function extractAlphaTwoPassFromBuffers(
 
   const outputBuffer = Buffer.alloc(dataWhite.length);
   const bgDist = Math.sqrt(3 * 255 * 255);
-  const nearWhiteThreshold = 250;
+  const nearWhiteThreshold = 240;
+  const nearBlackThreshold = 15;
+  const alphaFloor = 0.05;
 
   for (let i = 0; i < metaWhite.width * metaWhite.height; i++) {
     const offset = i * 4;
@@ -120,17 +129,21 @@ export async function extractAlphaTwoPassFromBuffers(
 
     const isNearWhite =
       rW >= nearWhiteThreshold && gW >= nearWhiteThreshold && bW >= nearWhiteThreshold;
+    const isNearBlack =
+      rB <= nearBlackThreshold && gB <= nearBlackThreshold && bB <= nearBlackThreshold;
 
     const pixelDist = Math.sqrt(Math.pow(rW - rB, 2) + Math.pow(gW - gB, 2) + Math.pow(bW - bB, 2));
 
     let alpha = 1 - pixelDist / bgDist;
     alpha = Math.max(0, Math.min(1, alpha));
     if (isNearWhite) alpha = 0;
+    if (isNearWhite && isNearBlack) alpha = 0;
+    if (alpha < alphaFloor) alpha = 0;
 
     let rOut = 0,
       gOut = 0,
       bOut = 0;
-    if (alpha > 0.01) {
+    if (alpha > alphaFloor) {
       rOut = rB / alpha;
       gOut = gB / alpha;
       bOut = bB / alpha;

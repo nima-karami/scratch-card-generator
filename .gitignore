@@ -24,6 +24,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 debug/*
+apps/server/debug/*
 output/*
 
 # Job asset outputs (worker writes here; served at /api/jobs/:id/assets/)

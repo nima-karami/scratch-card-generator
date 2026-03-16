@@ -34,7 +34,7 @@ import { validateAlgorithmically, validateWithLLM, type QAResult } from "./qa.js
 import { buildDetailedEditInstruction } from "./build-edit-instruction.js";
 
 const REFERENCE_IMAGE_PREFIX =
-  "Using the exact visual style, colors, lighting, and artistic treatment of the provided reference moodboard image, generate the following. Output only the requested new image content, not an edit of the reference.\n\n";
+  "The attached image is a tagged moodboard with sections: Graphic Style, Typography, Color Palette, Background Style. For this task use ONLY the GRAPHIC STYLE section as your style reference (the sample object/icon). Ignore the other sections. Match that section's visual style, colors, lighting, and artistic treatment for the subject you are drawing. Output only the requested new image content, not an edit of the reference.\n\n";
 
 function buildEditInstructionFromQA(reason: string, params: SpritesheetPromptParams): string {
   return `This image is a spritesheet (${params.cols}x${params.rows}) of: ${params.subject} ${params.animationAction}. It failed QA.

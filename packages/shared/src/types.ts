@@ -198,10 +198,41 @@ export interface ErrorEvent {
   code?: string;
 }
 
+/** SSE: theme design phase (creative director) */
+export interface DesigningEvent {
+  type: "designing";
+  message?: string;
+}
+
+/** SSE: asset generation progress (optional index/total for spritesheets) */
+export interface GeneratingSpritesheetEvent {
+  type: "generating-spritesheet";
+  message?: string;
+  index?: number;
+  total?: number;
+}
+
+/** SSE: other asset steps (particles, title, container, glyph, bgm, reveal sound, video) */
+export interface GeneratingAssetEvent {
+  type:
+    | "generating-particles"
+    | "generating-title"
+    | "generating-container"
+    | "generating-glyph-sheet"
+    | "generating-bgm"
+    | "generating-reveal-sound"
+    | "generating-video-image"
+    | "generating-video";
+  message?: string;
+}
+
 export type SSEEvent =
   | TextReadyEvent
   | ImageProgressEvent
   | ImageReadyEvent
   | ComposingEvent
   | CompleteEvent
-  | ErrorEvent;
+  | ErrorEvent
+  | DesigningEvent
+  | GeneratingSpritesheetEvent
+  | GeneratingAssetEvent;

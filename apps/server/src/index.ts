@@ -1,15 +1,10 @@
-import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { postGenerate, rateLimitGenerate } from "./routes/generate.js";
 import { getStatus } from "./routes/status.js";
 import { getCard } from "./routes/card.js";
 import { health } from "./routes/health.js";
-import {
-  postKlingVideo,
-  getKlingVideoStatus,
-  rateLimitKlingVideo,
-} from "./routes/kling-video.js";
+import { postKlingVideo, getKlingVideoStatus, rateLimitKlingVideo } from "./routes/kling-video.js";
 import { postSoundEffect, rateLimitSoundEffect } from "./routes/sound-effect.js";
 import { postContainerImage } from "./routes/container-image.js";
 import { getJobAsset } from "./routes/job-assets.js";
@@ -19,6 +14,7 @@ import { createWorker } from "./queue/worker.js";
 const app = express();
 app.use(cors());
 app.use(express.json());
+console.log(config);
 
 app.get("/api/health", health);
 app.post("/api/generate", rateLimitGenerate, postGenerate);

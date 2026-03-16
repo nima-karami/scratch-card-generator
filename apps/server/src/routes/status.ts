@@ -48,7 +48,7 @@ export async function getStatus(req: Request, res: Response): Promise<void> {
       clearProgressListener(jobId);
     }
   };
-  setProgressListener(jobId, sendEvent as (e: { type: string; [key: string]: unknown }) => void);
+  setProgressListener(jobId, sendEvent);
 
   req.on("close", () => {
     clearProgressListener(jobId);
