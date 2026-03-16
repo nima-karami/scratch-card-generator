@@ -2,7 +2,7 @@ import { readFile } from "fs/promises";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { GoogleGenAI } from "@google/genai";
-import { config } from "../../config.js";
+import { config } from "../../config/index.js";
 import { PIPELINE_CONFIG } from "./pipeline-config.js";
 import {
   THEME_MANIFEST_META_RESPONSE_SCHEMA,
@@ -109,7 +109,7 @@ export async function generateThemeElements(
 
   const systemPrompt = await loadSystemPromptElements();
   const metaBlurb = `Current art direction: artStyle="${meta.artStyle}", mood="${meta.mood}", colorPalette=[${meta.colorPalette.join(", ")}]. Theme: ${meta.themeDescription}.`;
-  const userMessage = `The attached image is the moodboard for this theme. ${metaBlurb}\n\nLook at the moodboard and output the complete elements JSON so that every visualStyle and creative choice matches what you see in the image.`;
+  const userMessage = `The attached image is the moodboard for this theme. ${metaBlurb}\n\nLook at the moodboard and output the complete elements JSON so that every visualStyle and creative choice matches what you see in the image. For titleImage.text only: choose the title wording yourself from the theme (catchy 2–4 words); do not copy any text from the moodboard image.`;
 
   const ai = new GoogleGenAI({ apiKey });
   const moodboardBase64 = moodboardBuffer.toString("base64");
@@ -179,14 +179,23 @@ export function buildManifestFromMetaAndElements(
 /**
  * Run the full two-step Creative Director pipeline: meta → moodboard → elements → manifest.
  * Returns the manifest and the moodboard buffer so callers can pass the moodboard to orchestration.
+ * When options.sourceImage is set, that reference image (e.g. deconstructed moodboard) is re-themed to produce the moodboard.
+ * Otherwise the default reference moodboard at apps/server/assets/reference-moodboard.png is used.
  */
-export async function runFullDirector(themeDescription: string): Promise<{
+export async function runFullDirector(
+  themeDescription: string,
+  options?: { sourceImage?: Buffer }
+): Promise<{
   manifest: ThemeManifest;
   moodboard: Buffer;
 }> {
   const { generateMoodboard } = await import("../moodboard.js");
+  const { getDefaultReferenceMoodboard } = await import("../reference-moodboard.js");
   const meta = await generateThemeMeta(themeDescription);
-  const moodboard = await generateMoodboard(meta);
+  const sourceImage = options?.sourceImage ?? (await getDefaultReferenceMoodboard());
+  const moodboard = await generateMoodboard(meta, {
+    ...(sourceImage && { sourceImage }),
+  });
   const elements = await generateThemeElements(meta, moodboard);
   const manifest = buildManifestFromMetaAndElements(meta, elements);
   return { manifest, moodboard };

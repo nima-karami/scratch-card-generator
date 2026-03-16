@@ -13,7 +13,7 @@ import {
 import { postSoundEffect, rateLimitSoundEffect } from "./routes/sound-effect.js";
 import { postContainerImage } from "./routes/container-image.js";
 import { getJobAsset } from "./routes/job-assets.js";
-import { config } from "./config.js";
+import { config } from "./config/index.js";
 import { createWorker } from "./queue/worker.js";
 
 const app = express();

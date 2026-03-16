@@ -10,7 +10,7 @@ export const PIPELINE_CONFIG = {
     particleSpritesheet: false,
     titleImage: true,
     containerBackground: false,
-    background: false,
+    background: true,
     backgroundMusic: true,
     revealSound: true,
     glyphSheet: false,
@@ -40,9 +40,9 @@ export const PIPELINE_CONFIG = {
     height: 300,
   },
 
-  /** Technical params for background (generate-background). */
+  /** Technical params for background (generate-background). Image only for now; video is costly. */
   background: {
-    mode: "video" as "image" | "video",
+    mode: "image" as "image" | "video",
     durationSeconds: 6 as 4 | 6 | 8,
     aspectRatio: "9:16" as const,
   },

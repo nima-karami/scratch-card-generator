@@ -2,7 +2,7 @@
 import "dotenv/config";
 import { writeFile } from "fs/promises";
 import { generateSoundEffect, writeSoundEffectDebug } from "../lib/elevenlabs.js";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { parseNamedArgs } from "./cli-utils.js";
 
 const USAGE = `

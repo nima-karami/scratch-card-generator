@@ -1,6 +1,7 @@
 #!/usr/bin/env npx tsx
 import "dotenv/config";
-import { writeFile } from "fs/promises";
+import { existsSync } from "fs";
+import { readFile, writeFile } from "fs/promises";
 import { generateParticleSpritesheet } from "../lib/spritesheet/generate.js";
 import type { ParticleSpritesheetPromptParams } from "../lib/spritesheet/prompt-builder.js";
 import { parseNamedArgs } from "./cli-utils.js";
@@ -8,7 +9,7 @@ import { parseNamedArgs } from "./cli-utils.js";
 const DEFAULT_VISUAL_STYLE = "2D flat illustration style";
 
 const USAGE = `
-Usage: npm run generate-particle-spritesheet -- --subject "<subject>" --cols <n> --rows <n> --width <px> --height <px> --output <path> [--visual-style <style>]
+Usage: npm run generate-particle-spritesheet -- --subject "<subject>" --cols <n> --rows <n> --width <px> --height <px> --output <path> [--visual-style <style>] [--reference-image <path>]
 
 Options:
   --subject <text>       Subject for each cell (e.g. "small cookie crumb", "coin")
@@ -18,9 +19,11 @@ Options:
   --height <px>         Canvas height in pixels
   --output <path>       Output path for the transparent PNG
   --visual-style <text> Art style. Default: "${DEFAULT_VISUAL_STYLE}"
+  --reference-image <path> Optional: path to a moodboard/reference image to anchor visual style
 
 Example:
   npm run generate-particle-spritesheet -- --subject "small chocolate chip cookie crumb" --cols 4 --rows 2 --width 512 --height 256 --output ./particles-cookie.png
+  npm run generate-particle-spritesheet -- --subject "gold star" --cols 4 --rows 2 --width 512 --height 256 --output particles.png --reference-image ./moodboard.png
 `;
 
 const REQUIRED = ["subject", "cols", "rows", "width", "height", "output"] as const;
@@ -51,6 +54,16 @@ async function main(): Promise<void> {
 
   const visualStyle = opts["visual-style"] ?? DEFAULT_VISUAL_STYLE;
 
+  let referenceImage: Buffer | undefined;
+  const refPath = opts["reference-image"];
+  if (refPath) {
+    if (!existsSync(refPath)) {
+      console.error(`Error: --reference-image file not found: ${refPath}`);
+      process.exit(1);
+    }
+    referenceImage = await readFile(refPath);
+  }
+
   const params: ParticleSpritesheetPromptParams = {
     canvasWidth: width,
     canvasHeight: height,
@@ -59,11 +72,13 @@ async function main(): Promise<void> {
     subject,
     visualStyle,
     backgroundColor: "white",
+    ...(referenceImage && { referenceImage }),
   };
 
   console.log("Generating particle spritesheet...");
   console.log(`  Subject: ${subject} (${cols}x${rows} variants)`);
   console.log(`  Visual style: ${visualStyle}`);
+  if (referenceImage) console.log("  Reference image:", refPath);
   console.log(`  Size: ${width}x${height}px`);
 
   try {

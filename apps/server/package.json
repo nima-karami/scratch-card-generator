@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node -e \"require('fs').cpSync('src/config/games/data', 'dist/config/games/data', {recursive:true})\"",
     "start": "node dist/index.js",
     "lint": "echo 'lint server'",
     "type-check": "tsc --noEmit",

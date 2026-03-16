@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { config } from "../../config.js";
+import { config } from "../../config/index.js";
 import type { SpritesheetPromptParams } from "./prompt-builder.js";
 
 const INSTRUCTION_MODEL = "gemini-3.1-pro-preview";

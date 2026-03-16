@@ -29,7 +29,7 @@ import type {
   SpritesheetPromptParams,
   ParticleSpritesheetPromptParams,
 } from "./prompt-builder.js";
-import { config } from "../../config.js";
+import { config } from "../../config/index.js";
 import { validateAlgorithmically, validateWithLLM, type QAResult } from "./qa.js";
 import { buildDetailedEditInstruction } from "./build-edit-instruction.js";
 
@@ -93,11 +93,8 @@ export async function generateSpritesheet(
     attempts++;
     if (attempts === 1) {
       console.log(`Generation attempt ${attempts} of ${maxRetries + 1}...`);
-      if (params.referenceImage) {
-        whiteBg = await editImage(params.referenceImage, REFERENCE_IMAGE_PREFIX + prompt);
-      } else {
-        whiteBg = await generateImage(prompt);
-      }
+      const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
+      whiteBg = await generateImage(fullPrompt, params.referenceImage);
     } else {
       console.log(`Edit attempt ${attempts} of ${maxRetries + 1} (fixing from QA feedback)...`);
       let instruction: string;
@@ -257,9 +254,7 @@ export async function generateParticleSpritesheet(
     backgroundColor: "white",
   });
   const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
-  const whiteBg = params.referenceImage
-    ? await editImage(params.referenceImage, fullPrompt)
-    : await generateImage(prompt);
+  const whiteBg = await generateImage(fullPrompt, params.referenceImage);
   const blackBg = await swapBackground(whiteBg, "white", "black");
   const workDir = await mkdtemp(join(tmpdir(), `particle-sheet-${randomUUID()}-`));
   const whitePath = join(workDir, "white.png");

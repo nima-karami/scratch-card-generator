@@ -1,15 +1,16 @@
 #!/usr/bin/env npx tsx
 import "dotenv/config";
-import { writeFile } from "fs/promises";
+import { existsSync } from "fs";
+import { readFile, writeFile } from "fs/promises";
 import { generateSpritesheet } from "../lib/spritesheet/generate.js";
 import type { SpritesheetPromptParams } from "../lib/spritesheet/prompt-builder.js";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { parseNamedArgs } from "./cli-utils.js";
 
 const DEFAULT_VISUAL_STYLE = "2D flat illustration style";
 
 const USAGE = `
-Usage: npm run generate-spritesheet -- --subject "<subject>" --action "<action>" --cols <n> --rows <n> --width <px> --height <px> --output <path> [--visual-style <style>]
+Usage: npm run generate-spritesheet -- --subject "<subject>" --action "<action>" --cols <n> --rows <n> --width <px> --height <px> --output <path> [--visual-style <style>] [--reference-image <path>]
 
 Options:
   --subject <text>       Subject of the animation (e.g. "chocolate chip cookie")
@@ -20,10 +21,12 @@ Options:
   --height <px>          Canvas height in pixels
   --output <path>        Output path for the transparent PNG
   --visual-style <text>  Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Default: "${DEFAULT_VISUAL_STYLE}"
+  --reference-image <path> Optional: path to a moodboard/reference image to anchor visual style
 
 Example:
   npm run generate-spritesheet -- --subject "Apple" --action "being eaten" --cols 4 --rows 3 --width 1024 --height 768 --output ./output.png
   npm run generate-spritesheet -- --subject "Dinosaur" --action "walking" --cols 4 --rows 2 --width 512 --height 256 --visual-style "pixel art, 16-bit game style" --output dino.png
+  npm run generate-spritesheet -- --subject "cookie" --action "crumbling" --cols 4 --rows 3 --width 1024 --height 768 --output out.png --reference-image ./moodboard.png
 `;
 
 function defaultKeyframes(
@@ -74,6 +77,16 @@ async function main(): Promise<void> {
   const keyframes = defaultKeyframes(totalFrames, subject, action);
   const visualStyle = opts["visual-style"] ?? DEFAULT_VISUAL_STYLE;
 
+  let referenceImage: Buffer | undefined;
+  const refPath = opts["reference-image"];
+  if (refPath) {
+    if (!existsSync(refPath)) {
+      console.error(`Error: --reference-image file not found: ${refPath}`);
+      process.exit(1);
+    }
+    referenceImage = await readFile(refPath);
+  }
+
   const params: SpritesheetPromptParams = {
     canvasWidth: width,
     canvasHeight: height,
@@ -84,6 +97,7 @@ async function main(): Promise<void> {
     keyframes,
     visualStyle,
     backgroundColor: "white",
+    ...(referenceImage && { referenceImage }),
   };
 
   console.log("Generating spritesheet...");
@@ -91,6 +105,7 @@ async function main(): Promise<void> {
   console.log(`  Visual style: ${visualStyle}`);
   console.log(`  Grid: ${cols}x${rows} (${totalFrames} frames)`);
   console.log(`  Size: ${width}x${height}px`);
+  if (referenceImage) console.log("  Reference image:", refPath);
   console.log(`  QA Config: Algorithmic=${config.spritesheet.qa.algorithmicEnabled}, LLM=${config.spritesheet.qa.llmEnabled}, MaxRetries=${config.spritesheet.qa.maxRetries}`);
 
   try {

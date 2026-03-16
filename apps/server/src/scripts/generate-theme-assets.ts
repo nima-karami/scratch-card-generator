@@ -2,7 +2,7 @@
 import "dotenv/config";
 import { appendFile, mkdir, readFile } from "fs/promises";
 import { join } from "path";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { parseNamedArgs } from "./cli-utils.js";
 import { orchestrateThemeAssets } from "../lib/creative-director/orchestrate.js";
 import { PIPELINE_CONFIG } from "../lib/creative-director/pipeline-config.js";

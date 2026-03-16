@@ -1,11 +1,13 @@
 #!/usr/bin/env npx tsx
 import "dotenv/config";
-import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
+import { existsSync } from "fs";
+import { appendFile, mkdir, readdir, readFile, writeFile } from "fs/promises";
 import { join } from "path";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { parseNamedArgs } from "./cli-utils.js";
 import { runFullDirector } from "../lib/creative-director/generate-manifest.js";
 import { orchestrateThemeAssets } from "../lib/creative-director/orchestrate.js";
+import { getDefaultReferenceMoodboard } from "../lib/reference-moodboard.js";
 import { PIPELINE_CONFIG } from "../lib/creative-director/pipeline-config.js";
 import type { ThemeManifest } from "../lib/creative-director/types.js";
 
@@ -71,17 +73,20 @@ async function writeThemeDebug(
 }
 
 const USAGE = `
-Usage: npm run generate-theme -- --theme "<description>" --output <dir>
+Usage: npm run generate-theme -- --theme "<description>" --output <dir> [--source-image <path>]
 
 Generates a full theme: Creative Director produces a manifest, then all enabled assets
 are generated into the output directory. Also writes manifest.json there for reference.
+With --source-image, the given reference image is re-themed to produce the moodboard.
 
 Options:
-  --theme <text>   Theme description (e.g. "cookies", "retro space arcade")
-  --output <dir>   Output directory for manifest and all assets (required)
+  --theme <text>        Theme description (e.g. "cookies", "retro space arcade")
+  --output <dir>        Output directory for manifest and all assets (required)
+  --source-image <path> Optional: path to a reference image to re-theme into the moodboard (overrides default apps/server/assets/reference-moodboard.png)
 
-Example:
+Examples:
   npm run generate-theme -- --theme "cookies" --output ./output/cookies
+  npm run generate-theme -- --theme "cookies" --output ./output/cookies --source-image ./my-collage.png
 `;
 
 async function main(): Promise<void> {
@@ -95,8 +100,22 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  let sourceImage: Buffer | undefined;
+  const sourcePath = opts["source-image"];
+  if (sourcePath) {
+    if (!existsSync(sourcePath)) {
+      console.error(`Error: --source-image file not found: ${sourcePath}`);
+      process.exit(1);
+    }
+    sourceImage = await readFile(sourcePath);
+    console.log("Using source reference image:", sourcePath);
+  } else {
+    sourceImage = await getDefaultReferenceMoodboard();
+    if (sourceImage) console.log("Using default reference moodboard (apps/server/assets/reference-moodboard.png)");
+  }
+
   console.log("Creative Director: designing theme (meta → moodboard → elements)...");
-  const { manifest, moodboard } = await runFullDirector(theme);
+  const { manifest, moodboard } = await runFullDirector(theme, sourceImage ? { sourceImage } : undefined);
 
   await mkdir(output, { recursive: true });
   const manifestPath = join(output, "manifest.json");

@@ -2,7 +2,7 @@ import { mkdir } from "fs/promises";
 import { join } from "path";
 import { basename } from "path";
 import { Worker, Job } from "bullmq";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { createRedisConnection } from "./connection.js";
 import { getQueueName } from "./queue.js";
 import type { CardData, WinOverlayTheme } from "@repo/shared";

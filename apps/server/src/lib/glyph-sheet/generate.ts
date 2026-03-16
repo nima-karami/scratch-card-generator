@@ -1,7 +1,7 @@
 import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
 import sharp from "sharp";
-import { config } from "../../config.js";
+import { config } from "../../config/index.js";
 import { editImage } from "../gemini.js";
 import { extractAlphaTwoPassFromBuffers } from "../extractAlpha.js";
 import { swapBackground } from "../spritesheet/swap-background.js";

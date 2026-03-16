@@ -3,8 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 import { appendFile, mkdir, readdir, readFile, unlink, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { config } from "../config.js";
-import { generateImage, editImage } from "./gemini.js";
+import { config } from "../config/index.js";
+import { generateImage } from "./gemini.js";
 
 const REFERENCE_IMAGE_PREFIX =
   "Using the exact visual style, colors, and atmosphere of the provided reference moodboard image, generate the following. Output only the requested new image, not an edit of the reference.\n\n";
@@ -59,7 +59,7 @@ export async function generateThemeBackgroundImage(
   ];
   const fullPrompt = parts.join(" ");
   const prompt = referenceImage ? REFERENCE_IMAGE_PREFIX + fullPrompt : fullPrompt;
-  return referenceImage ? editImage(referenceImage, prompt) : generateImage(prompt);
+  return generateImage(prompt, referenceImage);
 }
 
 export type GenerateLoopedVideoBackgroundParams = {

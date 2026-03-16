@@ -1,5 +1,5 @@
 import { Redis } from "ioredis";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 
 /**
  * Create a Redis connection for BullMQ (queue and worker each need their own connection).

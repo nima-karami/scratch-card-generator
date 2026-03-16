@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 
 const IMAGE_MODEL = "gemini-3.1-flash-image-preview";
 
@@ -17,14 +17,31 @@ function getClient(): GoogleGenAI {
 }
 
 /**
- * Generates an image from a text prompt using Nano Banana Pro (Gemini 3 Pro Image).
+ * Generates an image from a text prompt and an optional reference image.
+ * If a reference image is provided, it is passed via multimodal input (inlineData)
+ * rather than as an image to be edited.
  * Returns the raw PNG buffer.
  */
-export async function generateImage(prompt: string): Promise<Buffer> {
+export async function generateImage(prompt: string, referenceImage?: Buffer): Promise<Buffer> {
   const ai = getClient();
+  const input: Array<{ type: "text"; text: string } | { type: "image"; mime_type: "image/png"; data: string }> = [];
+  
+  if (referenceImage) {
+    input.push({
+      type: "image",
+      mime_type: "image/png",
+      data: referenceImage.toString("base64"),
+    });
+  }
+  
+  input.push({
+    type: "text",
+    text: prompt,
+  });
+
   const interaction = await ai.interactions.create({
     model: IMAGE_MODEL,
-    input: prompt,
+    input,
     response_modalities: ["image"],
   });
 

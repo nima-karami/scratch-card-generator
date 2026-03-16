@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import sharp from "sharp";
-import { config } from "../../config.js";
+import { config } from "../../config/index.js";
 import type { SpritesheetPromptParams } from "./prompt-builder.js";
 
 export interface QAResult {
@@ -24,9 +24,13 @@ export async function validateAlgorithmically(
 
   const image = sharp(imageBuffer);
 
+  const lastRow = rows - 1;
+  const lastCol = cols - 1;
+
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const isFirst = r === 0 && c === 0;
+      const isLast = r === lastRow && c === lastCol;
 
       const frameBuffer = await image
         .clone()
@@ -46,7 +50,14 @@ export async function validateAlgorithmically(
         return { passed: false, reason: "First frame appears empty or missing subject." };
       }
 
-      if (!isFirst && area === 0 && (r !== rows - 1 || c !== cols - 1)) {
+      if (isLast && area !== 0) {
+        return {
+          passed: false,
+          reason: "Final frame (last cell) must be completely empty, but it contains visible content.",
+        };
+      }
+
+      if (!isFirst && !isLast && area === 0) {
         return { passed: false, reason: `Frame at row ${r}, col ${c} is completely empty.` };
       }
     }
@@ -70,6 +81,8 @@ export async function validateWithLLM(
   const prompt = `You are an expert animation QA tester. This image is a spritesheet grid (${cols} columns × ${rows} rows) showing an animation sequence of: ${subject} ${animationAction}.
 The animation is intended to progress according to these keyframes: ${JSON.stringify(keyframes)}.
 
+IMPORTANT: The FINAL frame (last cell: row ${rows}, column ${cols}) must be COMPLETELY EMPTY (pure background color, absolutely no subject, particles, or debris). If it is not empty, you MUST fail QA and state this as an issue.
+
 **Your tasks:**
 1. Assess if the frames present a continuous, logical progression WITHOUT hallucinations, sudden jumps in art style, or magically appearing/disappearing elements. Set isContinuous to false and list specific issues if not.
 2. When isContinuous is false, you MUST also provide editInstructions: a single, super detailed instruction (2–4 paragraphs) that will be sent directly to an image-editing model to fix this spritesheet. The image model does NOT understand "frame 7" or "frame N". It only understands grid positions. So in editInstructions you MUST:
@@ -84,16 +97,21 @@ When isContinuous is true, set editInstructions to an empty string.`;
   const responseSchema = {
     type: "object" as const,
     properties: {
-      isContinuous: { type: "boolean" as const, description: "Whether the animation progression is continuous and logical" },
+      isContinuous: {
+        type: "boolean" as const,
+        description: "Whether the animation progression is continuous and logical",
+      },
       confidence: { type: "number" as const, description: "Confidence score 0-1" },
       issues: {
         type: "array" as const,
         items: { type: "string" as const },
-        description: "List of specific issues (e.g. frame numbers, style jumps); empty when passing",
+        description:
+          "List of specific issues (e.g. frame numbers, style jumps); empty when passing",
       },
       editInstructions: {
         type: "string" as const,
-        description: "When isContinuous is false: full instruction for the image-editing model (grid positions, what to fix, how). When true: empty string.",
+        description:
+          "When isContinuous is false: full instruction for the image-editing model (grid positions, what to fix, how). When true: empty string.",
       },
     },
     required: ["isContinuous", "confidence", "issues", "editInstructions"] as const,

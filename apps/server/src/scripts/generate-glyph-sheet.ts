@@ -3,7 +3,7 @@ import "dotenv/config";
 import { readFile, writeFile } from "fs/promises";
 import { basename, dirname, join } from "path";
 import { generateGlyphSheet } from "../lib/glyph-sheet/generate.js";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { parseNamedArgs } from "./cli-utils.js";
 
 const USAGE = `

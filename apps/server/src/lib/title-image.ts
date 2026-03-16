@@ -1,12 +1,12 @@
 import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { extractAlphaTwoPassFromBuffers } from "./extractAlpha.js";
-import { generateImage, editImage } from "./gemini.js";
+import { generateImage } from "./gemini.js";
 import { swapBackground } from "./spritesheet/swap-background.js";
 
 const REFERENCE_IMAGE_PREFIX =
-  "Using the exact visual style, colors, and treatment of the provided reference moodboard image, generate the following. Output only the requested new image, not an edit of the reference.\n\n";
+  "The attached image is a full scratch card game (it may show game boards, grids, coins, scratch areas, borders, and other UI). You are NOT generating a scratch card. You are ONLY generating a standalone TITLE GRAPHIC: the title words as styled text. Use the attached image PURELY as a style guide for the typography's colors, lighting, and textures. DO NOT include game boards, grids, coins, scratch areas, borders, or any other UI elements from the reference. Output ONLY the title graphic.\n\n";
 
 export type GenerateTitleImageParams = {
   text: string;
@@ -18,9 +18,10 @@ export type GenerateTitleImageParams = {
 function buildPrompt(params: GenerateTitleImageParams): string {
   const { text, visualStyle } = params;
   const parts = [
-    `Generate a single image that displays the following title text prominently and clearly: "${text}". The text should not contain any other text or elements.`,
+    `Generate a single image that displays the following title text prominently and clearly: "${text}".`,
     visualStyle.trim(),
     "The image must be on a pure solid white #FFFFFF background with no other background elements.",
+    `CRITICAL CONSTRAINTS: Output ONLY the words "${text}". The background MUST be pure solid white #FFFFFF. Absolutely no other objects, no secondary text, and no game UI.`,
   ];
   return parts.join(" ");
 }
@@ -33,9 +34,7 @@ function buildPrompt(params: GenerateTitleImageParams): string {
 export async function generateTitleImage(params: GenerateTitleImageParams): Promise<Buffer> {
   const prompt = buildPrompt(params);
   const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
-  const whiteBuffer = params.referenceImage
-    ? await editImage(params.referenceImage, fullPrompt)
-    : await generateImage(prompt);
+  const whiteBuffer = await generateImage(fullPrompt, params.referenceImage);
   const blackBuffer = await swapBackground(whiteBuffer, "white", "black");
   return extractAlphaTwoPassFromBuffers(whiteBuffer, blackBuffer);
 }

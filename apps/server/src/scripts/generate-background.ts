@@ -4,7 +4,7 @@ import { existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { generateBackground } from "../lib/background.js";
 import { generateLoopedVideoBackground, writeBackgroundDebug } from "../lib/veo.js";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { parseNamedArgs } from "./cli-utils.js";
 
 const USAGE = `
@@ -22,6 +22,7 @@ Options:
   --aspect-ratio <ratio>    9:16 (portrait, default) or 16:9 (landscape)
   --output <path>           Output path: for image mode the PNG path; for video mode the MP4 path. Defaults: ./output/background.png (image) or ./output/background.mp4 (video).
   --image <path>            Use this image as first and last frame (skip image generation). Only used when --mode video.
+  --reference-image <path>  Optional: path to a moodboard/reference image to anchor visual style (ignored when --image is used).
 `;
 
 const DEFAULT_ANIMATION_PROMPT = "subtle ambient motion, seamless loop";
@@ -63,13 +64,25 @@ async function main(): Promise<void> {
   const defaultOutput = mode === "image" ? "./output/background.png" : "./output/background.mp4";
   const outputPath = opts.output ?? defaultOutput;
 
+  let referenceImage: Buffer | undefined;
+  const refPath = opts["reference-image"];
+  if (refPath && !imagePath) {
+    if (!existsSync(refPath)) {
+      console.error(`Error: --reference-image file not found: ${refPath}`);
+      process.exit(1);
+    }
+    referenceImage = await readFile(refPath);
+  }
+
   try {
     if (mode === "image" && !imagePath) {
       console.log("Generating background image...");
+      if (referenceImage) console.log("  Reference image:", refPath);
       const { image } = await generateBackground({
         visualStyle: visualStyle!,
         mode: "image",
         aspectRatio,
+        ...(referenceImage && { referenceImage }),
       });
       await writeFile(outputPath, image);
       console.log("Saved to", outputPath);
@@ -94,12 +107,14 @@ async function main(): Promise<void> {
       visualStyleUsed = undefined;
     } else {
       console.log("Generating background image...");
+      if (referenceImage) console.log("  Reference image:", refPath);
       const result = await generateBackground({
         visualStyle: visualStyle!,
         animationPrompt: animationPrompt ?? DEFAULT_ANIMATION_PROMPT,
         mode: "video",
         durationSeconds: duration,
         aspectRatio,
+        ...(referenceImage && { referenceImage }),
       });
       frameBuffer = result.image;
 

@@ -1,8 +1,8 @@
 import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
 import sharp from "sharp";
-import { config } from "../config.js";
-import { generateImage, editImage } from "./gemini.js";
+import { config } from "../config/index.js";
+import { generateImage } from "./gemini.js";
 
 const REFERENCE_IMAGE_PREFIX =
   "Using the exact visual style and colors of the provided reference moodboard image, generate the following. Output only the requested new image, not an edit of the reference.\n\n";
@@ -132,9 +132,7 @@ export async function generateContainerImage(
         ? buildGradientPrompt(params, width, height)
         : buildPatternPrompt(params, width, height);
     const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
-    const buffer = params.referenceImage
-      ? await editImage(params.referenceImage, fullPrompt)
-      : await generateImage(prompt);
+    const buffer = await generateImage(fullPrompt, params.referenceImage);
     return sharp(buffer).resize(width, height).png().toBuffer();
   }
 

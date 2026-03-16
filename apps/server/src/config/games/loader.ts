@@ -12,9 +12,9 @@ import type {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** Resolve config/games dir: from src/config/games or dist/config/games up to server root, then config/games */
+/** Resolve data dir next to this loader (src/config/games/data or dist/config/games/data). */
 function getConfigDir(): string {
-  return path.join(__dirname, "..", "..", "..", "config", "games");
+  return path.join(__dirname, "data");
 }
 
 function loadJson<T>(filename: string): T {

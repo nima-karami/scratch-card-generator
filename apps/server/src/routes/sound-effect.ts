@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { soundEffectRequestSchema } from "@repo/shared";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { generateSoundEffect, writeSoundEffectDebug } from "../lib/elevenlabs.js";
 import { rateLimitGenerate } from "../middleware/rateLimit.js";
 

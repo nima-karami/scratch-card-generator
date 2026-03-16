@@ -87,7 +87,8 @@ export function buildSpritesheetPrompt(params: SpritesheetPromptParams): string 
 - Consistent art style and color palette across all ${totalFrames} frames
 - No text, labels, or annotations
 - Every frame must show visible change from the previous frame
-- Every frame must contain SOME visible content
+- The FINAL frame MUST be completely empty (pure background color, absolutely no subject, dust, or particles)
+- Every OTHER frame must contain some visible content
 - Even pacing: equal amount of change between every pair of consecutive frames`);
 
   return sections.join("\n\n");

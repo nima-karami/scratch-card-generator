@@ -1,7 +1,8 @@
 #!/usr/bin/env npx tsx
 import "dotenv/config";
-import { writeFile } from "fs/promises";
-import { config } from "../config.js";
+import { existsSync } from "fs";
+import { readFile, writeFile } from "fs/promises";
+import { config } from "../config/index.js";
 import {
   generateContainerImage,
   writeContainerImageDebug,
@@ -26,6 +27,7 @@ Options:
   --pattern <name>      For type=pattern: dots, lines, or grid. Default: dots
   --pattern-scale <px>  Tile size for pattern (legacy). Default: 24
   --visual-style <text> Style for LLM (gradient/pattern). Same as Creative Director containerBackground.visualStyle.
+  --reference-image <path> Optional: path to a moodboard/reference image (used for gradient/pattern only).
   --output <path>       Output file path. Default: ./container-image.png
 
 Examples:
@@ -58,6 +60,16 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  let referenceImage: Buffer | undefined;
+  const refPath = opts["reference-image"];
+  if (refPath) {
+    if (!existsSync(refPath)) {
+      console.error(`Error: --reference-image file not found: ${refPath}`);
+      process.exit(1);
+    }
+    referenceImage = await readFile(refPath);
+  }
+
   const params: GenerateContainerImageParams = {
     type,
     width: opts.width ? parseInt(opts.width, 10) : undefined,
@@ -68,12 +80,14 @@ async function main(): Promise<void> {
     pattern: opts.pattern as GenerateContainerImageParams["pattern"],
     patternScale: opts["pattern-scale"] ? parseInt(opts["pattern-scale"], 10) : undefined,
     visualStyle: opts["visual-style"],
+    ...(referenceImage && { referenceImage }),
   };
 
   const outputPath = opts.output ?? "./container-image.png";
 
   try {
     console.log("Generating container image...");
+    if (referenceImage) console.log("  Reference image:", refPath);
     const buffer = await generateContainerImage(params);
     await writeFile(outputPath, buffer);
     console.log("Saved to", outputPath);

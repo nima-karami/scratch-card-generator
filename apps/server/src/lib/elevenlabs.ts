@@ -1,6 +1,6 @@
 import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 
 function getApiKey(): string {

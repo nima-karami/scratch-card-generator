@@ -1,6 +1,6 @@
 # Scratch Card Generator
 
-CLI scripts for generating scratch card assets (spritesheets, videos, sound effects, container backgrounds). All **visual** generation flows use a single style input, **`--visual-style`**, so you can copy the same creative content from a Creative Director manifest into any CLI. Config (cols, rows, width, height, duration) comes from flags or pipeline config.
+CLI scripts for generating scratch card assets (spritesheets, videos, sound effects, container backgrounds). All **visual** generation flows use a single style input, **`--visual-style`**, so you can copy the same creative content from a Creative Director manifest into any CLI. To anchor style to a moodboard (e.g. from `generate-moodboard`), pass **`--reference-image <path>`** to the spritesheet, title-image, container-image, and background CLIs. Config (cols, rows, width, height, duration) comes from flags or pipeline config.
 
 ## Prerequisites
 
@@ -46,16 +46,17 @@ npm run generate-spritesheet -- --subject "Dinosaur" --action "walking" --cols 4
 ```
 
 
-| Option           | Description                                                                                                                       |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `--subject`      | Subject of the animation                                                                                                          |
-| `--action`       | Animation action                                                                                                                  |
-| `--cols`         | Number of columns                                                                                                                 |
-| `--rows`         | Number of rows                                                                                                                    |
-| `--width`        | Canvas width in pixels                                                                                                            |
-| `--height`       | Canvas height in pixels                                                                                                           |
-| `--output`       | Output path for transparent PNG                                                                                                   |
-| `--visual-style` | Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Default: 2D flat illustration style |
+| Option             | Description                                                                                                                       |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `--subject`        | Subject of the animation                                                                                                          |
+| `--action`         | Animation action                                                                                                                  |
+| `--cols`           | Number of columns                                                                                                                 |
+| `--rows`           | Number of rows                                                                                                                    |
+| `--width`          | Canvas width in pixels                                                                                                            |
+| `--height`         | Canvas height in pixels                                                                                                           |
+| `--output`         | Output path for transparent PNG                                                                                                   |
+| `--visual-style`   | Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Default: 2D flat illustration style |
+| `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style (e.g. from `generate-moodboard`)                             |
 
 
 ---
@@ -69,15 +70,16 @@ npm run generate-particle-spritesheet -- --subject "small chocolate chip cookie 
 ```
 
 
-| Option           | Description                                                                                            |
-| ---------------- | ------------------------------------------------------------------------------------------------------ |
-| `--subject`      | Subject for each cell (e.g. "small cookie crumb", "coin")                                              |
-| `--cols`         | Number of columns                                                                                      |
-| `--rows`         | Number of rows                                                                                         |
-| `--width`        | Canvas width in pixels                                                                                 |
-| `--height`       | Canvas height in pixels                                                                                |
-| `--output`       | Output path for transparent PNG                                                                        |
-| `--visual-style` | Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Optional |
+| Option             | Description                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `--subject`        | Subject for each cell (e.g. "small cookie crumb", "coin")                                              |
+| `--cols`           | Number of columns                                                                                      |
+| `--rows`           | Number of rows                                                                                         |
+| `--width`          | Canvas width in pixels                                                                                 |
+| `--height`         | Canvas height in pixels                                                                                |
+| `--output`         | Output path for transparent PNG                                                                        |
+| `--visual-style`   | Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Optional |
+| `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style                                  |
 
 
 ---
@@ -162,11 +164,12 @@ npm run generate-title-image -- --text "Win Big" --visual-style "bold typography
 ```
 
 
-| Option           | Description                                                                        |
-| ---------------- | ---------------------------------------------------------------------------------- |
-| `--text`         | Title text to render in the image (required)                                       |
-| `--visual-style` | Style description for the image (required). Same as Creative Director output.     |
-| `--output`       | Output file path. Default: `./title-image.png`                                     |
+| Option             | Description                                                                        |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| `--text`           | Title text to render in the image (required)                                       |
+| `--visual-style`   | Style description for the image (required). Same as Creative Director output.     |
+| `--output`         | Output file path. Default: `./title-image.png`                                    |
+| `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style               |
 
 
 ---
@@ -207,6 +210,7 @@ npm run generate-background -- --image ./frame.png --animation-prompt "soft ligh
 | `--aspect-ratio`     | `9:16` (portrait, default) or `16:9` (landscape)                                               |
 | `--output`           | Output path: for `--mode image` the PNG path; for `--mode video` the MP4 path. Defaults: `./output/background.png` (image) or `./output/background.mp4` (video). |
 | `--image`            | Use this image as first and last frame (skip image generation). Only used when `--mode video`.  |
+| `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style (ignored when `--image` is used). |
 
 
 ---
@@ -243,9 +247,10 @@ npm run generate-container-image -- --type pattern --pattern dots --visual-style
 | `--color-end`     | End color for gradient. Default: #16213e                                            |
 | `--angle`         | Gradient angle in degrees (linear). Default: 135                                   |
 | `--pattern`       | For type=pattern: dots, lines, or grid. Default: dots                               |
-| `--pattern-scale` | Pattern tile size in px (legacy). Default: 24                                      |
-| `--visual-style`  | Style for LLM (gradient/pattern). Same as Creative Director output.                 |
-| `--output`        | Output file path. Default: ./output/container-image.png                             |
+| `--pattern-scale`   | Pattern tile size in px (legacy). Default: 24                                      |
+| `--visual-style`   | Style for LLM (gradient/pattern). Same as Creative Director output.                 |
+| `--reference-image` | Optional: path to a moodboard/reference image (used for gradient/pattern only).    |
+| `--output`         | Output file path. Default: ./output/container-image.png                             |
 
 
 **API:** `POST /api/container-image` with JSON body `{ "type": "solid" | "gradient" | "pattern", "width?", "height?", "color?", "colorEnd?", "angle?", "pattern?", "patternScale?", "visualStyle?" }` (or `visual_style`) returns the image as PNG. Gradient and pattern require `GEMINI_API_KEY`. When `CONTAINER_IMAGE_DEBUG_OUTPUT_DIR` is set, each generated image is also written there with sequential IDs and logged to `container-image-log.txt`.
@@ -281,10 +286,16 @@ npm run generate-glyph-sheet -- --input ./base-font.png --visual-style "dinosaur
 
 ### Generate Moodboard
 
-Generate a **master moodboard** image from a theme description (requires `GEMINI_API_KEY`). This runs Phase 1 of the Creative Director (meta: artStyle, colorPalette, mood) then generates a single collage image. The moodboard is used to anchor visual style when running the full theme pipeline (`generate-theme`); you can also run this script alone to preview or debug the style anchor.
+Generate a **master moodboard** image from a theme description (requires `GEMINI_API_KEY`). This runs Phase 1 of the Creative Director (meta: artStyle, colorPalette, mood) then produces the moodboard. By default the server uses the reference moodboard at **`apps/server/assets/reference-moodboard.png`** (a deconstructed collage) and re-themes it with the meta. Pass **`--source-image <path>`** to use a different reference image for that run. The moodboard is used to anchor visual style when running the full theme pipeline (`generate-theme`); you can also run this script alone to preview or debug the style anchor.
 
 ```bash
 npm run generate-moodboard -- --theme "cookies" --output ./output/cookies/moodboard.png
+```
+
+**Re-theme a reference image (e.g. deconstructed collage):**
+
+```bash
+npm run generate-moodboard -- --theme "cookies" --source-image ./my-collage.png --output ./output/cookies/moodboard.png
 ```
 
 ```bash
@@ -293,10 +304,11 @@ npm run generate-moodboard -- --theme "retro space arcade"
 
 When `MOODBOARD_DEBUG_OUTPUT_DIR` is set, a copy of the moodboard and a log line are written there (e.g. `0001-cookies.png`, `moodboard-log.txt`).
 
-| Option     | Description                                                                 |
-| ---------- | --------------------------------------------------------------------------- |
-| `--theme`  | Theme description (required) (e.g. "cookies", "retro space arcade")         |
-| `--output` | Output file path for the moodboard PNG. Default: `./moodboard.png`          |
+| Option             | Description                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| `--theme`          | Theme description (required) (e.g. "cookies", "retro space arcade")                           |
+| `--output`         | Output file path for the moodboard PNG. Default: `./moodboard.png`                            |
+| `--source-image`   | Optional: path to a reference image to re-theme into the moodboard (overrides default `apps/server/assets/reference-moodboard.png`) |
 
 
 ---
@@ -311,7 +323,13 @@ The Creative Director turns a theme description into a structured manifest and a
 npm run generate-theme -- --theme "cookies" --output ./output/cookies
 ```
 
-This writes `manifest.json`, `moodboard.png`, and all generated assets into the output directory. Each visual asset is generated with the moodboard as reference to reduce style drift.
+With a custom reference image as moodboard source:
+
+```bash
+npm run generate-theme -- --theme "cookies" --output ./output/cookies --source-image ./my-collage.png
+```
+
+This writes `manifest.json`, `moodboard.png`, and all generated assets into the output directory. Each visual asset is generated with the moodboard as reference to reduce style drift. When `--source-image` is omitted, the default reference at `apps/server/assets/reference-moodboard.png` is used; when provided, that image is re-themed with the meta to produce the moodboard.
 
 When `THEME_DEBUG_OUTPUT_DIR` is set, a copy of the manifest and a log line are written there (e.g. `0001-cookies-manifest.json`, `theme-log.txt`).
 
@@ -336,11 +354,12 @@ Reads an existing manifest and generates assets. **No moodboard is used** (you w
 When `THEME_ASSETS_DEBUG_OUTPUT_DIR` is set, a log line is appended to `theme-assets-log.txt` (timestamp, manifest path, output dir, list of generated files).
 
 
-| Option       | Description                                                                                                 |
-| ------------ | ----------------------------------------------------------------------------------------------------------- |
-| `--theme`    | Theme description (e.g. "cookies", "retro space arcade")                                                    |
-| `--output`   | Output directory (generate-theme, generate-theme-assets) or path to manifest.json (generate-theme-manifest) |
-| `--manifest` | Path to manifest.json (generate-theme-assets only)                                                          |
+| Option             | Description                                                                                                 |
+| ------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `--theme`          | Theme description (e.g. "cookies", "retro space arcade")                                                    |
+| `--output`         | Output directory (generate-theme, generate-theme-assets) or path to manifest.json (generate-theme-manifest) |
+| `--manifest`       | Path to manifest.json (generate-theme-assets only)                                                          |
+| `--source-image`   | Optional (generate-theme only): path to a reference image to re-theme into the moodboard (overrides default `apps/server/assets/reference-moodboard.png`) |
 
 
 ---

@@ -2,7 +2,7 @@
 import "dotenv/config";
 import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
 import { dirname, join } from "path";
-import { config } from "../config.js";
+import { config } from "../config/index.js";
 import { parseNamedArgs } from "./cli-utils.js";
 import { runFullDirector } from "../lib/creative-director/generate-manifest.js";
 import type { ThemeManifest } from "../lib/creative-director/types.js";

@@ -5,7 +5,8 @@ export const config = {
   /** Server and rate limit. */
   server: {
     port: Number(process.env.PORT) || 3001,
-    maxGenerationsPerUser: Number(process.env.MAX_GENERATIONS_PER_USER) || DEFAULT_MAX_GENERATIONS_PER_USER,
+    maxGenerationsPerUser:
+      Number(process.env.MAX_GENERATIONS_PER_USER) || DEFAULT_MAX_GENERATIONS_PER_USER,
   },
   /** Redis for BullMQ. */
   redis: {
