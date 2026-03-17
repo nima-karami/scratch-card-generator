@@ -5,23 +5,27 @@ import { generateImage } from "./gemini.js";
 import type { ThemeManifestMeta } from "./creative-director/types.js";
 
 export interface GenerateMoodboardOptions {
-  /** When set, this reference image (e.g. deconstructed moodboard collage) is re-themed with the meta to produce the moodboard. */
+  /** When set, this reference image is used only as a layout example (four labeled sections); content for each section is created new from the meta, not copied from the reference. */
   sourceImage?: Buffer;
 }
 
 /**
- * Builds a text prompt for re-theming the default reference moodboard (4-panel tagged collage) into a new theme.
- * The reference has four labeled sections: Graphic Style, Typography, Color Palette, Background Style.
+ * Builds a text prompt for generating a moodboard using the reference image only as a layout example.
+ * The reference shows four labeled sections (Graphic Style, Typography, Color Palette, Background Style);
+ * the model must create entirely new content for each section and must not copy the reference's imagery.
  */
 function buildRethemeMoodboardPrompt(meta: ThemeManifestMeta): string {
   const colors = meta.colorPalette.join(", ");
   const parts = [
-    "The attached image is a tagged moodboard with four labeled sections: (1) Graphic Style — a sample object/icon, (2) Typography — sample title text treatment, (3) Color Palette — color swatches, (4) Background Style — a patterned or textured background area. Re-theme it according to the following.",
-    `Theme: ${meta.themeDescription}.`,
-    `Art style: ${meta.artStyle}.`,
-    `Mood: ${meta.mood}.`,
-    `Color palette (hex): ${colors}.`,
-    "Output a new image with the SAME four-panel structure and labels (Graphic Style, Typography, Color Palette, Background Style). Keep each section clearly separate and tagged. Apply the new theme's visuals, colors, and style to each section. Use the color palette given above for the Color Palette section. Do not produce a full scratch card or game layout — only this tagged, deconstructed moodboard. The result will be used so that title generation uses the Typography section, background generation uses the Background Style section, and game objects use the Graphic Style section.",
+    "A structured design moodboard on a solid light gray background, consisting of white, rounded-rectangle panels. The layout is divided into two main columns. The attached image is only a structural layout example; do not copy or adapt its imagery, patterns, or composition.",
+    `The overall theme is ${meta.themeDescription}, with a ${meta.mood} mood and a ${meta.artStyle} style.`,
+    "Left column (three stacked square panels):",
+    "1. Top left panel: Above the panel, the explicit small text 'Graphic Style'. Inside the panel: A single, centered game object illustration representing the theme on a clean background.",
+    "2. Middle left panel: Above the panel, the explicit small text 'Typography'. Inside the panel: A large, stylized title text design appropriate for the theme.",
+    `3. Bottom left panel: Above the panel, the explicit small text 'Color Palette'. Inside the panel: Vertical color swatches representing these exact hex codes: ${colors}.`,
+    "Right column (one tall vertical panel):",
+    "4. Large right panel: Above the panel, the explicit small text 'Background Style'. Inside the panel: A new full-bleed patterned or textured background designed for this theme, matching the color palette.",
+    "Output a single image with this exact four-panel structure and explicit text labels. Keep each section clearly isolated. Do not produce a full scratch card or game layout — only this tagged moodboard.",
   ];
   return parts.join(" ");
 }
@@ -51,7 +55,7 @@ function buildMoodboardPrompt(meta: ThemeManifestMeta): string {
  */
 export async function generateMoodboard(
   meta: ThemeManifestMeta,
-  options?: GenerateMoodboardOptions
+  options?: GenerateMoodboardOptions,
 ): Promise<Buffer> {
   const buffer =
     options?.sourceImage != null

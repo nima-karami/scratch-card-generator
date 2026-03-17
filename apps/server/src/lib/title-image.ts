@@ -1,6 +1,7 @@
 import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { config } from "../config/index.js";
+import { cropTransparentToContent } from "./crop-to-content.js";
 import { extractAlphaTwoPassFromBuffers } from "./extractAlpha.js";
 import { generateImage } from "./gemini.js";
 import { swapBackground } from "./spritesheet/swap-background.js";
@@ -36,7 +37,9 @@ export async function generateTitleImage(params: GenerateTitleImageParams): Prom
   const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
   const whiteBuffer = await generateImage(fullPrompt, params.referenceImage);
   const blackBuffer = await swapBackground(whiteBuffer, "white", "black");
-  return extractAlphaTwoPassFromBuffers(whiteBuffer, blackBuffer);
+  let buffer = await extractAlphaTwoPassFromBuffers(whiteBuffer, blackBuffer);
+  buffer = await cropTransparentToContent(buffer, { padding: 16 });
+  return buffer;
 }
 
 /** Next sequential 4-digit ID for title-image debug (0001, 0002, …). Scans dir for existing NNNN-*.png filenames. */
