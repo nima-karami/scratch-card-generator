@@ -1,12 +1,13 @@
 import { motion } from "motion/react";
-import type { BonusSpotData } from "@repo/shared";
+import type { BonusSpotData, MatchHighlightTheme } from "@repo/shared";
 import { GameItem } from "./game-item";
 
 export interface BonusSpotProps {
   data: BonusSpotData;
+  matchHighlightTheme?: MatchHighlightTheme;
 }
 
-export function BonusSpot({ data }: BonusSpotProps) {
+export function BonusSpot({ data, matchHighlightTheme }: BonusSpotProps) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 8 }}
@@ -18,7 +19,7 @@ export function BonusSpot({ data }: BonusSpotProps) {
         Bonus Spot
       </h3>
       <div className="flex items-center gap-3">
-        <GameItem data={data.item} size="lg" />
+        <GameItem data={data.item} size="lg" matchHighlightTheme={matchHighlightTheme} />
         <span className="text-sm font-medium text-gold">{data.prize}</span>
       </div>
     </motion.section>

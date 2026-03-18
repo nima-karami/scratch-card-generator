@@ -57,6 +57,15 @@ export function GameContainer({
     return "rounded-xl";
   })();
 
+  const borderWidthClass = (() => {
+    const bt = surface?.borderThickness;
+    if (bt === "none") return "border-0";
+    if (bt === "sm") return "border-2";
+    if (bt === "md") return "border-[3px]";
+    if (bt === "lg") return "border-4";
+    return "border";
+  })();
+
   let style: React.CSSProperties | undefined;
   if (isImageVariant) {
     style = {
@@ -74,12 +83,16 @@ export function GameContainer({
   if (surface) backgroundClass = "bg-transparent";
   else if (isImageVariant) backgroundClass = "bg-surface-bright/30";
 
+  const borderColorClass = surface ? undefined : "border-gold/20";
+
   return (
     <div
       className={cn(
-        "relative z-10 border border-gold/20 p-4",
+        "relative z-10 p-4 border",
         radiusClass,
+        borderWidthClass,
         backgroundClass,
+        borderColorClass,
         className,
       )}
       style={style}

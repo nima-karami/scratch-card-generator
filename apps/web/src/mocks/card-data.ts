@@ -1,4 +1,4 @@
-import type { CardData, GameItemData, WinOverlayTheme } from "@repo/shared";
+import type { CardData, GameItemData, MatchHighlightTheme, WinOverlayTheme } from "@repo/shared";
 
 const COOKIE_SPRITESHEET_1 = "/assets/spritesheets/cookie-shatter.png";
 const DINOSAUR_SPRITESHEET = "/assets/spritesheets/dinosaur-dying-3.png";
@@ -61,6 +61,7 @@ export const mockCardPrizeGrid: CardData = {
     backgroundColor: "#0B0C10",
     borderColor: "#FF00FF",
     borderRadius: "md",
+    borderThickness: "md",
   },
   variant: {
     id: "variant-1",
@@ -102,6 +103,7 @@ export const mockCardPrizeGrid2: CardData = {
     backgroundColor: "#10121A",
     borderColor: "#00FFFF",
     borderRadius: "sm",
+    borderThickness: "sm",
   },
   variant: {
     id: "variant-1",
@@ -129,6 +131,12 @@ const MOCK_CARD_PRIZE_GRID_3_SPRITESHEET = COOKIE_SPRITESHEET_1;
 const LUCKY_NUMBERS_SPRITESHEET = COOL_PINEAPPLE_SPRITESHEET;
 const YOUR_NUMBERS_SPRITESHEET = COOL_PINEAPPLE_SPRITESHEET;
 
+const MOCK_MATCH_HIGHLIGHT_THEME: MatchHighlightTheme = {
+  color: "#FFD700",
+  glowColor: "#FFA500",
+  borderRadius: "md",
+};
+
 export const mockCardPrizeGrid3: CardData = {
   title: "Prize Grid 3",
   images: [],
@@ -140,7 +148,9 @@ export const mockCardPrizeGrid3: CardData = {
     backgroundColor: "#0A3D62",
     borderColor: "#FFFF00",
     borderRadius: "lg",
+    borderThickness: "lg",
   },
+  matchHighlightTheme: MOCK_MATCH_HIGHLIGHT_THEME,
   winOverlayTheme: COOKIE_WIN_OVERLAY_THEME,
   variant: {
     id: "variant-1",
@@ -184,6 +194,12 @@ export const mockCardLuckyYour2: CardData = {
     backgroundColor: "#10121A",
     borderColor: "#FF9900",
     borderRadius: "sm",
+    borderThickness: "md",
+  },
+  matchHighlightTheme: {
+    color: "#00FFFF",
+    glowColor: "#0088FF",
+    borderRadius: "md",
   },
   variant: {
     id: "variant-2",

@@ -6,6 +6,7 @@ import type {
   LuckyNumbersData,
   YourNumbersData,
   ScratchCardGame,
+  GameId,
   WinningNumberEntry,
   SpriteSheetConfig,
 } from "@repo/shared";
@@ -25,6 +26,8 @@ export interface GameOutcomeOptions {
   coverSpriteSheet?: SpriteSheetConfig;
   /** Optional spritesheet URL for item covers (e.g. from design step). */
   coverSpriteSheetSrc?: string;
+  /** Optional per-game spritesheet URL for item covers. */
+  coverSpriteSheetSrcByGameId?: Partial<Record<GameId, string>>;
 }
 
 function gameItem(
@@ -203,27 +206,65 @@ export function generateVariantGames(
   options: GameOutcomeOptions
 ): ScratchCardGame[] {
   const games: ScratchCardGame[] = [];
+
+  const coverSpriteSheetSrcFor = (gameId: GameId): string | undefined => {
+    return options.coverSpriteSheetSrcByGameId?.[gameId] ?? options.coverSpriteSheetSrc;
+  };
+
   if (variantId === "variant-1") {
-    games.push(generatePrizeGrid(configs.prizeGrid, options));
+    games.push(
+      generatePrizeGrid(configs.prizeGrid, {
+        ...options,
+        coverSpriteSheetSrc: coverSpriteSheetSrcFor("prize-grid"),
+      })
+    );
     return games;
   }
 
   if (variantId === "variant-2") {
     // Variant 2: Lucky numbers row + Your numbers grid.
-    games.push(generateLuckyNumbers(configs.luckyNumbers, options));
+    games.push(
+      generateLuckyNumbers(configs.luckyNumbers, {
+        ...options,
+        coverSpriteSheetSrc: coverSpriteSheetSrcFor("lucky-numbers"),
+      })
+    );
     const luckyData = games[games.length - 1] as LuckyNumbersData;
-    games.push(generateYourNumbers(configs.yourNumbers, luckyData.winningNumbers, options));
+    games.push(
+      generateYourNumbers(configs.yourNumbers, luckyData.winningNumbers, {
+        ...options,
+        coverSpriteSheetSrc: coverSpriteSheetSrcFor("your-numbers"),
+      })
+    );
     return games;
   }
 
   if (variantId === "variant-3") {
     // Variant 3: Bonus spot + Match-a-bunch + Lucky numbers + Your numbers grid.
-    games.push(generateBonusSpot(configs.bonusSpot, options));
-    games.push(generateMatchABunch(configs.matchABunch, options));
-    games.push(generateLuckyNumbers(configs.luckyNumbers, options));
+    games.push(
+      generateBonusSpot(configs.bonusSpot, {
+        ...options,
+        coverSpriteSheetSrc: coverSpriteSheetSrcFor("bonus-spot"),
+      })
+    );
+    games.push(
+      generateMatchABunch(configs.matchABunch, {
+        ...options,
+        coverSpriteSheetSrc: coverSpriteSheetSrcFor("match-a-bunch"),
+      })
+    );
+    games.push(
+      generateLuckyNumbers(configs.luckyNumbers, {
+        ...options,
+        coverSpriteSheetSrc: coverSpriteSheetSrcFor("lucky-numbers"),
+      })
+    );
     const luckyData = games[games.length - 1] as LuckyNumbersData;
     games.push(
-      generateYourNumbers(configs.yourNumbers, luckyData.winningNumbers, options)
+      generateYourNumbers(configs.yourNumbers, luckyData.winningNumbers, {
+        ...options,
+        coverSpriteSheetSrc: coverSpriteSheetSrcFor("your-numbers"),
+      })
     );
     return games;
   }

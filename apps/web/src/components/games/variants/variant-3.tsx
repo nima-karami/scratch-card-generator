@@ -46,7 +46,7 @@ export function Variant3({ cardData }: Variant3Props) {
         {/* Your numbers: prominent, takes available space */}
         {yourNumbers && (
           <GameContainer className="flex-1 min-h-0" surface={cardData.gameContainerSurface}>
-            <GameSlot game={yourNumbers} glyphSheet={cardData.glyphSheet} />
+            <GameSlot game={yourNumbers} glyphSheet={cardData.glyphSheet} matchHighlightTheme={cardData.matchHighlightTheme} />
           </GameContainer>
         )}
 
@@ -55,17 +55,17 @@ export function Variant3({ cardData }: Variant3Props) {
           <div className="flex flex-wrap gap-3 items-center shrink-0">
             {bonusSpot && (
               <GameContainer variant="none" surface={cardData.gameContainerSurface}>
-                <GameSlot game={bonusSpot} />
+                <GameSlot game={bonusSpot} matchHighlightTheme={cardData.matchHighlightTheme} />
               </GameContainer>
             )}
             {matchABunch && (
               <GameContainer surface={cardData.gameContainerSurface}>
-                <GameSlot game={matchABunch} />
+                <GameSlot game={matchABunch} matchHighlightTheme={cardData.matchHighlightTheme} />
               </GameContainer>
             )}
             {luckyNumbers && (
               <GameContainer surface={cardData.gameContainerSurface}>
-                <GameSlot game={luckyNumbers} glyphSheet={cardData.glyphSheet} />
+                <GameSlot game={luckyNumbers} glyphSheet={cardData.glyphSheet} matchHighlightTheme={cardData.matchHighlightTheme} />
               </GameContainer>
             )}
           </div>

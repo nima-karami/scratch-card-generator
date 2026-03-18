@@ -2,7 +2,6 @@
  * Predefined technical parameters and enable/disable toggles for the Creative Director pipeline.
  * The LLM never touches these — they are config-driven only.
  */
-
 export const PIPELINE_CONFIG = {
   /** Which elements to generate. User toggles these on/off. */
   enabled: {
@@ -24,7 +23,6 @@ export const PIPELINE_CONFIG = {
     canvasHeight: 768,
     cols: 4,
     rows: 3,
-    variantCount: 1,
   },
 
   /** Technical params for particle spritesheet (generate-particle-spritesheet). */
@@ -59,7 +57,10 @@ export const PIPELINE_CONFIG = {
     durationSeconds: 1,
   },
 
-  /** Technical params for glyph sheet (generate-glyph-sheet). Base image: $ , 0-9 in cols x rows grid (see apps/server/assets/). */
+  /**
+   * Technical params for glyph sheet (generate-glyph-sheet).
+   * Base image: $ , 0-9 in cols x rows grid (see apps/server/assets/).
+   */
   glyphSheet: {
     inputPath: "./assets/glyphs-roboto-bold.jpg",
     cols: 4,
@@ -68,3 +69,4 @@ export const PIPELINE_CONFIG = {
 } as const;
 
 export type PipelineConfig = typeof PIPELINE_CONFIG;
+

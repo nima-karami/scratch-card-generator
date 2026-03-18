@@ -14,7 +14,20 @@ You ONLY make verbal/creative decisions. You NEVER output canvas sizes, grid dim
 
 ### gameButtonSpritesheets
 
-Produce exactly **{{SPRITESHEET_VARIANT_COUNT}}** variants. Each variant is an animation for a game cell: the object is destroyed or disappears when the user scratches. Use different but thematically related subjects and actions.
+Produce exactly **{{SPRITESHEET_VARIANT_COUNT}}** variants — one for each active game id in **{{ACTIVE_GAME_IDS}}**.
+
+Critical id contract:
+- For every active game id, you MUST output exactly one variant.
+- Each variant's `id` MUST match an active game id EXACTLY (no missing ids, no extra ids).
+
+To make the artwork correspond to the game type, choose `subject`/`action` based on `id`:
+- `prize-grid`: a generic prize tile cover (e.g. coin, gemstone, wrapped charm, token).
+- `bonus-spot`: a single bonus prize cover (smaller, more “special” than prize-grid tiles).
+- `match-a-bunch`: a cover representing a bunch of matching symbols (e.g. cluster of charms/emblems).
+- `lucky-numbers`: a cover representing lucky numbers (e.g. fortune token, number ticket, lucky seal).
+- `your-numbers`: a cover representing the player’s number grid tiles (e.g. number slate/card tiles distinct from `lucky-numbers`).
+
+Each variant is an animation for that game's cell cover: the object is destroyed or disappears when the user scratches. Use distinct but thematically related subjects/actions across the different active games.
 
 For each variant output:
 
@@ -56,6 +69,19 @@ Visual treatment for the **UI container** that wraps each game area (the boxed p
   - "sm" for slightly softened retro UI
   - "md" for modern, clean, friendly
   - "lg" for playful, bubbly, toy-like
+- **borderThickness**: One of "none" | "sm" | "md" | "lg". Pick based on vibe:
+  - "none" for frameless / flat UI
+  - "sm" for subtle outlines
+  - "md" for clear, modern panel framing
+  - "lg" for chunky, arcade/toy-like emphasis
+
+### matchHighlightTheme
+
+Visual treatment for the animation that highlights matching/winning items.
+
+- **color**: Primary hex color for the match highlight box shadow or border. Pick a bright, energetic color from the palette that stands out.
+- **glowColor**: Optional secondary hex color for the pulse/glow effect.
+- **borderRadius**: One of "none" | "sm" | "md" | "lg". Match the style of the `gameContainerSurface` or choose one that fits the game items.
 
 ### containerBackground
 
@@ -99,11 +125,10 @@ Overlay when the user wins (color only).
 - **overlayColor**: CSS color string, e.g. "rgba(44, 24, 16, 0.7)" — semi-transparent overlay that fits the moodboard palette.
 
 ## Variety and balance
-
-- Game buttons: {{SPRITESHEET_VARIANT_COUNT}} different but thematically related subjects/actions.
+- Game buttons: one distinct subject/action per active game id in **{{ACTIVE_GAME_IDS}}**.
 - Particles: complement, do not duplicate button subjects.
 - All visual elements must be described so they match the provided moodboard image.
 
 ## Output format
 
-The API enforces the response shape. Output only the elements object (gameButtonSpritesheets, particleSpritesheet, titleImage, winMessageImage, gameContainerSurface, containerBackground, videoBackground, backgroundMusic, revealSound, glyphSheet, winOverlay). No meta in this response.
+The API enforces the response shape. Output only the elements object (gameButtonSpritesheets, particleSpritesheet, titleImage, winMessageImage, gameContainerSurface, matchHighlightTheme, containerBackground, videoBackground, backgroundMusic, revealSound, glyphSheet, winOverlay). No meta in this response.

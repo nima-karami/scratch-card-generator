@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import type { GameItemData, GlyphSheetConfig } from "@repo/shared";
+import type { GameItemData, GlyphSheetConfig, MatchHighlightTheme } from "@repo/shared";
 import { useSoundStore } from "../../stores/sound-store";
 import { useScratchCardStore } from "../../stores/scratch-card-store";
 import { cn } from "../../lib/utils";
@@ -23,6 +23,8 @@ export interface GameItemProps {
   spriteSheetConfig?: { cols: number; rows: number };
   /** Optional glyph sheet for rendering the value (e.g. themed digits). When set, value is drawn from the sheet; otherwise plain text. */
   glyphSheet?: GlyphSheetConfig;
+  /** Optional theme for match highlight */
+  matchHighlightTheme?: MatchHighlightTheme;
 }
 
 export function GameItem({
@@ -31,6 +33,7 @@ export function GameItem({
   onReveal,
   spriteSheetConfig,
   glyphSheet,
+  matchHighlightTheme,
 }: GameItemProps) {
   const playRevealSound = useSoundStore((s) => s.playRevealSound);
   const [localRevealed, setLocalRevealed] = useState(false);
@@ -123,8 +126,7 @@ export function GameItem({
 
   function handleRevealComplete() {
     if (isOnScratchCard) {
-      const isWin = isYourNumber && (data.valueCents ?? 0) > 0;
-      setItemState(data.id, isWin ? "win" : "open");
+      setItemState(data.id, "open");
     }
     setLocalRevealed(true);
     setIsPlayingRevealAnimation(false);
@@ -152,10 +154,39 @@ export function GameItem({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       className={cn(
-        "rounded-lg flex items-center justify-center font-semibold text-text-primary overflow-hidden shrink-0",
+        "relative rounded-lg flex items-center justify-center font-semibold text-text-primary overflow-hidden shrink-0",
         sizeClasses[size],
       )}
     >
+      <AnimatePresence>
+        {storeItemState === "win" && matchHighlightTheme && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className={cn(
+              "absolute inset-0 z-20 pointer-events-none border-[3px]",
+              {
+                "rounded-none": matchHighlightTheme.borderRadius === "none",
+                "rounded-sm": matchHighlightTheme.borderRadius === "sm",
+                "rounded-md": matchHighlightTheme.borderRadius === "md",
+                "rounded-lg": matchHighlightTheme.borderRadius === "lg",
+              }
+            )}
+            style={{
+              borderColor: matchHighlightTheme.color,
+              boxShadow: `0 0 10px ${matchHighlightTheme.glowColor || matchHighlightTheme.color} inset, 0 0 10px ${matchHighlightTheme.glowColor || matchHighlightTheme.color}`,
+            }}
+            transition={{
+              duration: 0.8,
+              repeat: Infinity,
+              repeatType: "reverse",
+              ease: "easeInOut",
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {hasSpritesheet && data.coverSpriteSheetSrc && spriteSheetConfig ? (
         <div className="relative w-full h-full">
           {/* Keep value in a stable, centered layer to avoid any layout shift at reveal-complete. */}

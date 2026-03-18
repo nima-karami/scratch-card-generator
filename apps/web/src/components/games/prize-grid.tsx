@@ -1,14 +1,15 @@
 import { motion } from "motion/react";
-import type { GlyphSheetConfig, PrizeGridData } from "@repo/shared";
+import type { GlyphSheetConfig, PrizeGridData, MatchHighlightTheme } from "@repo/shared";
 import { GameItem } from "./game-item";
 
 export interface PrizeGridProps {
   data: PrizeGridData;
   /** Optional glyph sheet for rendering item values (from card). */
   glyphSheet?: GlyphSheetConfig;
+  matchHighlightTheme?: MatchHighlightTheme;
 }
 
-export function PrizeGrid({ data, glyphSheet }: PrizeGridProps) {
+export function PrizeGrid({ data, glyphSheet, matchHighlightTheme }: PrizeGridProps) {
   const { cols, rows, items, coverSpriteSheet } = data;
   const total = cols * rows;
   const visibleItems = items.slice(0, total);
@@ -33,6 +34,7 @@ export function PrizeGrid({ data, glyphSheet }: PrizeGridProps) {
             size="lg"
             spriteSheetConfig={coverSpriteSheet}
             glyphSheet={glyphSheet}
+            matchHighlightTheme={matchHighlightTheme}
           />
         ))}
       </div>

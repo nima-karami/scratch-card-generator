@@ -54,6 +54,9 @@ const gameContainerSurfaceSchema = z.object({
   borderRadius: z
     .enum(["none", "sm", "md", "lg"])
     .describe('Container corner radius: "none" | "sm" | "md" | "lg"'),
+  borderThickness: z
+    .enum(["none", "sm", "md", "lg"])
+    .describe('Container border thickness: "none" | "sm" | "md" | "lg"'),
 });
 
 const containerBackgroundSchema = z.object({
@@ -85,6 +88,14 @@ const winOverlaySchema = z.object({
   overlayColor: z.string().describe("e.g. rgba(44,24,16,0.7)"),
 });
 
+const matchHighlightThemeSchema = z.object({
+  color: z.string().describe("Primary hex color for the match highlight box shadow or border"),
+  glowColor: z.string().describe("Secondary hex color for the pulse/glow effect").optional(),
+  borderRadius: z
+    .enum(["none", "sm", "md", "lg"])
+    .describe('Highlight border radius: "none" | "sm" | "md" | "lg"'),
+});
+
 /** Schema for Phase 2: element-specific content (after moodboard is generated). */
 export const themeManifestElementsSchema = z
   .object({
@@ -96,6 +107,7 @@ export const themeManifestElementsSchema = z
     // Optional for backwards compatibility with older manifests.
     winMessageImage: winMessageImageSchema.optional(),
     gameContainerSurface: gameContainerSurfaceSchema,
+    matchHighlightTheme: matchHighlightThemeSchema,
     containerBackground: containerBackgroundSchema,
     videoBackground: videoBackgroundSchema,
     backgroundMusic: backgroundMusicSchema,

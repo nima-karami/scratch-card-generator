@@ -40,7 +40,7 @@ export function Variant2({ cardData }: Variant2Props) {
         {luckyNumbers && (
           <GameContainer surface={cardData.gameContainerSurface}>
             {/* render directly without GameSlot wrapper */}
-            <LuckyNumbers data={luckyNumbers} glyphSheet={cardData.glyphSheet} />
+            <LuckyNumbers data={luckyNumbers} glyphSheet={cardData.glyphSheet} matchHighlightTheme={cardData.matchHighlightTheme} />
           </GameContainer>
         )}
 
@@ -48,7 +48,7 @@ export function Variant2({ cardData }: Variant2Props) {
         {yourNumbers && (
           <GameContainer surface={cardData.gameContainerSurface}>
             {/* render directly without GameSlot wrapper */}
-            <YourNumbers data={yourNumbers} glyphSheet={cardData.glyphSheet} />
+            <YourNumbers data={yourNumbers} glyphSheet={cardData.glyphSheet} matchHighlightTheme={cardData.matchHighlightTheme} />
           </GameContainer>
         )}
       </div>

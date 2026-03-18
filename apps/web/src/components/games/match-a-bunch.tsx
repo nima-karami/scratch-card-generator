@@ -1,14 +1,15 @@
 import { motion } from "motion/react";
-import type { MatchABunchData } from "@repo/shared";
+import type { MatchABunchData, MatchHighlightTheme } from "@repo/shared";
 import { GameItem } from "./game-item";
 
 const CLAMP_MATCH = { min: 2, max: 5 };
 
 export interface MatchABunchProps {
   data: MatchABunchData;
+  matchHighlightTheme?: MatchHighlightTheme;
 }
 
-export function MatchABunch({ data }: MatchABunchProps) {
+export function MatchABunch({ data, matchHighlightTheme }: MatchABunchProps) {
   const matchCount = Math.max(
     CLAMP_MATCH.min,
     Math.min(CLAMP_MATCH.max, data.matchCount),
@@ -27,7 +28,7 @@ export function MatchABunch({ data }: MatchABunchProps) {
       </h3>
       <div className="flex flex-wrap items-center gap-2">
         {items.map((item) => (
-          <GameItem key={item.id} data={item} size="md" />
+          <GameItem key={item.id} data={item} size="md" matchHighlightTheme={matchHighlightTheme} />
         ))}
         <span className="text-text-muted text-sm mx-1">→</span>
         <div className="rounded-lg border border-gold/20 bg-surface px-2 py-1.5 text-sm font-medium text-gold">

@@ -4,13 +4,14 @@ import { Worker, Job } from "bullmq";
 import { config } from "../config/index.js";
 import { createRedisConnection } from "./connection.js";
 import { getQueueName } from "./queue.js";
-import type { CardData, SSEEvent, WinOverlayTheme } from "@repo/shared";
+import type { CardData, GameId, SSEEvent, WinOverlayTheme } from "@repo/shared";
 import { getGameConfigs } from "../config/games/index.js";
+import { DEFAULT_VARIANT_ID, VARIANT_NAMES, getActiveGameIdsForVariant } from "../config/games/active-games-by-variant.js";
 import { generateVariantGames } from "../lib/game-outcomes.js";
 import { runFullDirector } from "../lib/creative-director/generate-manifest.js";
 import { orchestrateThemeAssets } from "../lib/creative-director/orchestrate.js";
 import { writeThemeManifestDebug } from "../lib/creative-director/theme-manifest-debug.js";
-import { PIPELINE_CONFIG } from "../lib/creative-director/pipeline-config.js";
+import { PIPELINE_CONFIG } from "../config/creative-director/pipeline-config.js";
 import type { ThemeAssetResult } from "../lib/creative-director/orchestrate.js";
 
 export interface GenerationJobData {
@@ -38,10 +39,11 @@ export type ProgressCallback = (event: SSEEvent) => void;
 /** Step 1 — Creative Director: theme string → Theme Manifest + moodboard (two-step: meta → moodboard → elements). */
 async function runDesignStep(
   prompt: string,
-  onProgress: ProgressCallback
+  onProgress: ProgressCallback,
+  activeGameIds: string[]
 ): Promise<{ manifest: Awaited<ReturnType<typeof runFullDirector>>["manifest"]; moodboard: Buffer }> {
   onProgress({ type: "designing", message: "Designing your theme..." });
-  const { manifest, moodboard } = await runFullDirector(prompt);
+  const { manifest, moodboard } = await runFullDirector(prompt, { activeGameIds });
   return { manifest, moodboard };
 }
 
@@ -72,14 +74,6 @@ async function runAssetStep(
   }, { moodboard, baseUrl });
 }
 
-/** Default variant to generate (prize grid only). Can later be driven by request. */
-const DEFAULT_VARIANT_ID = "variant-2" as const;
-const VARIANT_NAMES = {
-  "variant-1": "Variant 1",
-  "variant-2": "Variant 2",
-  "variant-3": "Variant 3",
-} as const;
-
 /** Step 3 — Compose final CardData from manifest + asset result + game outcomes. */
 function runComposeStep(
   manifest: Awaited<ReturnType<typeof runFullDirector>>["manifest"],
@@ -90,15 +84,32 @@ function runComposeStep(
   const gameConfigs = getGameConfigs();
   const { spritesheet, particles, glyphSheet } = PIPELINE_CONFIG;
 
-  const coverSpriteSheetSrc =
+  const activeGameIds = getActiveGameIdsForVariant(DEFAULT_VARIANT_ID);
+  const fallbackCoverSpriteSheetSrc =
     assetResult.gameButtonSpritesheets.length > 0
       ? `${baseUrl}/${basename(assetResult.gameButtonSpritesheets[0]!)}`
       : undefined;
 
+  const coverSpriteSheetSrcByGameId: Partial<Record<GameId, string>> = {};
+  manifest.elements.gameButtonSpritesheets.forEach((variant, i) => {
+    const spritesheetPath = assetResult.gameButtonSpritesheets[i];
+    if (!spritesheetPath) return;
+    const url = `${baseUrl}/${basename(spritesheetPath)}`;
+    coverSpriteSheetSrcByGameId[variant.id as GameId] = url;
+  });
+
+  // If the director omitted a game id (shouldn't happen), fall back to the first generated spritesheet.
+  for (const gameId of activeGameIds) {
+    const typedGameId = gameId as GameId;
+    if (!coverSpriteSheetSrcByGameId[typedGameId] && fallbackCoverSpriteSheetSrc) {
+      coverSpriteSheetSrcByGameId[typedGameId] = fallbackCoverSpriteSheetSrc;
+    }
+  }
+
   const games = generateVariantGames(DEFAULT_VARIANT_ID, gameConfigs, {
     jobId,
     coverSpriteSheet: { cols: spritesheet.cols, rows: spritesheet.rows },
-    coverSpriteSheetSrc,
+    coverSpriteSheetSrcByGameId,
   });
 
   const title = manifest.elements.titleImage.text;
@@ -108,6 +119,7 @@ function runComposeStep(
     backgroundColor: rawSurface.backgroundColor.trim(),
     borderColor: rawSurface.borderColor.trim(),
     borderRadius: rawSurface.borderRadius,
+    borderThickness: rawSurface.borderThickness,
   };
 
   let winOverlayTheme: WinOverlayTheme | undefined;
@@ -166,9 +178,10 @@ async function processJob(
   await mkdir(outputDir, { recursive: true });
 
   const baseUrl = `/api/jobs/${jobId}/assets`;
+  const activeGameIds = getActiveGameIdsForVariant(DEFAULT_VARIANT_ID);
 
   // Step 1 — Creative Director (meta → moodboard → elements)
-  const { manifest, moodboard } = await runDesignStep(prompt, onProgress);
+  const { manifest, moodboard } = await runDesignStep(prompt, onProgress, activeGameIds);
 
   // Persist the theme manifest for a complete debug snapshot.
   await writeFile(join(outputDir, "manifest.json"), JSON.stringify(manifest, null, 2), "utf-8");

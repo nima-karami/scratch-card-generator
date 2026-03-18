@@ -30,7 +30,7 @@ export function Variant1({ cardData }: Variant1Props) {
       {/* Games: remaining space, stacked */}
       <div className="flex-1 min-h-0 overflow-auto flex flex-col gap-4 p-7 pt-4">
         <GameContainer surface={cardData.gameContainerSurface}>
-          <PrizeGrid data={prizeGrid} glyphSheet={cardData.glyphSheet} />
+          <PrizeGrid data={prizeGrid} glyphSheet={cardData.glyphSheet} matchHighlightTheme={cardData.matchHighlightTheme} />
         </GameContainer>
       </div>
     </div>

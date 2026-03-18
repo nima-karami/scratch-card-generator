@@ -1,13 +1,14 @@
 import { motion } from "motion/react";
-import type { GlyphSheetConfig, LuckyNumbersData } from "@repo/shared";
+import type { GlyphSheetConfig, LuckyNumbersData, MatchHighlightTheme } from "@repo/shared";
 import { GameItem } from "./game-item";
 
 export interface LuckyNumbersProps {
   data: LuckyNumbersData;
   glyphSheet?: GlyphSheetConfig;
+  matchHighlightTheme?: MatchHighlightTheme;
 }
 
-export function LuckyNumbers({ data, glyphSheet }: LuckyNumbersProps) {
+export function LuckyNumbers({ data, glyphSheet, matchHighlightTheme }: LuckyNumbersProps) {
   const items = data.items.slice(0, data.count);
   const spriteSheetConfig = data.coverSpriteSheet;
 
@@ -30,6 +31,7 @@ export function LuckyNumbers({ data, glyphSheet }: LuckyNumbersProps) {
             size="lg"
             spriteSheetConfig={spriteSheetConfig}
             glyphSheet={glyphSheet}
+            matchHighlightTheme={matchHighlightTheme}
           />
         ))}
       </div>

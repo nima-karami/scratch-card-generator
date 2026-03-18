@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "fs/promises";
 import { dirname, join, resolve, basename } from "path";
 import { fileURLToPath } from "url";
 import type { ThemeManifest } from "./types.js";
-import type { PipelineConfig } from "./pipeline-config.js";
+import type { PipelineConfig } from "../../config/creative-director/pipeline-config.js";
 import { generateSpritesheet } from "../spritesheet/generate.js";
 import type { SpritesheetPromptParams } from "../spritesheet/prompt-builder.js";
 import { generateParticleSpritesheet } from "../spritesheet/generate.js";

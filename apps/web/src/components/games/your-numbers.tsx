@@ -1,13 +1,14 @@
 import { motion } from "motion/react";
-import type { GlyphSheetConfig, YourNumbersData } from "@repo/shared";
+import type { GlyphSheetConfig, YourNumbersData, MatchHighlightTheme } from "@repo/shared";
 import { GameItem } from "./game-item";
 
 export interface YourNumbersProps {
   data: YourNumbersData;
   glyphSheet?: GlyphSheetConfig;
+  matchHighlightTheme?: MatchHighlightTheme;
 }
 
-export function YourNumbers({ data, glyphSheet }: YourNumbersProps) {
+export function YourNumbers({ data, glyphSheet, matchHighlightTheme }: YourNumbersProps) {
   const { cols, rows, items } = data;
   const total = cols * rows;
   const visibleItems = items.slice(0, total);
@@ -34,6 +35,7 @@ export function YourNumbers({ data, glyphSheet }: YourNumbersProps) {
             size="lg"
             spriteSheetConfig={spriteSheetConfig}
             glyphSheet={glyphSheet}
+            matchHighlightTheme={matchHighlightTheme}
           />
         ))}
       </div>

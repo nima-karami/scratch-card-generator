@@ -7,6 +7,7 @@ import { getScratchableItemIds, getTotalWonPlaceholder } from "./scratch-card-ut
 import { ScratchCardBackground } from "./scratch-card-background";
 import { Variant1, Variant2, Variant3 } from "./variants";
 import { WinAnimation } from "./win-animation";
+import { useMatchEvaluator } from "./use-match-evaluator";
 
 const DEFAULT_BACKGROUND_VIDEO = "/assets/videos/video-background.mp4";
 
@@ -44,6 +45,9 @@ export function ScratchCard({
       reset();
     };
   }, [cardData, variant, registerItemIds, reset]);
+
+  // Evaluate true-match conditions across games
+  useMatchEvaluator(cardData);
 
   // Show win overlay after a short delay once all items are revealed
   useEffect(() => {

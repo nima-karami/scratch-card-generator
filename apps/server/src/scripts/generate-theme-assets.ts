@@ -5,7 +5,7 @@ import { join } from "path";
 import { config } from "../config/index.js";
 import { parseNamedArgs } from "./cli-utils.js";
 import { orchestrateThemeAssets } from "../lib/creative-director/orchestrate.js";
-import { PIPELINE_CONFIG } from "../lib/creative-director/pipeline-config.js";
+import { PIPELINE_CONFIG } from "../config/creative-director/pipeline-config.js";
 import { themeManifestSchema } from "../lib/creative-director/types.js";
 
 async function writeThemeAssetsDebug(

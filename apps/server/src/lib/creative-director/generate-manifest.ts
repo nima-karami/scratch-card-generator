@@ -3,7 +3,10 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { GoogleGenAI } from "@google/genai";
 import { config } from "../../config/index.js";
-import { PIPELINE_CONFIG } from "./pipeline-config.js";
+import {
+  DEFAULT_VARIANT_ID,
+  getActiveGameIdsForVariant,
+} from "../../config/games/active-games-by-variant.js";
 import {
   THEME_MANIFEST_META_RESPONSE_SCHEMA,
   THEME_MANIFEST_ELEMENTS_RESPONSE_SCHEMA,
@@ -20,7 +23,9 @@ const CREATIVE_DIRECTOR_MODEL = "gemini-3.1-pro-preview";
 const MAX_RETRIES = 3;
 
 let cachedSystemPromptMeta: string | null = null;
-let cachedSystemPromptElements: string | null = null;
+const cachedSystemPromptElementsByActiveGameIdsKey = new Map<string, string>();
+
+const DEFAULT_ACTIVE_GAME_IDS = getActiveGameIdsForVariant(DEFAULT_VARIANT_ID);
 
 async function loadSystemPromptMeta(): Promise<string> {
   if (cachedSystemPromptMeta) return cachedSystemPromptMeta;
@@ -30,15 +35,20 @@ async function loadSystemPromptMeta(): Promise<string> {
   return cachedSystemPromptMeta;
 }
 
-async function loadSystemPromptElements(): Promise<string> {
-  if (cachedSystemPromptElements) return cachedSystemPromptElements;
+async function loadSystemPromptElements(activeGameIds: string[]): Promise<string> {
+  const normalized = [...activeGameIds].sort();
+  const cacheKey = normalized.join("|");
+  const cached = cachedSystemPromptElementsByActiveGameIdsKey.get(cacheKey);
+  if (cached) return cached;
   const path = join(__dirname, "system-prompt-elements.md");
   const raw = await readFile(path, "utf-8");
-  cachedSystemPromptElements = raw.replace(
-    /\{\{SPRITESHEET_VARIANT_COUNT\}\}/g,
-    String(PIPELINE_CONFIG.spritesheet.variantCount)
-  );
-  return cachedSystemPromptElements;
+  const activeGameIdsLiteral = `[${normalized.map((id) => JSON.stringify(id)).join(", ")}]`;
+  const prompt = raw
+    .replace(/\{\{SPRITESHEET_VARIANT_COUNT\}\}/g, String(normalized.length))
+    .replace(/\{\{ACTIVE_GAME_IDS\}\}/g, activeGameIdsLiteral);
+
+  cachedSystemPromptElementsByActiveGameIdsKey.set(cacheKey, prompt);
+  return prompt;
 }
 
 /**
@@ -100,14 +110,15 @@ export async function generateThemeMeta(themeDescription: string): Promise<Theme
  */
 export async function generateThemeElements(
   meta: ThemeManifestMeta,
-  moodboardBuffer: Buffer
+  moodboardBuffer: Buffer,
+  activeGameIds: string[]
 ): Promise<ThemeManifestElements> {
   const apiKey = config.gemini.apiKey;
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is required for Creative Director. Set it in .env.");
   }
 
-  const systemPrompt = await loadSystemPromptElements();
+  const systemPrompt = await loadSystemPromptElements(activeGameIds);
   const metaBlurb = `Current art direction: artStyle="${meta.artStyle}", mood="${meta.mood}", colorPalette=[${meta.colorPalette.join(", ")}]. Theme: ${meta.themeDescription}. Game name (use exactly for titleImage.text): "${meta.gameName}".`;
   const userMessage = `The attached image is the moodboard for this theme. ${metaBlurb}\n\nLook at the moodboard and output the complete elements JSON so that every visualStyle and creative choice matches what you see in the image. For titleImage.text you must use exactly this game name (already set in art direction): "${meta.gameName}". Do not invent different wording.`;
 
@@ -186,7 +197,7 @@ export function buildManifestFromMetaAndElements(
  */
 export async function runFullDirector(
   themeDescription: string,
-  options?: { sourceImage?: Buffer }
+  options?: { sourceImage?: Buffer; activeGameIds?: string[] }
 ): Promise<{
   manifest: ThemeManifest;
   moodboard: Buffer;
@@ -194,11 +205,12 @@ export async function runFullDirector(
   const { generateMoodboard } = await import("../moodboard.js");
   const { getDefaultReferenceMoodboard } = await import("../reference-moodboard.js");
   const meta = await generateThemeMeta(themeDescription);
+  const activeGameIds = options?.activeGameIds ?? DEFAULT_ACTIVE_GAME_IDS;
   const sourceImage = options?.sourceImage ?? (await getDefaultReferenceMoodboard());
   const moodboard = await generateMoodboard(meta, {
     ...(sourceImage && { sourceImage }),
   });
-  const elements = await generateThemeElements(meta, moodboard);
+  const elements = await generateThemeElements(meta, moodboard, activeGameIds);
   const manifest = buildManifestFromMetaAndElements(meta, elements);
   return { manifest, moodboard };
 }

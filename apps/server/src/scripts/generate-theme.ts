@@ -8,7 +8,7 @@ import { parseNamedArgs } from "./cli-utils.js";
 import { runFullDirector } from "../lib/creative-director/generate-manifest.js";
 import { orchestrateThemeAssets } from "../lib/creative-director/orchestrate.js";
 import { getDefaultReferenceMoodboard } from "../lib/reference-moodboard.js";
-import { PIPELINE_CONFIG } from "../lib/creative-director/pipeline-config.js";
+import { PIPELINE_CONFIG } from "../config/creative-director/pipeline-config.js";
 import type { ThemeManifest } from "../lib/creative-director/types.js";
 
 async function nextThemeDebugId(debugDir: string): Promise<string> {

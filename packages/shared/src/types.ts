@@ -149,11 +149,19 @@ export interface GlyphSheetConfig {
 /** Container corner radius options controlled by the theme manifest. */
 export type GameContainerRadius = "none" | "sm" | "md" | "lg";
 
+/** Theme for the match highlight animation */
+export interface MatchHighlightTheme {
+  color: string;
+  glowColor?: string;
+  borderRadius: GameContainerRadius;
+}
+
 /** Theme-controlled surface styling for the UI panel that wraps game content. */
 export interface GameContainerSurfaceTheme {
   backgroundColor: string;
   borderColor: string;
   borderRadius: GameContainerRadius;
+  borderThickness: GameContainerRadius;
 }
 
 /** Final composed card data for the scratch-card layout */
@@ -174,6 +182,8 @@ export interface CardData {
   glyphSheet?: GlyphSheetConfig;
   /** Theme-controlled surface styling for the wrapper around game content. */
   gameContainerSurface: GameContainerSurfaceTheme;
+  /** Optional theme for the match highlight animation */
+  matchHighlightTheme?: MatchHighlightTheme;
 }
 
 /** Job status for internal/SSE use */
