@@ -21,8 +21,16 @@ export function LuckyNumbers({ data, glyphSheet, matchHighlightTheme, foreground
       transition={{ duration: 0.4 }}
       className="space-y-3"
     >
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-gold-dim">
-        Lucky Numbers
+      <h3 className="flex w-full justify-center text-xs font-semibold uppercase tracking-wider text-gold-dim">
+        {data.headerImageUrl ? (
+          <img
+            src={data.headerImageUrl}
+            alt="Lucky Numbers"
+            className="h-4 max-w-full object-contain object-center"
+          />
+        ) : (
+          "Lucky Numbers"
+        )}
       </h3>
       {/* Center the tiles horizontally and vertically in their wrap grid */}
       <div className="flex flex-wrap gap-2 justify-center items-center">

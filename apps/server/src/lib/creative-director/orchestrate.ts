@@ -7,8 +7,9 @@ import type { PipelineConfig } from "../../config/creative-director/pipeline-con
 import { generateSpritesheet } from "../spritesheet/generate.js";
 import type { SpritesheetPromptParams } from "../spritesheet/prompt-builder.js";
 import { generateParticleSpritesheet } from "../spritesheet/generate.js";
-import { generateTitleImage, writeTitleImageDebug } from "../title-image.js";
+import { generateTitleImage, generateTwoWordmarkImages, writeTitleImageDebug } from "../title-image.js";
 import { generateWinMessageImage, writeWinMessageImageDebug } from "../win-message-image.js";
+import { generateNextButtonImage, writeNextButtonImageDebug } from "../next-button-image.js";
 import { generateContainerImage } from "../container-image.js";
 import { generateBackground } from "../background.js";
 import { generateSoundEffect, writeSoundEffectDebug } from "../elevenlabs.js";
@@ -39,7 +40,10 @@ export interface ThemeAssetResult {
   gameButtonSpritesheets: string[];
   particleSpritesheet?: string;
   titleImage?: string;
+  luckyNumbersHeaderImage?: string;
+  yourNumbersHeaderImage?: string;
   winMessageImage?: string;
+  nextButtonImage?: string;
   containerBackground?: string;
   backgroundImage?: string;
   videoBackground?: string;
@@ -208,6 +212,41 @@ export async function orchestrateThemeAssets(
     );
   }
 
+  // ---- Lucky/Your numbers section headers ("Lucky Numbers" + "Your Numbers") ----
+  if (enabled.numbersHeaderImages) {
+    tasks.push(
+      (async () => {
+        onProgress?.({ type: "generating-title", message: "Lucky/Your numbers header images" });
+        const { top, bottom } = await generateTwoWordmarkImages({
+          topText: "Lucky Numbers",
+          bottomText: "Your Numbers",
+          visualStyle: elements.titleImage.visualStyle,
+          ...(moodboard && { referenceImage: moodboard }),
+        });
+
+        const luckyPath = join(outputDir, "lucky-numbers-header.png");
+        await writeFile(luckyPath, top);
+        await writeTitleImageDebug(top, {
+          text: "Lucky Numbers",
+          visualStyle: elements.titleImage.visualStyle,
+          ...(moodboard && { referenceImage: moodboard }),
+        });
+        result.luckyNumbersHeaderImage = luckyPath;
+        emitAssetReady(luckyPath, "luckyNumbersHeaderImage");
+
+        const yourPath = join(outputDir, "your-numbers-header.png");
+        await writeFile(yourPath, bottom);
+        await writeTitleImageDebug(bottom, {
+          text: "Your Numbers",
+          visualStyle: elements.titleImage.visualStyle,
+          ...(moodboard && { referenceImage: moodboard }),
+        });
+        result.yourNumbersHeaderImage = yourPath;
+        emitAssetReady(yourPath, "yourNumbersHeaderImage");
+      })(),
+    );
+  }
+
   // ---- Win message image ("You Won!") ----
   if (enabled.winMessageImage) {
     tasks.push(
@@ -225,6 +264,26 @@ export async function orchestrateThemeAssets(
         result.winMessageImage = path;
         emitAssetReady(path, "winMessageImage");
       })()
+    );
+  }
+
+  // ---- Next button wordmark ("Next") ----
+  if ((enabled as { nextButtonImage?: boolean }).nextButtonImage) {
+    tasks.push(
+      (async () => {
+        onProgress?.({ type: "generating-title", message: "Next button image" });
+        const params = {
+          text: "Next",
+          visualStyle: elements.nextButtonImage?.visualStyle ?? elements.titleImage.visualStyle,
+          ...(moodboard && { referenceImage: moodboard }),
+        };
+        const buffer = await generateNextButtonImage(params);
+        const path = join(outputDir, "next-button.png");
+        await writeFile(path, buffer);
+        await writeNextButtonImageDebug(buffer, params);
+        result.nextButtonImage = path;
+        emitAssetReady(path, "nextButtonImage");
+      })(),
     );
   }
 

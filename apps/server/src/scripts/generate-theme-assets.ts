@@ -21,6 +21,7 @@ async function writeThemeAssetsDebug(
     result.particleSpritesheet,
     result.titleImage,
     result.winMessageImage,
+    result.nextButtonImage,
     result.containerBackground,
     result.backgroundImage,
     result.videoBackground,
@@ -84,6 +85,8 @@ async function main(): Promise<void> {
   }
   if (result.particleSpritesheet) console.log(" ", result.particleSpritesheet);
   if (result.titleImage) console.log(" ", result.titleImage);
+  if (result.winMessageImage) console.log(" ", result.winMessageImage);
+  if (result.nextButtonImage) console.log(" ", result.nextButtonImage);
   if (result.containerBackground) console.log(" ", result.containerBackground);
   if (result.backgroundImage) console.log(" ", result.backgroundImage);
   if (result.videoBackground) console.log(" ", result.videoBackground);

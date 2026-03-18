@@ -28,6 +28,8 @@ export interface GameOutcomeOptions {
   coverSpriteSheetSrc?: string;
   /** Optional per-game spritesheet URL for item covers. */
   coverSpriteSheetSrcByGameId?: Partial<Record<GameId, string>>;
+  /** Optional per-game header wordmark image URL (e.g. "Lucky Numbers"). */
+  headerImageSrcByGameId?: Partial<Record<GameId, string>>;
 }
 
 function gameItem(
@@ -149,6 +151,9 @@ export function generateLuckyNumbers(
     items,
     count: winningNumbers.length,
     winningNumbers,
+    ...(options.headerImageSrcByGameId?.["lucky-numbers"] && {
+      headerImageUrl: options.headerImageSrcByGameId["lucky-numbers"],
+    }),
     ...(options.coverSpriteSheet && { coverSpriteSheet: options.coverSpriteSheet }),
   };
 }
@@ -195,6 +200,9 @@ export function generateYourNumbers(
     items,
     cols: config.cols,
     rows: config.rows,
+    ...(options.headerImageSrcByGameId?.["your-numbers"] && {
+      headerImageUrl: options.headerImageSrcByGameId["your-numbers"],
+    }),
     ...(options.coverSpriteSheet && { coverSpriteSheet: options.coverSpriteSheet }),
   };
 }

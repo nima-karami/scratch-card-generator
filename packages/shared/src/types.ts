@@ -81,6 +81,8 @@ export interface LuckyNumbersData {
   winningNumbers: WinningNumberEntry[];
   /** Shared spritesheet config for items with coverSpriteSheetSrc. */
   coverSpriteSheet?: SpriteSheetConfig;
+  /** Optional header wordmark image ("Lucky Numbers") generated from theme typography. */
+  headerImageUrl?: string;
 }
 
 /** Your numbers: grid of revealable items (e.g. 3x3, 3x4, 4x4) */
@@ -91,6 +93,8 @@ export interface YourNumbersData {
   rows: number;
   /** Shared spritesheet config for items with coverSpriteSheetSrc. */
   coverSpriteSheet?: SpriteSheetConfig;
+  /** Optional header wordmark image ("Your Numbers") generated from theme typography. */
+  headerImageUrl?: string;
 }
 
 /** Prize grid: grid of revealable cells, each shows a prize (no matching) */
@@ -189,6 +193,8 @@ export interface CardData {
   winOverlayTheme?: WinOverlayTheme;
   /** Optional glyph sheet for rendering dollar/numeric values on game items. */
   glyphSheet?: GlyphSheetConfig;
+  /** Optional themed "Next" button wordmark image URL (transparent PNG). */
+  nextButtonImageUrl?: string;
   /** Semantic colors for text/contrast decisions in the UI. */
   colorPalette: SemanticColorPalette;
   /** Theme-controlled surface styling for the wrapper around game content. */

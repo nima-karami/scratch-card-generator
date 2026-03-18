@@ -23,7 +23,17 @@ export function YourNumbers({ data, glyphSheet, matchHighlightTheme, foregroundC
       transition={{ duration: 0.4 }}
       className="space-y-3"
     >
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-gold-dim">Your Numbers</h3>
+      <h3 className="flex w-full justify-center text-xs font-semibold uppercase tracking-wider text-gold-dim">
+        {data.headerImageUrl ? (
+          <img
+            src={data.headerImageUrl}
+            alt="Your Numbers"
+            className="h-4 max-w-full object-contain object-center"
+          />
+        ) : (
+          "Your Numbers"
+        )}
+      </h3>
       <div
         className="grid w-full place-items-center"
         style={{

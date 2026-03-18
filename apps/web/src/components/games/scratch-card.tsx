@@ -70,6 +70,9 @@ export function ScratchCard({
 
   const videoUrl = cardData.backgroundVideoUrl ?? (cardData.backgroundImageUrl ? undefined : DEFAULT_BACKGROUND_VIDEO);
   const totalWon = getTotalWonPlaceholder(cardData, itemStates);
+  const nextButtonImageUrl = cardData.nextButtonImageUrl;
+  const showNextControl =
+    Boolean(nextButtonImageUrl) && (Boolean(allRevealed) || isNextLoading);
   const nextEnabled = Boolean(allRevealed) && !isNextLoading && Boolean(jobId);
 
   async function handleNext() {
@@ -106,24 +109,32 @@ export function ScratchCard({
         {variant.id === "variant-3" && <Variant3 cardData={cardData} />}
       </div>
 
-      {/* Bottom Next CTA (enabled only after full reveal) */}
-      <div className="absolute bottom-0 left-0 right-0 z-40 p-4">
-        <div className="rounded-t-2xl border border-gold/20 bg-surface-raised/90 backdrop-blur-sm px-3 py-3">
+      {showNextControl && nextButtonImageUrl && (
+        <div className="absolute bottom-0 left-0 right-0 z-40 flex justify-center p-4 pointer-events-none [&>button]:pointer-events-auto">
           <button
             type="button"
             onClick={handleNext}
             disabled={!nextEnabled}
-            aria-disabled={!nextEnabled}
+            aria-busy={isNextLoading}
+            aria-label="Next game"
             className={cn(
-              "w-full rounded-xl border border-gold/30 bg-surface-raised text-gold font-semibold py-3 shadow-lg transition-colors",
-              "hover:bg-surface-bright",
-              "disabled:opacity-50 disabled:cursor-not-allowed",
+              "m-0 border-0 bg-transparent p-0 shadow-none cursor-pointer",
+              "appearance-none outline-none",
+              "focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-sm",
+              "disabled:cursor-not-allowed transition-opacity",
+              isNextLoading && "opacity-60",
+              !nextEnabled && !isNextLoading && "opacity-40",
             )}
           >
-            {isNextLoading ? "Loading..." : "Next"}
+            <img
+              src={nextButtonImageUrl}
+              alt=""
+              draggable={false}
+              className="block h-10 w-auto max-w-[min(100%,280px)] object-contain select-none"
+            />
           </button>
         </div>
-      </div>
+      )}
 
       <AnimatePresence>
         {showWinAnimation && !winDismissed && (

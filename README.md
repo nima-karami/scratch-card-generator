@@ -171,6 +171,27 @@ npm run generate-title-image -- --text "Win Big" --visual-style "bold typography
 | `--output`          | Output file path. Default: `./title-image.png`                                |
 | `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style          |
 
+---
+
+### Generate Lucky / Your Wordmarks
+
+Generate the `Lucky Numbers` and `Your Numbers` section headers as **transparent PNG assets**.
+
+Both wordmarks are generated **in a single Gemini call** and split into two images so they stay visually identical.
+
+Outputs:
+- `lucky-numbers-header.png`
+- `your-numbers-header.png`
+
+```bash
+npm run generate-lucky-your-wordmarks -- --visual-style "luxury typography, gold and black" --output-dir ./output/wordmarks
+```
+
+Optional style anchoring:
+
+```bash
+npm run generate-lucky-your-wordmarks -- --visual-style "bold typography, gold and dark" --output-dir ./output/wordmarks --reference-image ./moodboard.png
+```
 
 ---
 
@@ -194,6 +215,27 @@ npm run generate-win-message-image -- --text "You Won!" --visual-style "bold typ
 | `--output`          | Output file path. Default: `./win-message.png`                                |
 | `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style          |
 
+
+---
+
+### Generate Next Button Image
+
+Generate a **transparent PNG of a themed Next CTA button** (shape, chrome, centered label—not bare text) for the scratch card bottom control using Gemini (requires `GEMINI_API_KEY`). `--visual-style` matches Creative Director `nextButtonImage.visualStyle` (full control description).
+
+```bash
+npm run generate-next-button-image -- --visual-style "pill button, gold bevel, enamel fill, bold Next lettering" --output ./output/next.png
+```
+
+```bash
+npm run generate-next-button-image -- --text "Next" --visual-style "chunky arcade slab, cyan glow border" --output ./output/next.png
+```
+
+| Option              | Description                                                                   |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `--text`            | Button label in the image (optional). Default: `Next`                         |
+| `--visual-style`    | Full button look: shape, materials, label typography (required).             |
+| `--output`          | Output file path. Default: `./next-button-image.png`                        |
+| `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style          |
 
 ---
 
@@ -393,13 +435,14 @@ When `THEME_ASSETS_DEBUG_OUTPUT_DIR` is set, a log line is appended to `theme-as
 
 | Variable                             | Scripts                                                                                                                                                                                                                        | Description                                                                              |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| `GEMINI_API_KEY`                     | generate-spritesheet, generate-particle-spritesheet, generate-title-image, generate-background, generate-container-image (gradient/pattern), generate-glyph-sheet, generate-moodboard, generate-theme, generate-theme-manifest | Gemini API for image, VEO video, and Creative Director (manifest + moodboard)            |
+| `GEMINI_API_KEY`                     | generate-spritesheet, generate-particle-spritesheet, generate-title-image, generate-next-button-image, generate-background, generate-container-image (gradient/pattern), generate-glyph-sheet, generate-moodboard, generate-theme, generate-theme-manifest | Gemini API for image, VEO video, and Creative Director (manifest + moodboard)            |
 | `KLING_API_KEY`                      | generate-kling-video                                                                                                                                                                                                           | Kling 3.0 video generation                                                               |
 | `ELEVENLABS_API_KEY`                 | generate-sound-effect                                                                                                                                                                                                          | Eleven Labs sound effects                                                                |
 | `SPRITESHEET_QA_DEBUG_OUTPUT_DIR`    | generate-spritesheet                                                                                                                                                                                                           | Optional: debug output for QA attempts                                                   |
 | `SOUND_EFFECT_DEBUG_OUTPUT_DIR`      | generate-sound-effect                                                                                                                                                                                                          | Optional: debug output with sequential IDs                                               |
 | `TITLE_IMAGE_DEBUG_OUTPUT_DIR`       | generate-title-image                                                                                                                                                                                                           | Optional: debug output (0001-slug.png, …) and title-image-log.txt                        |
 | `WIN_MESSAGE_IMAGE_DEBUG_OUTPUT_DIR` | generate-win-message-image                                                                                                                                                                                                     | Optional: debug output (0001-slug.png, …) and win-message-image-log.txt                  |
+| `NEXT_BUTTON_IMAGE_DEBUG_OUTPUT_DIR`| generate-next-button-image                                                                                                                                                                                                    | Optional: debug output (0001-slug.png, …) and next-button-image-log.txt                |
 | `BACKGROUND_DEBUG_OUTPUT_DIR`        | generate-background                                                                                                                                                                                                            | Optional: debug output (0001-slug-frame.png, optional 0001-slug.mp4, background-log.txt) |
 | `CONTAINER_IMAGE_DEBUG_OUTPUT_DIR`   | generate-container-image, POST /api/container-image                                                                                                                                                                            | Optional: debug output (0001-slug.png, …) and container-image-log.txt                    |
 | `GLYPH_SHEET_DEBUG_OUTPUT_DIR`       | generate-glyph-sheet                                                                                                                                                                                                           | Optional: intermediate white/black and final transparent PNGs and glyph-sheet-log.txt    |
@@ -416,6 +459,7 @@ When the optional `*_DEBUG_OUTPUT_DIR` variables are set (e.g. in `.env`), gener
 - `./debug/sound-effect/` — `0001-slug.mp3`, … and `sound-effect-log.txt`
 - `./debug/title-image/` — `0001-slug.png`, … and `title-image-log.txt`
 - `./debug/win-message-image/` — `0001-slug.png`, … and `win-message-image-log.txt`
+- `./debug/next-button-image/` — `0001-slug.png`, … and `next-button-image-log.txt`
 - `./debug/background/` — `0001-slug-frame.png`, optional `0001-slug.mp4`, … and `background-log.txt`
 - `./debug/container-image/` — `0001-slug.png`, … and `container-image-log.txt`
 - `./debug/spritesheet/` — QA attempt images and `qa-log.txt`

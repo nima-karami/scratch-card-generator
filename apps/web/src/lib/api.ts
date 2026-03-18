@@ -19,8 +19,10 @@ function normalizeCardUrls(card: CardData, base: string): CardData {
         ...card.variant,
         games: card.variant.games.map((game) => {
           if ("items" in game) {
+            const headerImageUrl = (game as { headerImageUrl?: string }).headerImageUrl;
             return {
               ...game,
+              ...(headerImageUrl ? { headerImageUrl: abs(headerImageUrl) } : {}),
               items: game.items.map((item) => ({
                 ...item,
                 coverUrl: item.coverUrl ? abs(item.coverUrl) : undefined,
@@ -51,6 +53,7 @@ function normalizeCardUrls(card: CardData, base: string): CardData {
     titleImageUrl: abs(card.titleImageUrl),
     backgroundImageUrl: abs(card.backgroundImageUrl),
     backgroundVideoUrl: abs(card.backgroundVideoUrl),
+    nextButtonImageUrl: abs(card.nextButtonImageUrl),
     images: card.images.map((img) => ({ ...img, url: abs(img.url) ?? img.url })),
     glyphSheet: card.glyphSheet
       ? { ...card.glyphSheet, url: abs(card.glyphSheet.url) ?? card.glyphSheet.url }

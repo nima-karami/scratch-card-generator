@@ -50,6 +50,7 @@ export const config = {
     soundEffect: process.env.SOUND_EFFECT_DEBUG_OUTPUT_DIR || null,
     titleImage: process.env.TITLE_IMAGE_DEBUG_OUTPUT_DIR || null,
     winMessageImage: process.env.WIN_MESSAGE_IMAGE_DEBUG_OUTPUT_DIR || null,
+    nextButtonImage: process.env.NEXT_BUTTON_IMAGE_DEBUG_OUTPUT_DIR || null,
     background: process.env.BACKGROUND_DEBUG_OUTPUT_DIR || null,
     containerImage: process.env.CONTAINER_IMAGE_DEBUG_OUTPUT_DIR || null,
     spritesheetQa: process.env.SPRITESHEET_QA_DEBUG_OUTPUT_DIR || null,

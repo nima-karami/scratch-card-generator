@@ -9,6 +9,10 @@ export const PIPELINE_CONFIG = {
     particleSpritesheet: false,
     titleImage: true,
     winMessageImage: true,
+    nextButtonImage: true,
+    // Generates transparent wordmark PNGs for game section headers like
+    // "Lucky Numbers" / "Your Numbers" so the frontend doesn't rely on plain text.
+    numbersHeaderImages: true,
     containerBackground: false,
     background: true,
     backgroundMusic: true,

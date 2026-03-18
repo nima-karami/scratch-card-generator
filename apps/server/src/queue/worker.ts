@@ -106,10 +106,20 @@ function runComposeStep(
     }
   }
 
+  // Optional section header wordmarks ("Lucky Numbers" / "Your Numbers").
+  const headerImageSrcByGameId: Partial<Record<GameId, string>> = {};
+  if (assetResult.luckyNumbersHeaderImage) {
+    headerImageSrcByGameId["lucky-numbers"] = `${baseUrl}/${basename(assetResult.luckyNumbersHeaderImage)}`;
+  }
+  if (assetResult.yourNumbersHeaderImage) {
+    headerImageSrcByGameId["your-numbers"] = `${baseUrl}/${basename(assetResult.yourNumbersHeaderImage)}`;
+  }
+
   const games = generateVariantGames(DEFAULT_VARIANT_ID, gameConfigs, {
     jobId,
     coverSpriteSheet: { cols: spritesheet.cols, rows: spritesheet.rows },
     coverSpriteSheetSrcByGameId,
+    headerImageSrcByGameId,
   });
 
   const title = manifest.elements.titleImage.text;
@@ -143,6 +153,9 @@ function runComposeStep(
     colorPalette: manifest.meta.colorPalette,
     titleImageUrl: assetResult.titleImage
       ? `${baseUrl}/${basename(assetResult.titleImage)}`
+      : undefined,
+    nextButtonImageUrl: assetResult.nextButtonImage
+      ? `${baseUrl}/${basename(assetResult.nextButtonImage)}`
       : undefined,
     glyphSheet: assetResult.glyphSheet
       ? {

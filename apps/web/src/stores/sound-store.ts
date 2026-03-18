@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-const BGM_VOLUME = 0.25;
+const BGM_VOLUME = 0.1;
 const REVEAL_VOLUME = 0.75;
 const BGM_DEFAULT_SRC = "/assets/sounds/bgm-loop.mp3";
 const REVEAL_DEFAULT_SRC = "/assets/sounds/reveal-chime.mp3";
