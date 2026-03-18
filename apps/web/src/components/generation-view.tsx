@@ -20,6 +20,7 @@ function friendlyStage(raw: string): string {
 export function GenerationView() {
   const { jobId, progress, applySSEEvent, setCard, setError } = useGameStore();
   const unsubRef = useRef<(() => void) | null>(null);
+  const logEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!jobId) return;
@@ -39,6 +40,11 @@ export function GenerationView() {
       unsubRef.current?.();
     };
   }, [jobId, applySSEEvent, setCard, setError]);
+
+  // Auto-scroll live log as new SSE messages arrive.
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView?.({ behavior: "smooth", block: "end" });
+  }, [progress.log.length]);
 
   const backgroundVideoUrl = progress.assetUrls.backgroundVideo
     ? resolveAssetUrl(progress.assetUrls.backgroundVideo)
@@ -131,24 +137,40 @@ export function GenerationView() {
                 </p>
               </motion.div>
             </div>
+
+            {/* Live progress log */}
+            <div className="mt-4 w-full rounded-lg border border-surface-bright/60 bg-surface/60 backdrop-blur-sm px-3 py-2">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-text-secondary font-semibold">
+                  Live log
+                </p>
+                <p className="text-[11px] text-text-secondary/90">
+                  {progress.log.length > 0 ? `${progress.log.length} updates` : "Waiting..."}
+                </p>
+              </div>
+              <div className="max-h-28 overflow-y-auto pr-1">
+                {progress.log.length === 0 ? (
+                  <p className="text-xs text-text-secondary/90 leading-relaxed">
+                    Messages will appear here as the backend generates your theme.
+                  </p>
+                ) : (
+                  <div className="space-y-1">
+                    {progress.log.map((entry) => (
+                      <p
+                        key={`${entry.at}-${entry.text}`}
+                        className="text-[12px] text-text-secondary/95 leading-relaxed wrap-break-word"
+                      >
+                        {entry.text}
+                      </p>
+                    ))}
+                    <div ref={logEndRef} />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </motion.div>
 
-        {/* Stage indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
-          className="flex items-center justify-center gap-3"
-        >
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-60" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-gold" />
-          </span>
-          <p className="text-xs font-medium text-text-secondary tracking-wide">
-            {friendlyStage(progress.stage)}
-          </p>
-        </motion.div>
       </div>
     </div>
   );

@@ -43,7 +43,7 @@ async function runDesignStep(
   activeGameIds: string[]
 ): Promise<{ manifest: Awaited<ReturnType<typeof runFullDirector>>["manifest"]; moodboard: Buffer }> {
   onProgress({ type: "designing", message: "Designing your theme..." });
-  const { manifest, moodboard } = await runFullDirector(prompt, { activeGameIds });
+  const { manifest, moodboard } = await runFullDirector(prompt, { activeGameIds, onProgress });
   return { manifest, moodboard };
 }
 
@@ -140,6 +140,7 @@ function runComposeStep(
   return {
     title,
     images: [],
+    colorPalette: manifest.meta.colorPalette,
     titleImageUrl: assetResult.titleImage
       ? `${baseUrl}/${basename(assetResult.titleImage)}`
       : undefined,

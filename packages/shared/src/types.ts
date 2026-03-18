@@ -164,6 +164,15 @@ export interface GameContainerSurfaceTheme {
   borderThickness: GameContainerRadius;
 }
 
+/** Semantic color tokens derived from the theme meta. */
+export interface SemanticColorPalette {
+  background: string;
+  foreground: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+}
+
 /** Final composed card data for the scratch-card layout */
 export interface CardData {
   title: string;
@@ -180,6 +189,8 @@ export interface CardData {
   winOverlayTheme?: WinOverlayTheme;
   /** Optional glyph sheet for rendering dollar/numeric values on game items. */
   glyphSheet?: GlyphSheetConfig;
+  /** Semantic colors for text/contrast decisions in the UI. */
+  colorPalette: SemanticColorPalette;
   /** Theme-controlled surface styling for the wrapper around game content. */
   gameContainerSurface: GameContainerSurfaceTheme;
   /** Optional theme for the match highlight animation */

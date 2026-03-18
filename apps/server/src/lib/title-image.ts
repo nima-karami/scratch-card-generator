@@ -4,6 +4,7 @@ import { config } from "../config/index.js";
 import { cropTransparentToContent } from "./crop-to-content.js";
 import { extractAlphaTwoPassFromBuffers } from "./extractAlpha.js";
 import { generateImage } from "./gemini.js";
+import { sanitizeTextWithLLM } from "./llm/text-sanitizer.js";
 import { swapBackground } from "./spritesheet/swap-background.js";
 
 const REFERENCE_IMAGE_PREFIX =
@@ -16,11 +17,53 @@ export type GenerateTitleImageParams = {
   referenceImage?: Buffer;
 };
 
+const TITLE_VISUALSTYLE_CONSTRAINTS_TEXT = `The title image visualStyle MUST be typography-only.
+Allowed: font weight/style, letter outlines/strokes, fill color usage, distressed texture, halftone/print texture INSIDE the letters, shadow/drop-shadow, subtle glow/inner effects, and decorative letter-adjacent ornaments that are part of the typography treatment (e.g. water drops/splashes, beach spritz, small shell/bubble accents, small leaf-like flourishes near letters).
+Forbidden: any framing/layout description that indicates an external frame or surrounding composition (anything implying “around the title/letters” as a container), borders around the whole title, or any background/scene composition OUTSIDE the letters.
+Important: keep small letter-adjacent ornaments even if they contain words like “leaf” or “foliage”, as long as they are described as ornamentation attached to or immediately next to the letters (not a full surrounding frame/background).
+The sanitized output will be embedded into an instruction that also states the image must be ONLY the title words on a solid white background.`;
+
+function sanitizeTitleVisualStyleHeuristics(style: string): string {
+  let s = style.trim();
+  const lower = s.toLowerCase();
+
+  const truncationKeywords = [
+    "framed by",
+    "surrounded by",
+    "bordered by",
+    "in a frame",
+    "with a frame",
+    "framing the",
+    "around the title",
+    "around the letters",
+    "surrounding the title",
+    "surrounding the letters",
+    "in the background",
+    "background scene",
+  ];
+  for (const keyword of truncationKeywords) {
+    const idx = lower.indexOf(keyword);
+    if (idx !== -1) {
+      s = s.slice(0, idx).trim();
+      break;
+    }
+  }
+
+  // Intentionally do NOT strip generic foliage/leaf terms here.
+  // The sanitizer is responsible for removing external-frame/background instructions,
+  // while we must keep letter-adjacent ornaments (e.g. a water drop next to the text).
+  // This heuristic only truncates obvious framing phrases above.
+  s = s.replace(/\s{2,}/g, " ").trim();
+
+  return s;
+}
+
 function buildPrompt(params: GenerateTitleImageParams): string {
   const { text, visualStyle } = params;
   const parts = [
     `Generate a single image that displays the following title text prominently and clearly: "${text}".`,
     visualStyle.trim(),
+    "Treat the provided visualStyle as typography-only. Ignore any framing/background/scene instructions embedded within it. Only describe letter rendering (strokes/fill/textures/shadows) for the words.",
     "The image must be on a pure solid white #FFFFFF background with no other background elements.",
     `CRITICAL CONSTRAINTS: Output ONLY the words "${text}". The background MUST be pure solid white #FFFFFF. Absolutely no other objects, no secondary text, and no game UI.`,
   ];
@@ -33,6 +76,25 @@ function buildPrompt(params: GenerateTitleImageParams): string {
  * Returns a PNG buffer with transparent background.
  */
 export async function generateTitleImage(params: GenerateTitleImageParams): Promise<Buffer> {
+  // Prevent prompt conflicts where creative direction accidentally includes full "framed by foliage"
+  // scene descriptions, even though the generator must output ONLY typography on solid white.
+  const originalStyle = params.visualStyle;
+  if (originalStyle.trim()) {
+    let sanitized = originalStyle;
+    try {
+      sanitized = await sanitizeTextWithLLM({
+        inputText: originalStyle,
+        constraintsText: TITLE_VISUALSTYLE_CONSTRAINTS_TEXT,
+        maxRetries: 2,
+      });
+    } catch {
+      // LLM sanitizer failure should never crash title generation.
+    }
+    sanitized = sanitizeTitleVisualStyleHeuristics(sanitized);
+    if (!sanitized.trim()) sanitized = sanitizeTitleVisualStyleHeuristics(originalStyle);
+    params.visualStyle = sanitized;
+  }
+
   const prompt = buildPrompt(params);
   const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
   const whiteBuffer = await generateImage(fullPrompt, params.referenceImage);

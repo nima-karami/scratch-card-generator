@@ -12,11 +12,19 @@ export interface CardTitleProps {
   imageUrl?: string;
   /** Alt text for image */
   alt?: string;
+  /** Optional foreground color for text-mode rendering */
+  foregroundColor?: string;
   /** Optional class name */
   className?: string;
 }
 
-export function CardTitle({ title, imageUrl, alt, className = "" }: CardTitleProps) {
+export function CardTitle({
+  title,
+  imageUrl,
+  alt,
+  foregroundColor,
+  className = "",
+}: CardTitleProps) {
   if (imageUrl) {
     return (
       <img
@@ -34,6 +42,7 @@ export function CardTitle({ title, imageUrl, alt, className = "" }: CardTitlePro
         "font-display text-3xl font-extrabold text-gold-light leading-tight",
         className,
       )}
+      style={foregroundColor ? { color: foregroundColor } : undefined}
       data-card-title
     >
       {title}

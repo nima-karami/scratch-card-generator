@@ -14,6 +14,8 @@ export interface WinAnimationProps {
   winOverlayTheme?: WinOverlayTheme | null;
   /** Optional glyph sheet for rendering the numeric part with styled glyphs. */
   glyphSheet?: GlyphSheetConfig | null;
+  /** Optional foreground color for text-mode rendering when win message image/glyphs are missing. */
+  foregroundColor?: string;
 }
 
 function parseAmount(totalWon: string): number {
@@ -31,6 +33,7 @@ export function WinAnimation({
   onClose,
   winOverlayTheme,
   glyphSheet,
+  foregroundColor,
 }: WinAnimationProps) {
   const targetAmount = parseAmount(totalWon);
   const [displayAmount, setDisplayAmount] = useState(0);
@@ -98,7 +101,12 @@ export function WinAnimation({
         {winMessageImageUrl ? (
           <img src={winMessageImageUrl} alt="You Won!" className="h-40 w-auto object-contain" />
         ) : (
-          <p className="text-sm uppercase tracking-[0.2em] text-gold-dim font-medium">You Won!</p>
+          <p
+            className="text-sm uppercase tracking-[0.2em] text-gold-dim font-medium"
+            style={foregroundColor ? { color: foregroundColor } : undefined}
+          >
+            You Won!
+          </p>
         )}
         {glyphSheet ? (
           <GlyphValueDisplay
@@ -110,7 +118,10 @@ export function WinAnimation({
             className="font-display text-5xl font-extrabold text-gold-light"
           />
         ) : (
-          <p className="font-display text-5xl font-extrabold text-gold-light">
+          <p
+            className="font-display text-5xl font-extrabold text-gold-light"
+            style={foregroundColor ? { color: foregroundColor } : undefined}
+          >
             {formatAmount(displayAmount, totalWon)}
           </p>
         )}

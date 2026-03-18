@@ -11,7 +11,7 @@ const USAGE = `
 Usage: npm run generate-moodboard -- --theme "<description>" [--output <path>] [--source-image <path>]
 
 Generates a master moodboard image from the theme. Runs Phase 1 of the Creative Director
-(meta: artStyle, colorPalette, mood) then generates the moodboard. With --source-image,
+(meta: artStyle, colorPalette tokens, mood) then generates the moodboard. With --source-image,
 the given reference image (e.g. deconstructed moodboard collage) is re-themed with the meta to produce the moodboard.
 
 Options:
@@ -56,7 +56,7 @@ async function main(): Promise<void> {
     const meta = await generateThemeMeta(theme);
     console.log("  artStyle:", meta.artStyle);
     console.log("  mood:", meta.mood);
-    console.log("  colorPalette:", meta.colorPalette.join(", "));
+    console.log("  colorPalette:", JSON.stringify(meta.colorPalette));
 
     console.log(sourceImage ? "Re-theming reference image into moodboard..." : "Generating moodboard image...");
     const buffer = await generateMoodboard(meta, sourceImage ? { sourceImage } : undefined);

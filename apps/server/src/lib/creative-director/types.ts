@@ -11,7 +11,19 @@ export const themeManifestMetaSchema = z
     themeDescription: z.string().describe("Original user theme input"),
     generatedAt: z.string().describe("Placeholder; overwritten by system with actual generation time"),
     artStyle: z.string().describe("e.g. flat illustration, pixel art, watercolor"),
-    colorPalette: z.array(z.string()).describe("3-5 hex colors"),
+    colorPalette: z
+      .object({
+        background: z
+          .string()
+          .describe("Hex color for dominant backgrounds (e.g. panel/card background)."),
+        foreground: z
+          .string()
+          .describe("Hex color for primary readable foreground (title text, important UI text)."),
+        primary: z.string().describe("Hex color for primary accent/control surfaces."),
+        secondary: z.string().describe("Hex color for secondary accents and highlights."),
+        accent: z.string().describe("Hex color for strongest accent/glow/highlights."),
+      })
+      .describe("Semantic palette tokens derived from the theme."),
     mood: z.string().describe("e.g. playful, warm, cozy"),
     gameName: z
       .string()

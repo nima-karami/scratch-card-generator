@@ -7,9 +7,11 @@ const CLAMP_MATCH = { min: 2, max: 5 };
 export interface MatchABunchProps {
   data: MatchABunchData;
   matchHighlightTheme?: MatchHighlightTheme;
+  /** Semantic foreground color for text rendering. */
+  foregroundColor?: string;
 }
 
-export function MatchABunch({ data, matchHighlightTheme }: MatchABunchProps) {
+export function MatchABunch({ data, matchHighlightTheme, foregroundColor }: MatchABunchProps) {
   const matchCount = Math.max(
     CLAMP_MATCH.min,
     Math.min(CLAMP_MATCH.max, data.matchCount),
@@ -28,10 +30,19 @@ export function MatchABunch({ data, matchHighlightTheme }: MatchABunchProps) {
       </h3>
       <div className="flex flex-wrap items-center gap-2">
         {items.map((item) => (
-          <GameItem key={item.id} data={item} size="md" matchHighlightTheme={matchHighlightTheme} />
+          <GameItem
+            key={item.id}
+            data={item}
+            size="md"
+            matchHighlightTheme={matchHighlightTheme}
+            foregroundColor={foregroundColor}
+          />
         ))}
         <span className="text-text-muted text-sm mx-1">→</span>
-        <div className="rounded-lg border border-gold/20 bg-surface px-2 py-1.5 text-sm font-medium text-gold">
+        <div
+          className="rounded-lg border border-gold/20 bg-surface px-2 py-1.5 text-sm font-medium text-gold"
+          style={foregroundColor ? { color: foregroundColor } : undefined}
+        >
           {data.prize}
         </div>
       </div>

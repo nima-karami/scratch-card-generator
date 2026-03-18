@@ -30,6 +30,7 @@ import type {
   ParticleSpritesheetPromptParams,
 } from "./prompt-builder.js";
 import { config } from "../../config/index.js";
+import type { SSEEvent } from "@repo/shared";
 import { validateAlgorithmically, validateWithLLM, type QAResult } from "./qa.js";
 import { buildDetailedEditInstruction } from "./build-edit-instruction.js";
 
@@ -58,13 +59,15 @@ export interface GenerateSpritesheetResult {
  * 3. Extract alpha from white + black to produce transparent PNG
  */
 export async function generateSpritesheet(
-  params: SpritesheetPromptParams
+  params: SpritesheetPromptParams,
+  onProgress?: (event: SSEEvent) => void
 ): Promise<GenerateSpritesheetResult> {
   const prompt = buildSpritesheetPrompt({ ...params, backgroundColor: "white" });
   
   let whiteBg: Buffer | null = null;
   let attempts = 0;
   const maxRetries = config.spritesheet.qa.maxRetries;
+  const totalAttempts = maxRetries + 1;
   const debugDir = config.debug.spritesheetQa;
   const debugSubjectSlug = debugDir
     ? params.subject.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
@@ -93,10 +96,18 @@ export async function generateSpritesheet(
     attempts++;
     if (attempts === 1) {
       console.log(`Generation attempt ${attempts} of ${maxRetries + 1}...`);
+      onProgress?.({
+        type: "generating-spritesheet",
+        message: `Spritesheet QA: attempt ${attempts}/${totalAttempts} (generating)`,
+      });
       const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
       whiteBg = await generateImage(fullPrompt, params.referenceImage);
     } else {
       console.log(`Edit attempt ${attempts} of ${maxRetries + 1} (fixing from QA feedback)...`);
+      onProgress?.({
+        type: "generating-spritesheet",
+        message: `Spritesheet QA: attempt ${attempts}/${totalAttempts} (editing from QA feedback)`,
+      });
       let instruction: string;
       if (lastFailureEditInstructions?.trim()) {
         instruction = lastFailureEditInstructions.trim();
@@ -114,9 +125,17 @@ export async function generateSpritesheet(
 
     if (config.spritesheet.qa.algorithmicEnabled) {
       console.log("Running algorithmic QA...");
+      onProgress?.({
+        type: "generating-spritesheet",
+        message: `Spritesheet QA: attempt ${attempts}/${totalAttempts} (Algorithmic QA)`,
+      });
       algoResult = await validateAlgorithmically(whiteBg!, params);
       if (!algoResult.passed) {
         console.warn(`Algorithmic QA failed: ${algoResult.reason}`);
+        onProgress?.({
+          type: "generating-spritesheet",
+          message: `Algorithmic QA failed (attempt ${attempts}/${totalAttempts}) — retrying/editing`,
+        });
         lastFailureReason = algoResult.reason;
         lastFailureIssues = undefined;
         lastFailureEditInstructions = undefined;
@@ -128,9 +147,17 @@ export async function generateSpritesheet(
 
     if (qaPassed && config.spritesheet.qa.llmEnabled) {
       console.log("Running LLM QA...");
+      onProgress?.({
+        type: "generating-spritesheet",
+        message: `Spritesheet QA: attempt ${attempts}/${totalAttempts} (LLM QA)`,
+      });
       llmResult = await validateWithLLM(whiteBg!, params);
       if (!llmResult.passed) {
         console.warn(`LLM QA failed: ${llmResult.reason}`);
+        onProgress?.({
+          type: "generating-spritesheet",
+          message: `LLM QA failed (attempt ${attempts}/${totalAttempts}) — retrying/editing`,
+        });
         lastFailureReason = llmResult.reason;
         lastFailureIssues = llmResult.issues;
         lastFailureEditInstructions = llmResult.editInstructions;
@@ -194,9 +221,17 @@ export async function generateSpritesheet(
 
     if (qaPassed) {
       passedQA = true;
+      onProgress?.({
+        type: "generating-spritesheet",
+        message: `Spritesheet QA passed (attempt ${attempts}/${totalAttempts})`,
+      });
       break;
     } else if (attempts > maxRetries) {
       console.warn("Max retries reached. Selecting attempt with highest accuracy.");
+      onProgress?.({
+        type: "generating-spritesheet",
+        message: `Spritesheet QA: max retries hit — selecting best attempt`,
+      });
     }
   }
 
@@ -206,6 +241,10 @@ export async function generateSpritesheet(
     console.log(
       `Selected attempt ${best.attemptNumber} (accuracy score: ${best.score.toFixed(2)})`
     );
+    onProgress?.({
+      type: "generating-spritesheet",
+      message: `Spritesheet QA: selected attempt ${best.attemptNumber} (${best.score.toFixed(2)} score)`,
+    });
   }
 
   if (!whiteBg) {
@@ -222,6 +261,10 @@ export async function generateSpritesheet(
   try {
     await writeFile(whitePath, whiteBg);
     await writeFile(blackPath, blackBg);
+    onProgress?.({
+      type: "generating-spritesheet",
+      message: `Spritesheet QA: extracting transparency (alpha)`,
+    });
     await extractAlphaTwoPass(whitePath, blackPath, outputPath);
     const transparent = await readFile(outputPath);
 

@@ -17,7 +17,7 @@ function findGame<T extends { id: string }>(games: { id: string }[], id: string)
 }
 
 export function Variant2({ cardData }: Variant2Props) {
-  const { title, titleImageUrl, variant } = cardData;
+  const { title, titleImageUrl, variant, colorPalette } = cardData;
   const games = variant?.games ?? [];
 
   const luckyNumbers = findGame<LuckyNumbersData>(games, "lucky-numbers");
@@ -31,6 +31,7 @@ export function Variant2({ cardData }: Variant2Props) {
           title={title}
           titleImageUrl={titleImageUrl}
           className="w-full h-full"
+          foregroundColor={colorPalette.foreground}
         />
       </div>
 
@@ -40,7 +41,12 @@ export function Variant2({ cardData }: Variant2Props) {
         {luckyNumbers && (
           <GameContainer surface={cardData.gameContainerSurface}>
             {/* render directly without GameSlot wrapper */}
-            <LuckyNumbers data={luckyNumbers} glyphSheet={cardData.glyphSheet} matchHighlightTheme={cardData.matchHighlightTheme} />
+            <LuckyNumbers
+              data={luckyNumbers}
+              glyphSheet={cardData.glyphSheet}
+              matchHighlightTheme={cardData.matchHighlightTheme}
+              foregroundColor={colorPalette.foreground}
+            />
           </GameContainer>
         )}
 
@@ -48,7 +54,12 @@ export function Variant2({ cardData }: Variant2Props) {
         {yourNumbers && (
           <GameContainer surface={cardData.gameContainerSurface}>
             {/* render directly without GameSlot wrapper */}
-            <YourNumbers data={yourNumbers} glyphSheet={cardData.glyphSheet} matchHighlightTheme={cardData.matchHighlightTheme} />
+            <YourNumbers
+              data={yourNumbers}
+              glyphSheet={cardData.glyphSheet}
+              matchHighlightTheme={cardData.matchHighlightTheme}
+              foregroundColor={colorPalette.foreground}
+            />
           </GameContainer>
         )}
       </div>

@@ -1,5 +1,6 @@
 import { appendFile, mkdir, readdir, writeFile } from "fs/promises";
 import { join } from "path";
+import type { SSEEvent } from "@repo/shared";
 import { config } from "../config/index.js";
 import { generateImage } from "./gemini.js";
 import type { ThemeManifestMeta } from "./creative-director/types.js";
@@ -7,6 +8,8 @@ import type { ThemeManifestMeta } from "./creative-director/types.js";
 export interface GenerateMoodboardOptions {
   /** When set, this reference image is used only as a layout example (four labeled sections); content for each section is created new from the meta, not copied from the reference. */
   sourceImage?: Buffer;
+  /** Optional SSE callback so callers can show progress while the moodboard is being generated. */
+  onProgress?: (event: SSEEvent) => void;
 }
 
 /**
@@ -15,7 +18,8 @@ export interface GenerateMoodboardOptions {
  * the model must create entirely new content for each section and must not copy the reference's imagery.
  */
 function buildRethemeMoodboardPrompt(meta: ThemeManifestMeta): string {
-  const colors = meta.colorPalette.join(", ");
+  const cp = meta.colorPalette;
+  const colors = [cp.background, cp.foreground, cp.primary, cp.secondary, cp.accent].join(", ");
   const parts = [
     "A structured design moodboard on a solid light gray background, consisting of white, rounded-rectangle panels. The layout is divided into two main columns. The attached image is only a structural layout example; do not copy or adapt its imagery, patterns, or composition.",
     `The overall theme is ${meta.themeDescription}, with a ${meta.mood} mood and a ${meta.artStyle} style.`,
@@ -35,7 +39,8 @@ function buildRethemeMoodboardPrompt(meta: ThemeManifestMeta): string {
  * as the default reference, so downstream tasks know which section to use.
  */
 function buildMoodboardPrompt(meta: ThemeManifestMeta): string {
-  const colors = meta.colorPalette.join(", ");
+  const cp = meta.colorPalette;
+  const colors = [cp.background, cp.foreground, cp.primary, cp.secondary, cp.accent].join(", ");
   const parts = [
     "Generate a single moodboard image that will be used as the visual style reference for a scratch card game. It must have four clearly labeled sections, arranged in a single image:",
     "(1) Graphic Style — one or two sample objects or icons for the theme (e.g. a cookie, a gem), on a plain background.",
@@ -57,10 +62,13 @@ export async function generateMoodboard(
   meta: ThemeManifestMeta,
   options?: GenerateMoodboardOptions,
 ): Promise<Buffer> {
+  options?.onProgress?.({ type: "designing", message: "Designing your theme (moodboard)..." });
   const buffer =
     options?.sourceImage != null
       ? await generateImage(buildRethemeMoodboardPrompt(meta), options.sourceImage)
       : await generateImage(buildMoodboardPrompt(meta));
+
+  options?.onProgress?.({ type: "designing", message: "Moodboard ready." });
 
   const debugDir = config.debug.moodboard;
   if (debugDir) {

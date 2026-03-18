@@ -25,6 +25,8 @@ export interface GameItemProps {
   glyphSheet?: GlyphSheetConfig;
   /** Optional theme for match highlight */
   matchHighlightTheme?: MatchHighlightTheme;
+  /** Semantic foreground color for fallback value rendering (when glyph/text modes are used). */
+  foregroundColor?: string;
 }
 
 export function GameItem({
@@ -34,6 +36,7 @@ export function GameItem({
   spriteSheetConfig,
   glyphSheet,
   matchHighlightTheme,
+  foregroundColor,
 }: GameItemProps) {
   const playRevealSound = useSoundStore((s) => s.playRevealSound);
   const [localRevealed, setLocalRevealed] = useState(false);
@@ -49,16 +52,29 @@ export function GameItem({
   // For spritesheet items: show value only after animation completes (localRevealed). Otherwise store-driven reveal would show value immediately.
   const showValue = revealed && (!hasSpritesheet || localRevealed);
 
+  // When the scratch-store resets to "closed" (e.g. after pressing Next),
+  // ensure the local spritesheet reveal state also resets. Without this,
+  // React may reuse the same component instance (same item ids) and the
+  // spritesheet cover/value would remain visible.
+  useEffect(() => {
+    if (storeItemState !== "closed") return;
+    setLocalRevealed(false);
+    setIsPlayingRevealAnimation(false);
+  }, [storeItemState]);
+
   const isLuckyNumber = data.id.startsWith("ln-");
   const isYourNumber = data.id.startsWith("yn-");
 
   const dollarValue = `$${Math.round(((data.valueCents ?? 0) as number) / 100).toFixed(0)}`;
+  const foregroundStyle = foregroundColor ? { color: foregroundColor } : undefined;
 
   function renderRevealedValue() {
     if (isYourNumber) {
       return (
         <span className="flex flex-col items-center leading-none gap-1">
-          <span className="font-semibold text-xs text-text-primary">{data.value}</span>
+          <span className="font-semibold text-xs text-text-primary" style={foregroundStyle}>
+            {data.value}
+          </span>
           {glyphSheet ? (
             <GlyphValueDisplay
               value={dollarValue}
@@ -67,9 +83,12 @@ export function GameItem({
               rows={glyphSheet.rows}
               cellInset={glyphSheet.cellInset}
               className="text-[12px]"
+              style={foregroundStyle}
             />
           ) : (
-            <span className="text-[10px] font-semibold text-text-primary">{dollarValue}</span>
+            <span className="text-[10px] font-semibold text-text-primary" style={foregroundStyle}>
+              {dollarValue}
+            </span>
           )}
         </span>
       );
@@ -78,7 +97,7 @@ export function GameItem({
     // Lucky numbers: reveal should show only the number.
     if (isLuckyNumber) {
       return (
-        <span className="font-semibold text-text-primary">
+        <span className="font-semibold text-text-primary" style={foregroundStyle}>
           {glyphSheet ? (
             <GlyphValueDisplay
               value={data.value}
@@ -87,9 +106,12 @@ export function GameItem({
               rows={glyphSheet.rows}
               cellInset={glyphSheet.cellInset}
               className="text-[12px]"
+              style={foregroundStyle}
             />
           ) : (
-            <span className="text-[10px] font-semibold text-text-primary">{data.value}</span>
+            <span className="text-[10px] font-semibold text-text-primary" style={foregroundStyle}>
+              {data.value}
+            </span>
           )}
         </span>
       );
@@ -104,6 +126,7 @@ export function GameItem({
           cols={glyphSheet.cols}
           rows={glyphSheet.rows}
           cellInset={glyphSheet.cellInset}
+          style={foregroundStyle}
         />
       );
     }
@@ -190,7 +213,10 @@ export function GameItem({
       {hasSpritesheet && data.coverSpriteSheetSrc && spriteSheetConfig ? (
         <div className="relative w-full h-full">
           {/* Keep value in a stable, centered layer to avoid any layout shift at reveal-complete. */}
-          <span className="absolute inset-0 flex items-center justify-center font-semibold text-text-primary">
+          <span
+            className="absolute inset-0 flex items-center justify-center font-semibold text-text-primary"
+            style={foregroundStyle}
+          >
             {renderRevealedValue()}
           </span>
 
@@ -222,13 +248,16 @@ export function GameItem({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.25 }}
           className="font-semibold text-text-primary"
+          style={foregroundStyle}
         >
           {renderRevealedValue()}
         </motion.span>
       ) : data.coverUrl ? (
         <img src={data.coverUrl} alt="" className="w-full h-full object-cover" />
       ) : (
-        <span className="text-gold-dim">?</span>
+        <span className="text-gold-dim" style={foregroundStyle}>
+          ?
+        </span>
       )}
     </motion.button>
   );

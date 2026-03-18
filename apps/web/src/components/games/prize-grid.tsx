@@ -7,9 +7,11 @@ export interface PrizeGridProps {
   /** Optional glyph sheet for rendering item values (from card). */
   glyphSheet?: GlyphSheetConfig;
   matchHighlightTheme?: MatchHighlightTheme;
+  /** Semantic foreground color for fallback text rendering inside each tile. */
+  foregroundColor?: string;
 }
 
-export function PrizeGrid({ data, glyphSheet, matchHighlightTheme }: PrizeGridProps) {
+export function PrizeGrid({ data, glyphSheet, matchHighlightTheme, foregroundColor }: PrizeGridProps) {
   const { cols, rows, items, coverSpriteSheet } = data;
   const total = cols * rows;
   const visibleItems = items.slice(0, total);
@@ -35,6 +37,7 @@ export function PrizeGrid({ data, glyphSheet, matchHighlightTheme }: PrizeGridPr
             spriteSheetConfig={coverSpriteSheet}
             glyphSheet={glyphSheet}
             matchHighlightTheme={matchHighlightTheme}
+            foregroundColor={foregroundColor}
           />
         ))}
       </div>

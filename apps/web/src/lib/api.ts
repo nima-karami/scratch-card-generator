@@ -148,3 +148,17 @@ export async function getCard(jobId: string): Promise<CardData> {
   const card = (await res.json()) as CardData;
   return normalizeCardUrls(card, API_BASE);
 }
+
+export async function fetchNextCard(jobId: string, variantId?: string): Promise<CardData> {
+  const res = await fetch(`${API_BASE}/api/next/${jobId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(variantId ? { variantId } : {}),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message ?? body.error ?? `Request failed: ${res.status}`);
+  }
+  const card = (await res.json()) as CardData;
+  return normalizeCardUrls(card, API_BASE);
+}

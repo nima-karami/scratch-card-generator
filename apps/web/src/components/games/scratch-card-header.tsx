@@ -6,6 +6,8 @@ export interface ScratchCardHeaderProps {
   title: string;
   /** Optional image URL for the title (overrides text) */
   titleImageUrl?: string;
+  /** Optional foreground color for text-mode rendering */
+  foregroundColor?: string;
   /** Optional class name for the root */
   className?: string;
 }
@@ -13,6 +15,7 @@ export interface ScratchCardHeaderProps {
 export function ScratchCardHeader({
   title,
   titleImageUrl,
+  foregroundColor,
   className = "",
 }: ScratchCardHeaderProps) {
   return (
@@ -23,7 +26,12 @@ export function ScratchCardHeader({
         transition={{ delay: 0.4, duration: 0.5 }}
         className="w-full h-full"
       >
-        <CardTitle title={title} imageUrl={titleImageUrl} alt={title} />
+        <CardTitle
+          title={title}
+          imageUrl={titleImageUrl}
+          alt={title}
+          foregroundColor={foregroundColor}
+        />
       </motion.div>
     </header>
   );

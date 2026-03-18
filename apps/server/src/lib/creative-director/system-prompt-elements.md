@@ -49,6 +49,10 @@ The main title graphic at the top of the card.
 
 - **text**: Use exactly the game name provided in the user message (meta.gameName). The game name was already chosen in the art direction step; do not invent different wording.
 - **visualStyle**: Typography and style that match the moodboard (colors, mood, treatment). Use the moodboard only for how the title should look visually.
+  - **Typography-only constraint (critical)**: `visualStyle` MUST describe only the title lettering/typography treatment (strokes/outlines, fill color usage, texture/discoloration inside the letters, halftone/print texture, shadows/drop-shadows, and letter-adjacent ornaments that are part of the typography treatment).
+  - **Allowed (letter-adjacent ornaments)**: Small decorations immediately next to/attached to the lettering are allowed (e.g. water drops/splashes, beach spritz, tiny shells/bubbles, small leaf-like flourishes).
+  - **Forbidden**: Do NOT describe any external framing, borders around the whole title, surrounding foliage/vines/palm trees/leaves as an *overall frame*, or any background/scene composition outside the letters.
+  - Use the semantic `colorPalette.foreground` token as the dominant readable color for the title typography.
 
 ### winMessageImage
 
@@ -57,13 +61,14 @@ Typography-only graphic for the fixed win popup wording: **"You Won!"**.
 The orchestrator will render the exact words, so your job is only to describe how they should look visually.
 
 - **visualStyle**: Typography and visual treatment for the fixed win message wording "You Won!" that matches the moodboard (colors, mood, lighting/textures, treatment). Use the moodboard only for how the win message should look visually.
+  - Use the semantic `colorPalette.foreground` token as the dominant readable color for the win message typography.
 
 ### gameContainerSurface
 
 Visual treatment for the **UI container** that wraps each game area (the boxed panel behind the game content).
 
-- **backgroundColor**: A CSS color string. Prefer a hex taken from the moodboard palette. This is the panel/surface fill color (can be dark or bright depending on the moodboard). Choose something that provides readable contrast against the game content and feels cohesive with the background.
-- **borderColor**: A CSS color string. Prefer a hex taken from the moodboard palette. This should be an accent outline color that complements the backgroundColor (often a brighter neon/accent, or a subtle warm highlight depending on the theme).
+- **backgroundColor**: A CSS color string. MUST use the semantic `colorPalette.background` token from the current theme direction.
+- **borderColor**: A CSS color string. MUST use the semantic `colorPalette.primary` or `colorPalette.accent` token (choose whichever looks best while remaining clearly readable on `backgroundColor`).
 - **borderRadius**: One of "none" | "sm" | "md" | "lg". Pick based on vibe:
   - "none" for sharp, rigid, mechanical, pixel/retro UI
   - "sm" for slightly softened retro UI
@@ -79,7 +84,7 @@ Visual treatment for the **UI container** that wraps each game area (the boxed p
 
 Visual treatment for the animation that highlights matching/winning items.
 
-- **color**: Primary hex color for the match highlight box shadow or border. Pick a bright, energetic color from the palette that stands out.
+- **color**: Primary hex color for the match highlight box shadow or border. Use the semantic `colorPalette.accent` token so the highlight clearly pops.
 - **glowColor**: Optional secondary hex color for the pulse/glow effect.
 - **borderRadius**: One of "none" | "sm" | "md" | "lg". Match the style of the `gameContainerSurface` or choose one that fits the game items.
 
@@ -88,8 +93,8 @@ Visual treatment for the animation that highlights matching/winning items.
 Background for the game container area.
 
 - **type**: "solid" | "gradient" | "pattern"
-- **color**: Primary hex from the moodboard palette. Optional for gradient/pattern.
-- **colorEnd**: Second hex for gradient. Optional.
+- **color**: For `type=solid`, MUST use the semantic `colorPalette.background` token. For `type=gradient` or `pattern`, use `colorPalette.background` as the dominant base color.
+- **colorEnd**: For gradients, use `colorPalette.secondary` or `colorPalette.accent` so the gradient stays visually interesting while keeping the background readable.
 - **pattern**: For type=pattern only: "dots" | "lines" | "grid"
 - **visualStyle**: Description that matches the moodboard look.
 
@@ -116,13 +121,14 @@ Short sound when the user reveals a game cell.
 
 Themed number/currency glyphs. Only describe visual style, not the glyphs themselves.
 
-- **visualStyle**: Style description that matches the moodboard (colors, texture). IMPORTANT: all 12 glyphs must share the exact same color, outline, texture, and glow. Do not use "alternating", "varying", or per-glyph color differences. Pick ONE consistent color treatment and apply it uniformly to every symbol.
+- **visualStyle**: Style description that matches the moodboard (colors, texture). IMPORTANT: all 12 glyphs must share the exact same color, outline, texture, and glow. Use the semantic `colorPalette.foreground` token as the dominant glyph color so digits remain readable on win overlays.
 
 ### winOverlay
 
 Overlay when the user wins (color only).
 
-- **overlayColor**: CSS color string, e.g. "rgba(44, 24, 16, 0.7)" — semi-transparent overlay that fits the moodboard palette.
+- **overlayColor**: CSS color string, e.g. "rgba(44, 24, 16, 0.7)" — semi-transparent overlay that creates strong contrast with the win message typography rendered using `colorPalette.foreground`.
+  - Prefer making the overlay a semi-transparent version of `colorPalette.background` (alpha ~0.55–0.8) so the foreground text stays legible.
 
 ## Variety and balance
 - Game buttons: one distinct subject/action per active game id in **{{ACTIVE_GAME_IDS}}**.

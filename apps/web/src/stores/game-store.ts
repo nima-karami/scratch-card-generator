@@ -13,6 +13,8 @@ export interface GenerationProgress {
   assetSlots: string[];
   /** Filled as asset-ready events arrive: kind -> url. */
   assetUrls: Record<string, string>;
+  /** Streaming log of recent progress messages (capped to avoid unbounded growth). */
+  log: { at: number; text: string }[];
 }
 
 interface GameState {
@@ -36,6 +38,7 @@ const defaultProgress: GenerationProgress = {
   images: [],
   assetSlots: [],
   assetUrls: {},
+  log: [],
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -59,12 +62,18 @@ export const useGameStore = create<GameState>((set) => ({
 
   applySSEEvent: (e) =>
     set((state) => {
+      const pushLog = (text?: string): GenerationProgress["log"] => {
+        if (!text) return state.progress.log;
+        const next = [...state.progress.log, { at: Date.now(), text }];
+        return next.length > 50 ? next.slice(next.length - 50) : next;
+      };
       switch (e.type) {
         case "designing":
           return {
             progress: {
               ...state.progress,
               stage: e.message ?? "Designing your theme...",
+              log: pushLog(e.message),
             },
           };
         case "text-ready":
@@ -73,6 +82,7 @@ export const useGameStore = create<GameState>((set) => ({
               ...state.progress,
               stage: "Writing copy...",
               title: e.title,
+              log: pushLog(`Theme copy ready: ${e.title}`),
             },
           };
         case "image-progress":
@@ -89,6 +99,7 @@ export const useGameStore = create<GameState>((set) => ({
             progress: {
               ...state.progress,
               stage: e.message ?? "Generating assets...",
+              log: pushLog(e.message),
             },
           };
         case "image-ready":
@@ -97,6 +108,7 @@ export const useGameStore = create<GameState>((set) => ({
               ...state.progress,
               stage: "Adding images...",
               images: [...state.progress.images, { id: e.id, url: e.url }],
+              log: pushLog(`Image ready: ${e.id}`),
             },
           };
         case "card-structure":
@@ -112,6 +124,7 @@ export const useGameStore = create<GameState>((set) => ({
               ...state.progress,
               stage: "Adding images...",
               assetUrls: { ...state.progress.assetUrls, [e.kind]: e.url },
+              log: pushLog(`Asset ready: ${e.kind}`),
             },
           };
         case "composing":
@@ -119,12 +132,13 @@ export const useGameStore = create<GameState>((set) => ({
             progress: {
               ...state.progress,
               stage: e.message ?? "Composing your card...",
+              log: pushLog(e.message),
             },
           };
         case "complete":
-          return { progress: { ...state.progress, stage: "Done!" } };
+          return { progress: { ...state.progress, stage: "Done!", log: pushLog("Done!") } };
         case "error":
-          return { error: e.message, view: "landing" as View };
+          return { error: e.message, view: "landing" as View, progress: { ...state.progress, log: pushLog(`Error: ${e.message}`) } };
         default:
           return state;
       }

@@ -8,6 +8,7 @@ import { postKlingVideo, getKlingVideoStatus, rateLimitKlingVideo } from "./rout
 import { postSoundEffect, rateLimitSoundEffect } from "./routes/sound-effect.js";
 import { postContainerImage } from "./routes/container-image.js";
 import { getJobAsset } from "./routes/job-assets.js";
+import { postNextGame } from "./routes/next-game.js";
 import { config } from "./config/index.js";
 import { createWorker } from "./queue/worker.js";
 
@@ -18,6 +19,7 @@ console.log(config);
 
 app.get("/api/health", health);
 app.post("/api/generate", rateLimitGenerate, postGenerate);
+app.post("/api/next/:jobId", postNextGame);
 app.get("/api/status/:jobId", getStatus);
 app.get("/api/card/:jobId", getCard);
 app.get("/api/jobs/:jobId/assets/:filename", getJobAsset);

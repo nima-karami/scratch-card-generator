@@ -6,9 +6,11 @@ export interface LuckyNumbersProps {
   data: LuckyNumbersData;
   glyphSheet?: GlyphSheetConfig;
   matchHighlightTheme?: MatchHighlightTheme;
+  /** Semantic foreground color for fallback text rendering inside each tile. */
+  foregroundColor?: string;
 }
 
-export function LuckyNumbers({ data, glyphSheet, matchHighlightTheme }: LuckyNumbersProps) {
+export function LuckyNumbers({ data, glyphSheet, matchHighlightTheme, foregroundColor }: LuckyNumbersProps) {
   const items = data.items.slice(0, data.count);
   const spriteSheetConfig = data.coverSpriteSheet;
 
@@ -32,6 +34,7 @@ export function LuckyNumbers({ data, glyphSheet, matchHighlightTheme }: LuckyNum
             spriteSheetConfig={spriteSheetConfig}
             glyphSheet={glyphSheet}
             matchHighlightTheme={matchHighlightTheme}
+            foregroundColor={foregroundColor}
           />
         ))}
       </div>

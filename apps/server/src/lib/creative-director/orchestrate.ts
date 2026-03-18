@@ -153,7 +153,7 @@ export async function orchestrateThemeAssets(
             backgroundColor: "white",
             ...(moodboard && { referenceImage: moodboard }),
           };
-          const { transparent } = await generateSpritesheet(params);
+          const { transparent } = await generateSpritesheet(params, (ev) => onProgress?.(ev as ProgressEvent));
           const filename = `spritesheet-${slug(variant.id)}.png`;
           const path = join(outputDir, filename);
           await writeFile(path, transparent);

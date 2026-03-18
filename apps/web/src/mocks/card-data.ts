@@ -54,6 +54,13 @@ const COOL_PINEAPPLE_BACKGROUND_IMAGE_URL = "/assets/backgrounds/cool-pineapple-
 export const mockCardPrizeGrid: CardData = {
   title: "Prize Grid",
   images: [],
+  colorPalette: {
+    background: "#0B0C10",
+    foreground: "#FFFFFF",
+    primary: "#FF00FF",
+    secondary: "#00FFFF",
+    accent: "#FFFF00",
+  },
   titleImageUrl: TITLE_IMAGE_COOKIES,
   winOverlayTheme: COOKIE_WIN_OVERLAY_THEME,
   glyphSheet: GLYPH_SHEET_BEACH_PARTY,
@@ -97,6 +104,13 @@ export const mockCardPrizeGrid: CardData = {
 export const mockCardPrizeGrid2: CardData = {
   title: "Prize Grid 2",
   images: [],
+  colorPalette: {
+    background: "#10121A",
+    foreground: "#FFFFFF",
+    primary: "#00FFFF",
+    secondary: "#FF9900",
+    accent: "#FFFF00",
+  },
   winOverlayTheme: COOKIE_WIN_OVERLAY_THEME,
   glyphSheet: GLYPH_SHEET_BEACH_PARTY,
   gameContainerSurface: {
@@ -140,6 +154,13 @@ const MOCK_MATCH_HIGHLIGHT_THEME: MatchHighlightTheme = {
 export const mockCardPrizeGrid3: CardData = {
   title: "Prize Grid 3",
   images: [],
+  colorPalette: {
+    background: "#0A3D62",
+    foreground: "#FFFFFF",
+    primary: "#FFFF00",
+    secondary: "#00FFFF",
+    accent: "#FF00FF",
+  },
   titleImageUrl: TITLE_IMAGE_COOKIES,
   glyphSheet: {
     ...GLYPH_SHEET_BEACH_PARTY,
@@ -186,6 +207,13 @@ export const mockCardPrizeGrid3: CardData = {
 export const mockCardLuckyYour2: CardData = {
   title: "Lucky + Your Numbers",
   images: [],
+  colorPalette: {
+    background: "#10121A",
+    foreground: "#FFFFFF",
+    primary: "#FF9900",
+    secondary: "#00FFFF",
+    accent: "#0088FF",
+  },
   titleImageUrl: TITLE_IMAGE_COOL_PINEAPPLE,
   winOverlayTheme: COOL_PINEAPPLE_WIN_OVERLAY_THEME,
   glyphSheet: GLYPH_SHEET_COOL_PINEAPPLE,

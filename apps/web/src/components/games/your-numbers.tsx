@@ -6,9 +6,11 @@ export interface YourNumbersProps {
   data: YourNumbersData;
   glyphSheet?: GlyphSheetConfig;
   matchHighlightTheme?: MatchHighlightTheme;
+  /** Semantic foreground color for fallback text rendering inside each tile. */
+  foregroundColor?: string;
 }
 
-export function YourNumbers({ data, glyphSheet, matchHighlightTheme }: YourNumbersProps) {
+export function YourNumbers({ data, glyphSheet, matchHighlightTheme, foregroundColor }: YourNumbersProps) {
   const { cols, rows, items } = data;
   const total = cols * rows;
   const visibleItems = items.slice(0, total);
@@ -36,6 +38,7 @@ export function YourNumbers({ data, glyphSheet, matchHighlightTheme }: YourNumbe
             spriteSheetConfig={spriteSheetConfig}
             glyphSheet={glyphSheet}
             matchHighlightTheme={matchHighlightTheme}
+            foregroundColor={foregroundColor}
           />
         ))}
       </div>

@@ -3,6 +3,8 @@ import { AnimatePresence } from "motion/react";
 import type { CardData } from "@repo/shared";
 import { cn } from "../../lib/utils";
 import { useScratchCardStore, allRevealedSelector } from "../../stores/scratch-card-store";
+import { useGameStore } from "../../stores/game-store";
+import { fetchNextCard } from "../../lib/api";
 import { getScratchableItemIds, getTotalWonPlaceholder } from "./scratch-card-utils";
 import { ScratchCardBackground } from "./scratch-card-background";
 import { Variant1, Variant2, Variant3 } from "./variants";
@@ -34,7 +36,10 @@ export function ScratchCard({
   const itemStates = useScratchCardStore((s) => s.itemStates);
   const winDismissed = useScratchCardStore((s) => s.winDismissed);
   const setWinDismissed = useScratchCardStore((s) => s.setWinDismissed);
+  const jobId = useGameStore((s) => s.jobId);
+  const setCard = useGameStore((s) => s.setCard);
   const [showWinAnimation, setShowWinAnimation] = useState(false);
+  const [isNextLoading, setIsNextLoading] = useState(false);
 
   useEffect(() => {
     if (!variant) return;
@@ -65,6 +70,26 @@ export function ScratchCard({
 
   const videoUrl = cardData.backgroundVideoUrl ?? (cardData.backgroundImageUrl ? undefined : DEFAULT_BACKGROUND_VIDEO);
   const totalWon = getTotalWonPlaceholder(cardData, itemStates);
+  const nextEnabled = Boolean(allRevealed) && !isNextLoading && Boolean(jobId);
+
+  async function handleNext() {
+    if (!jobId) return;
+    if (!nextEnabled) return;
+
+    setIsNextLoading(true);
+    // Reset scratch state immediately so tiles close even before the next card arrives.
+    reset();
+    setWinDismissed(true);
+
+    try {
+      const nextCard = await fetchNextCard(jobId, variant?.id);
+      setCard(nextCard);
+    } catch (err) {
+      console.error("Failed to load next card", err);
+    } finally {
+      setIsNextLoading(false);
+    }
+  }
 
   return (
     <div
@@ -81,6 +106,25 @@ export function ScratchCard({
         {variant.id === "variant-3" && <Variant3 cardData={cardData} />}
       </div>
 
+      {/* Bottom Next CTA (enabled only after full reveal) */}
+      <div className="absolute bottom-0 left-0 right-0 z-40 p-4">
+        <div className="rounded-t-2xl border border-gold/20 bg-surface-raised/90 backdrop-blur-sm px-3 py-3">
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={!nextEnabled}
+            aria-disabled={!nextEnabled}
+            className={cn(
+              "w-full rounded-xl border border-gold/30 bg-surface-raised text-gold font-semibold py-3 shadow-lg transition-colors",
+              "hover:bg-surface-bright",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+            )}
+          >
+            {isNextLoading ? "Loading..." : "Next"}
+          </button>
+        </div>
+      </div>
+
       <AnimatePresence>
         {showWinAnimation && !winDismissed && (
           <WinAnimation
@@ -88,6 +132,7 @@ export function ScratchCard({
             onClose={() => setWinDismissed(true)}
             winOverlayTheme={cardData.winOverlayTheme}
             glyphSheet={cardData.glyphSheet}
+            foregroundColor={cardData.colorPalette.foreground}
           />
         )}
       </AnimatePresence>

@@ -3,6 +3,7 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { GoogleGenAI } from "@google/genai";
 import { config } from "../../config/index.js";
+import type { SSEEvent } from "@repo/shared";
 import {
   DEFAULT_VARIANT_ID,
   getActiveGameIdsForVariant,
@@ -55,7 +56,10 @@ async function loadSystemPromptElements(activeGameIds: string[]): Promise<string
  * Phase 1: Generate only the high-level art direction (meta) from the user's theme.
  * Use this first; then generate the moodboard from meta; then call generateThemeElements.
  */
-export async function generateThemeMeta(themeDescription: string): Promise<ThemeManifestMeta> {
+export async function generateThemeMeta(
+  themeDescription: string,
+  onProgress?: (event: SSEEvent) => void,
+): Promise<ThemeManifestMeta> {
   const apiKey = config.gemini.apiKey;
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is required for Creative Director. Set it in .env.");
@@ -69,6 +73,10 @@ export async function generateThemeMeta(themeDescription: string): Promise<Theme
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
+      onProgress?.({
+        type: "designing",
+        message: `Designing your theme (meta) — attempt ${attempt}/${MAX_RETRIES}`,
+      });
       const response = await ai.models.generateContent({
         model: CREATIVE_DIRECTOR_MODEL,
         contents: [{ role: "user", parts: [{ text: userMessage }] }],
@@ -111,7 +119,8 @@ export async function generateThemeMeta(themeDescription: string): Promise<Theme
 export async function generateThemeElements(
   meta: ThemeManifestMeta,
   moodboardBuffer: Buffer,
-  activeGameIds: string[]
+  activeGameIds: string[],
+  onProgress?: (event: SSEEvent) => void
 ): Promise<ThemeManifestElements> {
   const apiKey = config.gemini.apiKey;
   if (!apiKey) {
@@ -119,7 +128,8 @@ export async function generateThemeElements(
   }
 
   const systemPrompt = await loadSystemPromptElements(activeGameIds);
-  const metaBlurb = `Current art direction: artStyle="${meta.artStyle}", mood="${meta.mood}", colorPalette=[${meta.colorPalette.join(", ")}]. Theme: ${meta.themeDescription}. Game name (use exactly for titleImage.text): "${meta.gameName}".`;
+  const cp = meta.colorPalette;
+  const metaBlurb = `Current art direction: artStyle="${meta.artStyle}", mood="${meta.mood}", colorPalette={background:"${cp.background}", foreground:"${cp.foreground}", primary:"${cp.primary}", secondary:"${cp.secondary}", accent:"${cp.accent}"}. Theme: ${meta.themeDescription}. Game name (use exactly for titleImage.text): "${meta.gameName}".`;
   const userMessage = `The attached image is the moodboard for this theme. ${metaBlurb}\n\nLook at the moodboard and output the complete elements JSON so that every visualStyle and creative choice matches what you see in the image. For titleImage.text you must use exactly this game name (already set in art direction): "${meta.gameName}". Do not invent different wording.`;
 
   const ai = new GoogleGenAI({ apiKey });
@@ -129,6 +139,10 @@ export async function generateThemeElements(
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
+      onProgress?.({
+        type: "designing",
+        message: `Designing your theme (elements) — attempt ${attempt}/${MAX_RETRIES}`,
+      });
       const response = await ai.models.generateContent({
         model: CREATIVE_DIRECTOR_MODEL,
         contents: [
@@ -197,20 +211,23 @@ export function buildManifestFromMetaAndElements(
  */
 export async function runFullDirector(
   themeDescription: string,
-  options?: { sourceImage?: Buffer; activeGameIds?: string[] }
+  options?: { sourceImage?: Buffer; activeGameIds?: string[]; onProgress?: (event: SSEEvent) => void }
 ): Promise<{
   manifest: ThemeManifest;
   moodboard: Buffer;
 }> {
   const { generateMoodboard } = await import("../moodboard.js");
   const { getDefaultReferenceMoodboard } = await import("../reference-moodboard.js");
-  const meta = await generateThemeMeta(themeDescription);
+  const meta = await generateThemeMeta(themeDescription, options?.onProgress);
   const activeGameIds = options?.activeGameIds ?? DEFAULT_ACTIVE_GAME_IDS;
   const sourceImage = options?.sourceImage ?? (await getDefaultReferenceMoodboard());
+  options?.onProgress?.({ type: "designing", message: "Designing your theme (moodboard)..." });
   const moodboard = await generateMoodboard(meta, {
     ...(sourceImage && { sourceImage }),
+    onProgress: options?.onProgress,
   });
-  const elements = await generateThemeElements(meta, moodboard, activeGameIds);
+  options?.onProgress?.({ type: "designing", message: "Designing your theme (elements)..." });
+  const elements = await generateThemeElements(meta, moodboard, activeGameIds, options?.onProgress);
   const manifest = buildManifestFromMetaAndElements(meta, elements);
   return { manifest, moodboard };
 }
