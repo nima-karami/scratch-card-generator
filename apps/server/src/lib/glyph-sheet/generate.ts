@@ -32,6 +32,7 @@ function buildStylizePrompt(visualStyle: string): string {
 Rules:
 - Preserve the exact layout and character positions. Do not move, resize, or rearrange any glyph.
 - Only change colors and texture to match the style. Keep each character readable and recognizable.
+- Every glyph must use the exact same color, outline, texture, and effects. No alternating or per-character color variation.
 - Keep the background pure solid white #FFFFFF.`;
 }
 

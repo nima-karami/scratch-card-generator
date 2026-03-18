@@ -1,6 +1,6 @@
 # Scratch Card Generator
 
-CLI scripts for generating scratch card assets (spritesheets, videos, sound effects, container backgrounds). All **visual** generation flows use a single style input, **`--visual-style`**, so you can copy the same creative content from a Creative Director manifest into any CLI. To anchor style to a moodboard (e.g. from `generate-moodboard`), pass **`--reference-image <path>`** to the spritesheet, title-image, container-image, and background CLIs. Config (cols, rows, width, height, duration) comes from flags or pipeline config.
+CLI scripts for generating scratch card assets (spritesheets, videos, sound effects, container backgrounds). All **visual** generation flows use a single style input, `**--visual-style`**, so you can copy the same creative content from a Creative Director manifest into any CLI. To anchor style to a moodboard (e.g. from `generate-moodboard`), pass `**--reference-image <path>`** to the spritesheet, title-image, container-image, and background CLIs. Config (cols, rows, width, height, duration) comes from flags or pipeline config.
 
 ## Prerequisites
 
@@ -46,16 +46,16 @@ npm run generate-spritesheet -- --subject "Dinosaur" --action "walking" --cols 4
 ```
 
 
-| Option             | Description                                                                                                                       |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| `--subject`        | Subject of the animation                                                                                                          |
-| `--action`         | Animation action                                                                                                                  |
-| `--cols`           | Number of columns                                                                                                                 |
-| `--rows`           | Number of rows                                                                                                                    |
-| `--width`          | Canvas width in pixels                                                                                                            |
-| `--height`         | Canvas height in pixels                                                                                                           |
-| `--output`         | Output path for transparent PNG                                                                                                   |
-| `--visual-style`   | Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Default: 2D flat illustration style |
+| Option              | Description                                                                                                                       |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `--subject`         | Subject of the animation                                                                                                          |
+| `--action`          | Animation action                                                                                                                  |
+| `--cols`            | Number of columns                                                                                                                 |
+| `--rows`            | Number of rows                                                                                                                    |
+| `--width`           | Canvas width in pixels                                                                                                            |
+| `--height`          | Canvas height in pixels                                                                                                           |
+| `--output`          | Output path for transparent PNG                                                                                                   |
+| `--visual-style`    | Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Default: 2D flat illustration style |
 | `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style (e.g. from `generate-moodboard`)                             |
 
 
@@ -70,16 +70,16 @@ npm run generate-particle-spritesheet -- --subject "small chocolate chip cookie 
 ```
 
 
-| Option             | Description                                                                                            |
-| ------------------ | ------------------------------------------------------------------------------------------------------ |
-| `--subject`        | Subject for each cell (e.g. "small cookie crumb", "coin")                                              |
-| `--cols`           | Number of columns                                                                                      |
-| `--rows`           | Number of rows                                                                                         |
-| `--width`          | Canvas width in pixels                                                                                 |
-| `--height`         | Canvas height in pixels                                                                                |
-| `--output`         | Output path for transparent PNG                                                                        |
-| `--visual-style`   | Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Optional |
-| `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style                                  |
+| Option              | Description                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `--subject`         | Subject for each cell (e.g. "small cookie crumb", "coin")                                              |
+| `--cols`            | Number of columns                                                                                      |
+| `--rows`            | Number of rows                                                                                         |
+| `--width`           | Canvas width in pixels                                                                                 |
+| `--height`          | Canvas height in pixels                                                                                |
+| `--output`          | Output path for transparent PNG                                                                        |
+| `--visual-style`    | Art style for the spritesheet (e.g. "2D flat illustration style", "pixel art", "watercolor"). Optional |
+| `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style                                   |
 
 
 ---
@@ -141,11 +141,11 @@ npm run generate-sound-effect -- --prompt "thunder rumbling in the distance" --d
 ```
 
 
-| Option       | Description                                     |
-| ------------ | ----------------------------------------------- |
-| `--prompt`   | Sound effect description (required)             |
-| `--duration` | Duration in seconds (0.5-30). Default: 1        |
-| `--loop`     | Generate seamlessly looping sound (for BGM)     |
+| Option       | Description                                            |
+| ------------ | ------------------------------------------------------ |
+| `--prompt`   | Sound effect description (required)                    |
+| `--duration` | Duration in seconds (0.5-30). Default: 1               |
+| `--loop`     | Generate seamlessly looping sound (for BGM)            |
 | `--output`   | Output file path. Default: `./output/sound-effect.mp3` |
 
 
@@ -164,12 +164,35 @@ npm run generate-title-image -- --text "Win Big" --visual-style "bold typography
 ```
 
 
-| Option             | Description                                                                        |
-| ------------------ | ---------------------------------------------------------------------------------- |
-| `--text`           | Title text to render in the image (required)                                       |
-| `--visual-style`   | Style description for the image (required). Same as Creative Director output.     |
-| `--output`         | Output file path. Default: `./title-image.png`                                    |
-| `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style               |
+| Option              | Description                                                                   |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `--text`            | Title text to render in the image (required)                                  |
+| `--visual-style`    | Style description for the image (required). Same as Creative Director output. |
+| `--output`          | Output file path. Default: `./title-image.png`                                |
+| `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style          |
+
+
+---
+
+### Generate Win Message Image
+
+Generate a transparent win-message graphic for the win popup from fixed wording ("You Won!") using Gemini (requires `GEMINI_API_KEY`). Uses a single style field `--visual-style` (same as Creative Director `winMessageImage.visualStyle`).
+
+```bash
+npm run generate-win-message-image -- --visual-style "luxury typography, gold and black" --output ./output/win-message.png
+```
+
+```bash
+npm run generate-win-message-image -- --text "You Won!" --visual-style "bold typography, gold and dark" --output ./output/win-message.png
+```
+
+
+| Option              | Description                                                                   |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `--text`            | Win message text to render in the image (optional). Default: `You Won!`       |
+| `--visual-style`    | Style description for the image (required). Same as Creative Director output. |
+| `--output`          | Output file path. Default: `./win-message.png`                                |
+| `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style          |
 
 
 ---
@@ -201,16 +224,16 @@ npm run generate-background -- --image ./frame.png --animation-prompt "soft ligh
 ```
 
 
-| Option               | Description                                                                                    |
-| -------------------- | ---------------------------------------------------------------------------------------------- |
+| Option               | Description                                                                                                                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--mode`             | `image` = PNG only (default output: `./output/background.png`). `video` = image + attempt VEO video; on failure, only the image is written (as `<output-stem>-frame.png`). Default: `video`. |
-| `--visual-style`     | Style for the background image (required unless `--image`). Same as Creative Director output.  |
-| `--animation-prompt` | Description for video motion (required for `--mode video` unless `--image`). Same as Creative Director output. |
-| `--duration`         | Video length in seconds: 4, 6, or 8. Default: 6                                                |
-| `--aspect-ratio`     | `9:16` (portrait, default) or `16:9` (landscape)                                               |
-| `--output`           | Output path: for `--mode image` the PNG path; for `--mode video` the MP4 path. Defaults: `./output/background.png` (image) or `./output/background.mp4` (video). |
-| `--image`            | Use this image as first and last frame (skip image generation). Only used when `--mode video`.  |
-| `--reference-image` | Optional: path to a moodboard/reference image to anchor visual style (ignored when `--image` is used). |
+| `--visual-style`     | Style for the background image (required unless `--image`). Same as Creative Director output.                                                                                                |
+| `--animation-prompt` | Description for video motion (required for `--mode video` unless `--image`). Same as Creative Director output.                                                                               |
+| `--duration`         | Video length in seconds: 4, 6, or 8. Default: 6                                                                                                                                              |
+| `--aspect-ratio`     | `9:16` (portrait, default) or `16:9` (landscape)                                                                                                                                             |
+| `--output`           | Output path: for `--mode image` the PNG path; for `--mode video` the MP4 path. Defaults: `./output/background.png` (image) or `./output/background.mp4` (video).                             |
+| `--image`            | Use this image as first and last frame (skip image generation). Only used when `--mode video`.                                                                                               |
+| `--reference-image`  | Optional: path to a moodboard/reference image to anchor visual style (ignored when `--image` is used).                                                                                       |
 
 
 ---
@@ -238,19 +261,19 @@ npm run generate-container-image -- --type pattern --pattern dots --visual-style
 ```
 
 
-| Option            | Description                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------- |
-| `--type`          | One of: solid, gradient, pattern (required)                                        |
-| `--width`         | Width in pixels. Default: 400                                                       |
-| `--height`        | Height in pixels. Default: 300                                                      |
-| `--color`         | Primary color (hex, e.g. #1a1a2e). Default: #1a1a2e                                   |
-| `--color-end`     | End color for gradient. Default: #16213e                                            |
-| `--angle`         | Gradient angle in degrees (linear). Default: 135                                   |
-| `--pattern`       | For type=pattern: dots, lines, or grid. Default: dots                               |
-| `--pattern-scale`   | Pattern tile size in px (legacy). Default: 24                                      |
-| `--visual-style`   | Style for LLM (gradient/pattern). Same as Creative Director output.                 |
-| `--reference-image` | Optional: path to a moodboard/reference image (used for gradient/pattern only).    |
-| `--output`         | Output file path. Default: ./output/container-image.png                             |
+| Option              | Description                                                                     |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `--type`            | One of: solid, gradient, pattern (required)                                     |
+| `--width`           | Width in pixels. Default: 400                                                   |
+| `--height`          | Height in pixels. Default: 300                                                  |
+| `--color`           | Primary color (hex, e.g. #1a1a2e). Default: #1a1a2e                             |
+| `--color-end`       | End color for gradient. Default: #16213e                                        |
+| `--angle`           | Gradient angle in degrees (linear). Default: 135                                |
+| `--pattern`         | For type=pattern: dots, lines, or grid. Default: dots                           |
+| `--pattern-scale`   | Pattern tile size in px (legacy). Default: 24                                   |
+| `--visual-style`    | Style for LLM (gradient/pattern). Same as Creative Director output.             |
+| `--reference-image` | Optional: path to a moodboard/reference image (used for gradient/pattern only). |
+| `--output`          | Output file path. Default: ./output/container-image.png                         |
 
 
 **API:** `POST /api/container-image` with JSON body `{ "type": "solid" | "gradient" | "pattern", "width?", "height?", "color?", "colorEnd?", "angle?", "pattern?", "patternScale?", "visualStyle?" }` (or `visual_style`) returns the image as PNG. Gradient and pattern require `GEMINI_API_KEY`. When `CONTAINER_IMAGE_DEBUG_OUTPUT_DIR` is set, each generated image is also written there with sequential IDs and logged to `container-image-log.txt`.
@@ -272,13 +295,13 @@ npm run generate-glyph-sheet -- --input ./base-font.png --visual-style "dinosaur
 ```
 
 
-| Option           | Description                                                                                         |
-| ---------------- | --------------------------------------------------------------------------------------------------- |
-| `--input`        | Path to the predefined glyph sheet image (12 glyphs: $ , 0–9 on solid background) (required)        |
-| `--visual-style` | Style for stylization (required). Same as Creative Director output.                                 |
-| `--output`       | Output path for the transparent PNG (required)                                                      |
-| `--cols`         | Number of columns in the grid. Default: 12                                                          |
-| `--rows`         | Number of rows in the grid. Default: 1                                                              |
+| Option           | Description                                                                                                       |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `--input`        | Path to the predefined glyph sheet image (12 glyphs: $ , 0–9 on solid background) (required)                      |
+| `--visual-style` | Style for stylization (required). Same as Creative Director output.                                               |
+| `--output`       | Output path for the transparent PNG (required)                                                                    |
+| `--cols`         | Number of columns in the grid. Default: 12                                                                        |
+| `--rows`         | Number of rows in the grid. Default: 1                                                                            |
 | `--slice`        | Also write 12 per-glyph PNGs (e.g. `glyph-dino-00.png` … `glyph-dino-11.png` in the same directory as `--output`) |
 
 
@@ -286,7 +309,7 @@ npm run generate-glyph-sheet -- --input ./base-font.png --visual-style "dinosaur
 
 ### Generate Moodboard
 
-Generate a **master moodboard** image from a theme description (requires `GEMINI_API_KEY`). This runs Phase 1 of the Creative Director (meta: artStyle, colorPalette, mood) then produces the moodboard. By default the server uses the reference moodboard at **`apps/server/assets/reference-moodboard.png`** (a deconstructed collage) and re-themes it with the meta. Pass **`--source-image <path>`** to use a different reference image for that run. The moodboard is used to anchor visual style when running the full theme pipeline (`generate-theme`); you can also run this script alone to preview or debug the style anchor.
+Generate a **master moodboard** image from a theme description (requires `GEMINI_API_KEY`). This runs Phase 1 of the Creative Director (meta: artStyle, colorPalette, mood) then produces the moodboard. By default the server uses the reference moodboard at `**apps/server/assets/reference-moodboard.png`** (a deconstructed collage) and re-themes it with the meta. Pass `**--source-image <path>`** to use a different reference image for that run. The moodboard is used to anchor visual style when running the full theme pipeline (`generate-theme`); you can also run this script alone to preview or debug the style anchor.
 
 ```bash
 npm run generate-moodboard -- --theme "cookies" --output ./output/cookies/moodboard.png
@@ -304,11 +327,12 @@ npm run generate-moodboard -- --theme "retro space arcade"
 
 When `MOODBOARD_DEBUG_OUTPUT_DIR` is set, a copy of the moodboard and a log line are written there (e.g. `0001-cookies.png`, `moodboard-log.txt`).
 
-| Option             | Description                                                                                  |
-| ------------------ | -------------------------------------------------------------------------------------------- |
-| `--theme`          | Theme description (required) (e.g. "cookies", "retro space arcade")                           |
-| `--output`         | Output file path for the moodboard PNG. Default: `./moodboard.png`                            |
-| `--source-image`   | Optional: path to a reference image to re-theme into the moodboard (overrides default `apps/server/assets/reference-moodboard.png`) |
+
+| Option           | Description                                                                                                                         |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `--theme`        | Theme description (required) (e.g. "cookies", "retro space arcade")                                                                 |
+| `--output`       | Output file path for the moodboard PNG. Default: `./moodboard.png`                                                                  |
+| `--source-image` | Optional: path to a reference image to re-theme into the moodboard (overrides default `apps/server/assets/reference-moodboard.png`) |
 
 
 ---
@@ -354,12 +378,12 @@ Reads an existing manifest and generates assets. **No moodboard is used** (you w
 When `THEME_ASSETS_DEBUG_OUTPUT_DIR` is set, a log line is appended to `theme-assets-log.txt` (timestamp, manifest path, output dir, list of generated files).
 
 
-| Option             | Description                                                                                                 |
-| ------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `--theme`          | Theme description (e.g. "cookies", "retro space arcade")                                                    |
-| `--output`         | Output directory (generate-theme, generate-theme-assets) or path to manifest.json (generate-theme-manifest) |
-| `--manifest`       | Path to manifest.json (generate-theme-assets only)                                                          |
-| `--source-image`   | Optional (generate-theme only): path to a reference image to re-theme into the moodboard (overrides default `apps/server/assets/reference-moodboard.png`) |
+| Option           | Description                                                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--theme`        | Theme description (e.g. "cookies", "retro space arcade")                                                                                                  |
+| `--output`       | Output directory (generate-theme, generate-theme-assets) or path to manifest.json (generate-theme-manifest)                                               |
+| `--manifest`     | Path to manifest.json (generate-theme-assets only)                                                                                                        |
+| `--source-image` | Optional (generate-theme only): path to a reference image to re-theme into the moodboard (overrides default `apps/server/assets/reference-moodboard.png`) |
 
 
 ---
@@ -367,21 +391,22 @@ When `THEME_ASSETS_DEBUG_OUTPUT_DIR` is set, a log line is appended to `theme-as
 ## Environment Variables
 
 
-| Variable                            | Scripts                                                                                                                                                                                                          | Description                                                                           |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `GEMINI_API_KEY`                    | generate-spritesheet, generate-particle-spritesheet, generate-title-image, generate-background, generate-container-image (gradient/pattern), generate-glyph-sheet, generate-moodboard, generate-theme, generate-theme-manifest | Gemini API for image, VEO video, and Creative Director (manifest + moodboard)          |
-| `KLING_API_KEY`                     | generate-kling-video                                                                                                                                                                                             | Kling 3.0 video generation                                                            |
-| `ELEVENLABS_API_KEY`                | generate-sound-effect                                                                                                                                                                                            | Eleven Labs sound effects                                                             |
-| `SPRITESHEET_QA_DEBUG_OUTPUT_DIR`   | generate-spritesheet                                                                                                                                                                                             | Optional: debug output for QA attempts                                                |
-| `SOUND_EFFECT_DEBUG_OUTPUT_DIR`     | generate-sound-effect                                                                                                                                                                                            | Optional: debug output with sequential IDs                                            |
-| `TITLE_IMAGE_DEBUG_OUTPUT_DIR`      | generate-title-image                                                                                                                                                                                             | Optional: debug output (0001-slug.png, …) and title-image-log.txt                     |
-| `BACKGROUND_DEBUG_OUTPUT_DIR`      | generate-background                                                                                                                                                                                               | Optional: debug output (0001-slug-frame.png, optional 0001-slug.mp4, background-log.txt) |
-| `CONTAINER_IMAGE_DEBUG_OUTPUT_DIR`  | generate-container-image, POST /api/container-image                                                                                                                                                              | Optional: debug output (0001-slug.png, …) and container-image-log.txt                 |
-| `GLYPH_SHEET_DEBUG_OUTPUT_DIR`      | generate-glyph-sheet                                                                                                                                                                                             | Optional: intermediate white/black and final transparent PNGs and glyph-sheet-log.txt |
-| `THEME_DEBUG_OUTPUT_DIR`            | generate-theme                                                                                                                                                                                                   | Optional: copy of manifest (NNNN-slug-manifest.json) and theme-log.txt                |
-| `THEME_MANIFEST_DEBUG_OUTPUT_DIR`   | generate-theme-manifest                                                                                                                                                                                          | Optional: copy of manifest (NNNN-slug-manifest.json) and theme-manifest-log.txt       |
-| `THEME_ASSETS_DEBUG_OUTPUT_DIR`     | generate-theme-assets                                                                                                                                                                                            | Optional: theme-assets-log.txt (timestamp, manifest path, output dir, asset list)     |
-| `MOODBOARD_DEBUG_OUTPUT_DIR`        | generate-moodboard, generate-theme                                                                                                                                                                                 | Optional: moodboard PNGs (0001-slug.png, …) and moodboard-log.txt                     |
+| Variable                             | Scripts                                                                                                                                                                                                                        | Description                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `GEMINI_API_KEY`                     | generate-spritesheet, generate-particle-spritesheet, generate-title-image, generate-background, generate-container-image (gradient/pattern), generate-glyph-sheet, generate-moodboard, generate-theme, generate-theme-manifest | Gemini API for image, VEO video, and Creative Director (manifest + moodboard)            |
+| `KLING_API_KEY`                      | generate-kling-video                                                                                                                                                                                                           | Kling 3.0 video generation                                                               |
+| `ELEVENLABS_API_KEY`                 | generate-sound-effect                                                                                                                                                                                                          | Eleven Labs sound effects                                                                |
+| `SPRITESHEET_QA_DEBUG_OUTPUT_DIR`    | generate-spritesheet                                                                                                                                                                                                           | Optional: debug output for QA attempts                                                   |
+| `SOUND_EFFECT_DEBUG_OUTPUT_DIR`      | generate-sound-effect                                                                                                                                                                                                          | Optional: debug output with sequential IDs                                               |
+| `TITLE_IMAGE_DEBUG_OUTPUT_DIR`       | generate-title-image                                                                                                                                                                                                           | Optional: debug output (0001-slug.png, …) and title-image-log.txt                        |
+| `WIN_MESSAGE_IMAGE_DEBUG_OUTPUT_DIR` | generate-win-message-image                                                                                                                                                                                                     | Optional: debug output (0001-slug.png, …) and win-message-image-log.txt                  |
+| `BACKGROUND_DEBUG_OUTPUT_DIR`        | generate-background                                                                                                                                                                                                            | Optional: debug output (0001-slug-frame.png, optional 0001-slug.mp4, background-log.txt) |
+| `CONTAINER_IMAGE_DEBUG_OUTPUT_DIR`   | generate-container-image, POST /api/container-image                                                                                                                                                                            | Optional: debug output (0001-slug.png, …) and container-image-log.txt                    |
+| `GLYPH_SHEET_DEBUG_OUTPUT_DIR`       | generate-glyph-sheet                                                                                                                                                                                                           | Optional: intermediate white/black and final transparent PNGs and glyph-sheet-log.txt    |
+| `THEME_DEBUG_OUTPUT_DIR`             | generate-theme                                                                                                                                                                                                                 | Optional: copy of manifest (NNNN-slug-manifest.json) and theme-log.txt                   |
+| `THEME_MANIFEST_DEBUG_OUTPUT_DIR`    | generate-theme-manifest                                                                                                                                                                                                        | Optional: copy of manifest (NNNN-slug-manifest.json) and theme-manifest-log.txt          |
+| `THEME_ASSETS_DEBUG_OUTPUT_DIR`      | generate-theme-assets                                                                                                                                                                                                          | Optional: theme-assets-log.txt (timestamp, manifest path, output dir, asset list)        |
+| `MOODBOARD_DEBUG_OUTPUT_DIR`         | generate-moodboard, generate-theme                                                                                                                                                                                             | Optional: moodboard PNGs (0001-slug.png, …) and moodboard-log.txt                        |
 
 
 ### Debug output folders
@@ -390,6 +415,7 @@ When the optional `*_DEBUG_OUTPUT_DIR` variables are set (e.g. in `.env`), gener
 
 - `./debug/sound-effect/` — `0001-slug.mp3`, … and `sound-effect-log.txt`
 - `./debug/title-image/` — `0001-slug.png`, … and `title-image-log.txt`
+- `./debug/win-message-image/` — `0001-slug.png`, … and `win-message-image-log.txt`
 - `./debug/background/` — `0001-slug-frame.png`, optional `0001-slug.mp4`, … and `background-log.txt`
 - `./debug/container-image/` — `0001-slug.png`, … and `container-image-log.txt`
 - `./debug/spritesheet/` — QA attempt images and `qa-log.txt`

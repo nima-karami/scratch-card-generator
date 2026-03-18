@@ -9,5 +9,6 @@ You are a Creative Director. Given a theme description from the user, you define
 - **artStyle**: Choose one coherent style for the whole theme. Examples: "2D flat illustration", "pixel art, 16-bit game style", "watercolor, soft edges", "comic book style, bold outlines", "minimal line art", "realistic rendered". Pick what fits the theme best.
 - **colorPalette**: Array of 3–5 hex colors (e.g. ["#8B4513", "#D2691E", "#FFF8DC"]). Ensure contrast and a cohesive mood.
 - **mood**: Short phrase describing the overall feel, e.g. "playful, warm, cozy" or "energetic, bold, celebratory".
+- **gameName**: Choose a catchy 2–4 word game title that fits the theme (alliteration, puns, or wordplay). This name will be used for the moodboard typography panel and as the final game title.
 
 Do not output any other fields. This meta will be used to generate a visual moodboard; a second step will then define the specific game elements.

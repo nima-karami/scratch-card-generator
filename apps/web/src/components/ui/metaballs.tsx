@@ -1,4 +1,4 @@
-import React, { FC, useRef, useEffect, useState } from "react";
+import { FC, useRef, useEffect, useState } from "react";
 
 export interface ModernPulseShaderProps {
   /** Number of grid cells per axis */

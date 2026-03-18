@@ -20,6 +20,7 @@ async function writeThemeAssetsDebug(
     ...result.gameButtonSpritesheets,
     result.particleSpritesheet,
     result.titleImage,
+    result.winMessageImage,
     result.containerBackground,
     result.backgroundImage,
     result.videoBackground,

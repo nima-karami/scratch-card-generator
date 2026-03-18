@@ -21,7 +21,7 @@ function buildRethemeMoodboardPrompt(meta: ThemeManifestMeta): string {
     `The overall theme is ${meta.themeDescription}, with a ${meta.mood} mood and a ${meta.artStyle} style.`,
     "Left column (three stacked square panels):",
     "1. Top left panel: Above the panel, the explicit small text 'Graphic Style'. Inside the panel: A single, centered game object illustration representing the theme on a clean background.",
-    "2. Middle left panel: Above the panel, the explicit small text 'Typography'. Inside the panel: A large, stylized title text design appropriate for the theme.",
+    `2. Middle left panel: Above the panel, the explicit small text 'Typography'. Inside the panel: A large, stylized title displaying the game name: "${meta.gameName}".`,
     `3. Bottom left panel: Above the panel, the explicit small text 'Color Palette'. Inside the panel: Vertical color swatches representing these exact hex codes: ${colors}.`,
     "Right column (one tall vertical panel):",
     "4. Large right panel: Above the panel, the explicit small text 'Background Style'. Inside the panel: A new full-bleed patterned or textured background designed for this theme, matching the color palette.",
@@ -39,7 +39,7 @@ function buildMoodboardPrompt(meta: ThemeManifestMeta): string {
   const parts = [
     "Generate a single moodboard image that will be used as the visual style reference for a scratch card game. It must have four clearly labeled sections, arranged in a single image:",
     "(1) Graphic Style — one or two sample objects or icons for the theme (e.g. a cookie, a gem), on a plain background.",
-    "(2) Typography — sample title or headline text (e.g. two words) in the same style, showing how the title should look.",
+    `(2) Typography — the game title "${meta.gameName}" styled as a headline, showing how the title should look.`,
     "(3) Color Palette — a row of color swatches using exactly these hex colors: " + colors + ".",
     "(4) Background Style — a patterned or textured background area (no game UI, no grids).",
     `Theme: ${meta.themeDescription}. Art style: ${meta.artStyle}. Mood: ${meta.mood}.`,

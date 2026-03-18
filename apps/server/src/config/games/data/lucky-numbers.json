@@ -1,5 +1,5 @@
 {
-  "winningCount": 5,
+  "winningCount": 3,
   "numberRange": { "min": 1, "max": 99 },
   "prizePool": [
     { "value": "$1", "valueCents": 100, "weight": 40 },

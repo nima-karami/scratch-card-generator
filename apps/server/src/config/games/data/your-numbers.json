@@ -1,6 +1,6 @@
 {
   "cols": 3,
-  "rows": 4,
+  "rows": 3,
   "numberRange": { "min": 1, "max": 99 },
   "minMatches": 0,
   "maxMatches": 3

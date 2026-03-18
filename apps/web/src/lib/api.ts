@@ -2,6 +2,14 @@ import type { CardData, SSEEvent } from "@repo/shared";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
+/** Resolve a path-only asset URL (e.g. from progress.assetUrls) with API_BASE. */
+export function resolveAssetUrl(url: string): string {
+  if (url.startsWith("/") && API_BASE) {
+    return `${API_BASE.replace(/\/$/, "")}${url}`;
+  }
+  return url;
+}
+
 /** Prepend API_BASE to path-only URLs so assets work when API is on a different origin. */
 function normalizeCardUrls(card: CardData, base: string): CardData {
   const abs = (url: string | undefined) =>
@@ -44,10 +52,14 @@ function normalizeCardUrls(card: CardData, base: string): CardData {
     backgroundImageUrl: abs(card.backgroundImageUrl),
     backgroundVideoUrl: abs(card.backgroundVideoUrl),
     images: card.images.map((img) => ({ ...img, url: abs(img.url) ?? img.url })),
+    glyphSheet: card.glyphSheet
+      ? { ...card.glyphSheet, url: abs(card.glyphSheet.url) ?? card.glyphSheet.url }
+      : undefined,
     winOverlayTheme: card.winOverlayTheme
       ? {
           ...card.winOverlayTheme,
           particleSpriteSheetUrl: abs(card.winOverlayTheme.particleSpriteSheetUrl),
+          winMessageImageUrl: abs(card.winOverlayTheme.winMessageImageUrl),
         }
       : undefined,
     variant,
@@ -96,6 +108,8 @@ export function subscribeToStatus(
   const eventNames = [
     "designing",
     "text-ready",
+    "card-structure",
+    "asset-ready",
     "image-progress",
     "image-ready",
     "generating-spritesheet",

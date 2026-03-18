@@ -108,8 +108,8 @@ export async function generateThemeElements(
   }
 
   const systemPrompt = await loadSystemPromptElements();
-  const metaBlurb = `Current art direction: artStyle="${meta.artStyle}", mood="${meta.mood}", colorPalette=[${meta.colorPalette.join(", ")}]. Theme: ${meta.themeDescription}.`;
-  const userMessage = `The attached image is the moodboard for this theme. ${metaBlurb}\n\nLook at the moodboard and output the complete elements JSON so that every visualStyle and creative choice matches what you see in the image. For titleImage.text only: choose the title wording yourself from the theme (catchy 2–4 words); do not copy any text from the moodboard image.`;
+  const metaBlurb = `Current art direction: artStyle="${meta.artStyle}", mood="${meta.mood}", colorPalette=[${meta.colorPalette.join(", ")}]. Theme: ${meta.themeDescription}. Game name (use exactly for titleImage.text): "${meta.gameName}".`;
+  const userMessage = `The attached image is the moodboard for this theme. ${metaBlurb}\n\nLook at the moodboard and output the complete elements JSON so that every visualStyle and creative choice matches what you see in the image. For titleImage.text you must use exactly this game name (already set in art direction): "${meta.gameName}". Do not invent different wording.`;
 
   const ai = new GoogleGenAI({ apiKey });
   const moodboardBase64 = moodboardBuffer.toString("base64");
@@ -173,7 +173,9 @@ export function buildManifestFromMetaAndElements(
   meta: ThemeManifestMeta,
   elements: ThemeManifestElements
 ): ThemeManifest {
-  return { meta, elements };
+  const manifest: ThemeManifest = { meta, elements };
+  manifest.elements.titleImage.text = meta.gameName;
+  return manifest;
 }
 
 /**

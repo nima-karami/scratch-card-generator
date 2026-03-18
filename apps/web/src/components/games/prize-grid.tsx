@@ -1,12 +1,14 @@
 import { motion } from "motion/react";
-import type { PrizeGridData } from "@repo/shared";
+import type { GlyphSheetConfig, PrizeGridData } from "@repo/shared";
 import { GameItem } from "./game-item";
 
 export interface PrizeGridProps {
   data: PrizeGridData;
+  /** Optional glyph sheet for rendering item values (from card). */
+  glyphSheet?: GlyphSheetConfig;
 }
 
-export function PrizeGrid({ data }: PrizeGridProps) {
+export function PrizeGrid({ data, glyphSheet }: PrizeGridProps) {
   const { cols, rows, items, coverSpriteSheet } = data;
   const total = cols * rows;
   const visibleItems = items.slice(0, total);
@@ -25,7 +27,13 @@ export function PrizeGrid({ data }: PrizeGridProps) {
         }}
       >
         {visibleItems.map((item) => (
-          <GameItem key={item.id} data={item} size="lg" spriteSheetConfig={coverSpriteSheet} />
+          <GameItem
+            key={item.id}
+            data={item}
+            size="lg"
+            spriteSheetConfig={coverSpriteSheet}
+            glyphSheet={glyphSheet}
+          />
         ))}
       </div>
     </motion.section>

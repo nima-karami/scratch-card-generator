@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import type { WinOverlayTheme } from "@repo/shared";
+import type { GlyphSheetConfig, WinOverlayTheme } from "@repo/shared";
 import { WinParticles } from "./win-particles";
+import { GlyphValueDisplay } from "./glyph-value-display";
 
 const DEFAULT_OVERLAY_COLOR = "rgba(0, 0, 0, 0.5)";
 const COUNT_UP_DURATION_MS = 1200;
@@ -11,6 +12,8 @@ export interface WinAnimationProps {
   onClose?: () => void;
   /** Theme for overlay color and particle spritesheet. When missing, default overlay only. */
   winOverlayTheme?: WinOverlayTheme | null;
+  /** Optional glyph sheet for rendering the numeric part with styled glyphs. */
+  glyphSheet?: GlyphSheetConfig | null;
 }
 
 function parseAmount(totalWon: string): number {
@@ -23,7 +26,12 @@ function formatAmount(value: number, totalWon: string): string {
   return hasDollar ? `$${value}` : String(value);
 }
 
-export function WinAnimation({ totalWon, onClose, winOverlayTheme }: WinAnimationProps) {
+export function WinAnimation({
+  totalWon,
+  onClose,
+  winOverlayTheme,
+  glyphSheet,
+}: WinAnimationProps) {
   const targetAmount = parseAmount(totalWon);
   const [displayAmount, setDisplayAmount] = useState(0);
 
@@ -45,8 +53,8 @@ export function WinAnimation({ totalWon, onClose, winOverlayTheme }: WinAnimatio
     return () => cancelAnimationFrame(rafId);
   }, [targetAmount]);
 
-  const overlayColor =
-    winOverlayTheme?.overlayColor ?? DEFAULT_OVERLAY_COLOR;
+  const overlayColor = winOverlayTheme?.overlayColor ?? DEFAULT_OVERLAY_COLOR;
+  const winMessageImageUrl = winOverlayTheme?.winMessageImageUrl;
   const hasParticles =
     winOverlayTheme?.particleSpriteSheetUrl &&
     winOverlayTheme.particleSpriteSheetCols != null &&
@@ -58,7 +66,10 @@ export function WinAnimation({ totalWon, onClose, winOverlayTheme }: WinAnimatio
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl"
+      className={`absolute inset-0 z-30 flex items-center justify-center rounded-2xl ${
+        onClose ? "cursor-pointer" : ""
+      }`}
+      onClick={() => onClose?.()}
     >
       {/* Layer 1: Semi-transparent color overlay on the card */}
       <div
@@ -82,22 +93,26 @@ export function WinAnimation({ totalWon, onClose, winOverlayTheme }: WinAnimatio
         initial={{ opacity: 0, scale: 0.85 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 mx-4 flex max-w-sm flex-col items-center gap-6 rounded-2xl border border-gold/30 bg-surface-raised p-8 shadow-xl"
+        className="relative z-10 mx-4 flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl"
       >
-        <p className="text-[10px] uppercase tracking-[0.3em] text-gold-dim font-medium">
-          You won!
-        </p>
-        <p className="font-display text-4xl font-extrabold text-gold-light">
-          Total Win: {formatAmount(displayAmount, totalWon)}
-        </p>
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-gold/30 bg-surface px-4 py-2.5 text-sm font-semibold text-gold transition-colors hover:bg-surface-bright"
-          >
-            Done
-          </button>
+        {winMessageImageUrl ? (
+          <img src={winMessageImageUrl} alt="You Won!" className="h-40 w-auto object-contain" />
+        ) : (
+          <p className="text-sm uppercase tracking-[0.2em] text-gold-dim font-medium">You Won!</p>
+        )}
+        {glyphSheet ? (
+          <GlyphValueDisplay
+            value={formatAmount(displayAmount, totalWon)}
+            glyphSheetSrc={glyphSheet.url}
+            cols={glyphSheet.cols}
+            rows={glyphSheet.rows}
+            cellInset={glyphSheet.cellInset}
+            className="font-display text-5xl font-extrabold text-gold-light"
+          />
+        ) : (
+          <p className="font-display text-5xl font-extrabold text-gold-light">
+            {formatAmount(displayAmount, totalWon)}
+          </p>
         )}
       </motion.div>
     </motion.div>

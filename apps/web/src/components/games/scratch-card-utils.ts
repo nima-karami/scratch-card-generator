@@ -58,22 +58,28 @@ export function getScratchableItemIds(cardData: CardData): string[] {
   return games.flatMap((game) => getIdsFromGame(game));
 }
 
-function getItemsWithValues(cardData: CardData): { id: string; value: string }[] {
+function getItemsWithValues(cardData: CardData): { id: string; value: string; valueCents?: number }[] {
   const games = cardData.variant?.games ?? [];
   return games.flatMap((game) => {
     switch (game.id) {
       case "prize-grid":
-        return game.items.slice(0, game.cols * game.rows).map((i: { id: string; value: string }) => ({ id: i.id, value: i.value }));
+        return game.items
+          .slice(0, game.cols * game.rows)
+          .map((i) => ({ id: i.id, value: i.value, valueCents: i.valueCents }));
       case "match-a-bunch": {
         const n = Math.max(2, Math.min(5, game.matchCount));
-        return game.items.slice(0, n).map((i: { id: string; value: string }) => ({ id: i.id, value: i.value }));
+        return game.items.slice(0, n).map((i) => ({ id: i.id, value: i.value, valueCents: i.valueCents }));
       }
       case "bonus-spot":
-        return [{ id: game.item.id, value: game.item.value }];
+        return [{ id: game.item.id, value: game.item.value, valueCents: game.item.valueCents }];
       case "lucky-numbers":
-        return game.items.slice(0, game.count).map((i: { id: string; value: string }) => ({ id: i.id, value: i.value }));
+        return game.items
+          .slice(0, game.count)
+          .map((i) => ({ id: i.id, value: i.value, valueCents: i.valueCents }));
       case "your-numbers":
-        return game.items.slice(0, game.cols * game.rows).map((i: { id: string; value: string }) => ({ id: i.id, value: i.value }));
+        return game.items
+          .slice(0, game.cols * game.rows)
+          .map((i) => ({ id: i.id, value: i.value, valueCents: i.valueCents }));
       default:
         return [];
     }
@@ -90,8 +96,19 @@ export function getTotalWonPlaceholder(
 ): string {
   const itemsWithValues = getItemsWithValues(cardData);
   let total = 0;
-  for (const { id, value } of itemsWithValues) {
+  for (const { id, value, valueCents } of itemsWithValues) {
     if (itemStates[id] === "open" || itemStates[id] === "win") {
+      // Variant-2 win rules:
+      // - `lucky-numbers` are displayed only; they should not contribute to total.
+      // - `your-numbers` contributes based on its assigned prize (`valueCents`), even if the store state
+      //   is only "open" (e.g. revealAll() debug helper).
+      if (id.startsWith("ln-")) continue;
+      if (id.startsWith("yn-")) {
+        // valueCents is in cents (e.g. 1000 -> $10)
+        total += Math.round((valueCents ?? 0) / 100);
+        continue;
+      }
+
       const num = parseFloat(value.replace(/[^0-9.-]/g, "")) || 0;
       total += num;
     }

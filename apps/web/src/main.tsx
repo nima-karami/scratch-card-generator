@@ -4,7 +4,7 @@ import App from "./app";
 import "./index.css";
 import { useGameStore } from "./stores/game-store";
 import { useScratchCardStore } from "./stores/scratch-card-store";
-import { getMockCard, MOCK_KEYS } from "./mocks/card-data";
+import { getMockAudioAssetUrls, getMockCard, MOCK_KEYS } from "./mocks/card-data";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -22,6 +22,10 @@ if (import.meta.env.DEV) {
     if (!mock) {
       console.warn(`Unknown key "${key}". Use loadMockCard() to see keys.`);
       return;
+    }
+    const audioAssetUrls = getMockAudioAssetUrls(key);
+    if (audioAssetUrls) {
+      useGameStore.getState().setMockAssetUrls(audioAssetUrls);
     }
     useGameStore.getState().setCard(mock);
   };

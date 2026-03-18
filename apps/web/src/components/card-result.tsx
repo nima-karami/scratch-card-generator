@@ -2,22 +2,40 @@ import { useRef, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useGameStore } from "../stores/game-store";
 import { useSoundStore } from "../stores/sound-store";
+import { resolveAssetUrl } from "../lib/api";
 import { ScratchCard } from "./games";
 
 export function CardResult() {
-  const { cardData, reset } = useGameStore();
-  const { muted, toggleMuted, startBGM, stopBGM } = useSoundStore();
+  const { cardData, reset, progress } = useGameStore();
+  const { muted, toggleMuted, startBGM, stopBGM, setSoundUrls } = useSoundStore();
   const cardRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
+    const bgmSrc = progress.assetUrls.backgroundMusic
+      ? resolveAssetUrl(progress.assetUrls.backgroundMusic)
+      : undefined;
+    const revealSrc = progress.assetUrls.revealSound
+      ? resolveAssetUrl(progress.assetUrls.revealSound)
+      : undefined;
+
+    // Always set sound URLs when we have them (or revert to defaults).
+    setSoundUrls({ bgmSrc, revealSrc });
+
     if (muted) return;
     startBGM();
     return () => {
       stopBGM();
     };
-  }, [muted, startBGM, stopBGM]);
+  }, [
+    muted,
+    progress.assetUrls.backgroundMusic,
+    progress.assetUrls.revealSound,
+    setSoundUrls,
+    startBGM,
+    stopBGM,
+  ]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -36,7 +54,7 @@ export function CardResult() {
     const el = cardRef.current;
     el.requestFullscreen?.().catch(() => {});
     if (navigator.clipboard) {
-      const text = `${cardData.title} \u2013 ${cardData.tagline}`;
+      const text = `${cardData.title}`;
       navigator.clipboard.writeText(text).catch(() => {});
     }
     setMenuOpen(false);
@@ -81,10 +99,7 @@ export function CardResult() {
               <h2 className="font-display text-3xl font-extrabold text-gold-light leading-tight">
                 {cardData.title}
               </h2>
-              <p className="text-text-secondary text-sm mt-2 leading-relaxed">
-                {cardData.tagline}
-              </p>
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/30 to-transparent my-5" />
+              <div className="h-px w-full bg-linear-to-r from-transparent via-gold/30 to-transparent my-5" />
               <div className="flex flex-wrap gap-3">
                 {cardData.images.map((img, i) => (
                   <motion.img

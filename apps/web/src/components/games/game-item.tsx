@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import type { GameItemData } from "@repo/shared";
+import { AnimatePresence, motion } from "motion/react";
+import type { GameItemData, GlyphSheetConfig } from "@repo/shared";
 import { useSoundStore } from "../../stores/sound-store";
 import { useScratchCardStore } from "../../stores/scratch-card-store";
 import { cn } from "../../lib/utils";
 import { SpriteSheetRenderer } from "./sprite-sheet-renderer";
+import { GlyphValueDisplay } from "./glyph-value-display";
 
 export type GameItemSize = "sm" | "md" | "lg";
 
@@ -20,9 +21,17 @@ export interface GameItemProps {
   onReveal?: (id: string) => void;
   /** Spritesheet config when item uses coverSpriteSheetSrc (e.g. from PrizeGridData). Frame size is derived from image. */
   spriteSheetConfig?: { cols: number; rows: number };
+  /** Optional glyph sheet for rendering the value (e.g. themed digits). When set, value is drawn from the sheet; otherwise plain text. */
+  glyphSheet?: GlyphSheetConfig;
 }
 
-export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: GameItemProps) {
+export function GameItem({
+  data,
+  size = "md",
+  onReveal,
+  spriteSheetConfig,
+  glyphSheet,
+}: GameItemProps) {
   const playRevealSound = useSoundStore((s) => s.playRevealSound);
   const [localRevealed, setLocalRevealed] = useState(false);
   const [isPlayingRevealAnimation, setIsPlayingRevealAnimation] = useState(false);
@@ -36,6 +45,68 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
   const hasSpritesheet = Boolean(data.coverSpriteSheetSrc && spriteSheetConfig);
   // For spritesheet items: show value only after animation completes (localRevealed). Otherwise store-driven reveal would show value immediately.
   const showValue = revealed && (!hasSpritesheet || localRevealed);
+
+  const isLuckyNumber = data.id.startsWith("ln-");
+  const isYourNumber = data.id.startsWith("yn-");
+
+  const dollarValue = `$${Math.round(((data.valueCents ?? 0) as number) / 100).toFixed(0)}`;
+
+  function renderRevealedValue() {
+    if (isYourNumber) {
+      return (
+        <span className="flex flex-col items-center leading-none gap-1">
+          <span className="font-semibold text-xs text-text-primary">{data.value}</span>
+          {glyphSheet ? (
+            <GlyphValueDisplay
+              value={dollarValue}
+              glyphSheetSrc={glyphSheet.url}
+              cols={glyphSheet.cols}
+              rows={glyphSheet.rows}
+              cellInset={glyphSheet.cellInset}
+              className="text-[12px]"
+            />
+          ) : (
+            <span className="text-[10px] font-semibold text-text-primary">{dollarValue}</span>
+          )}
+        </span>
+      );
+    }
+
+    // Lucky numbers: reveal should show only the number.
+    if (isLuckyNumber) {
+      return (
+        <span className="font-semibold text-text-primary">
+          {glyphSheet ? (
+            <GlyphValueDisplay
+              value={data.value}
+              glyphSheetSrc={glyphSheet.url}
+              cols={glyphSheet.cols}
+              rows={glyphSheet.rows}
+              cellInset={glyphSheet.cellInset}
+              className="text-[12px]"
+            />
+          ) : (
+            <span className="text-[10px] font-semibold text-text-primary">{data.value}</span>
+          )}
+        </span>
+      );
+    }
+
+    // Default: optionally render themed glyph value (prize-grid etc).
+    if (glyphSheet) {
+      return (
+        <GlyphValueDisplay
+          value={data.value}
+          glyphSheetSrc={glyphSheet.url}
+          cols={glyphSheet.cols}
+          rows={glyphSheet.rows}
+          cellInset={glyphSheet.cellInset}
+        />
+      );
+    }
+
+    return <>{data.value}</>;
+  }
 
   // When store sets this item to open/win (e.g. revealAllInSequence), start the spritesheet animation
   useEffect(() => {
@@ -51,7 +122,10 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
   }, [isOnScratchCard, storeItemState, data.coverSpriteSheetSrc, spriteSheetConfig, localRevealed]);
 
   function handleRevealComplete() {
-    if (isOnScratchCard) setItemState(data.id, "open");
+    if (isOnScratchCard) {
+      const isWin = isYourNumber && (data.valueCents ?? 0) > 0;
+      setItemState(data.id, isWin ? "win" : "open");
+    }
     setLocalRevealed(true);
     setIsPlayingRevealAnimation(false);
     onReveal?.(data.id);
@@ -82,31 +156,44 @@ export function GameItem({ data, size = "md", onReveal, spriteSheetConfig }: Gam
         sizeClasses[size],
       )}
     >
-      {/* When revealed and (no spritesheet or animation done), show value so store-driven reveal works */}
-      {showValue ? (
-        <motion.span
-          initial={hasSpritesheet ? false : { opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: hasSpritesheet ? 0 : 0.25 }}
-        >
-          {data.value}
-        </motion.span>
-      ) : data.coverSpriteSheetSrc && spriteSheetConfig ? (
+      {hasSpritesheet && data.coverSpriteSheetSrc && spriteSheetConfig ? (
         <div className="relative w-full h-full">
+          {/* Keep value in a stable, centered layer to avoid any layout shift at reveal-complete. */}
           <span className="absolute inset-0 flex items-center justify-center font-semibold text-text-primary">
-            {data.value}
+            {renderRevealedValue()}
           </span>
-          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-            <SpriteSheetRenderer
-              src={data.coverSpriteSheetSrc}
-              cols={spriteSheetConfig.cols}
-              rows={spriteSheetConfig.rows}
-              className="max-w-full max-h-full"
-              play={isPlayingRevealAnimation}
-              onComplete={handleRevealComplete}
-            />
-          </div>
+
+          <AnimatePresence>
+            {!localRevealed && (
+              <motion.div
+                key="cover"
+                className="absolute inset-0 flex items-center justify-center overflow-hidden"
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12, ease: "easeOut" }}
+              >
+                <SpriteSheetRenderer
+                  src={data.coverSpriteSheetSrc}
+                  cols={spriteSheetConfig.cols}
+                  rows={spriteSheetConfig.rows}
+                  className="max-w-full max-h-full"
+                  play={isPlayingRevealAnimation}
+                  onComplete={handleRevealComplete}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+      ) : showValue ? (
+        <motion.span
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.25 }}
+          className="font-semibold text-text-primary"
+        >
+          {renderRevealedValue()}
+        </motion.span>
       ) : data.coverUrl ? (
         <img src={data.coverUrl} alt="" className="w-full h-full object-cover" />
       ) : (

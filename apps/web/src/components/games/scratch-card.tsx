@@ -83,6 +83,7 @@ export function ScratchCard({
             totalWon={totalWon}
             onClose={() => setWinDismissed(true)}
             winOverlayTheme={cardData.winOverlayTheme}
+            glyphSheet={cardData.glyphSheet}
           />
         )}
       </AnimatePresence>

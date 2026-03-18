@@ -8,8 +8,11 @@ export type View = "landing" | "generating" | "result";
 export interface GenerationProgress {
   stage: string;
   title?: string;
-  tagline?: string;
   images: { id: string; url: string }[];
+  /** Asset slot ids from card-structure event (e.g. titleImage, backgroundImage). */
+  assetSlots: string[];
+  /** Filled as asset-ready events arrive: kind -> url. */
+  assetUrls: Record<string, string>;
 }
 
 interface GameState {
@@ -23,6 +26,7 @@ interface GameState {
   setGenerating: (jobId: string) => void;
   applySSEEvent: (e: SSEEvent) => void;
   setCard: (data: CardData) => void;
+  setMockAssetUrls: (assetUrls: Record<string, string>) => void;
   setError: (msg: string | null) => void;
   reset: () => void;
 }
@@ -30,6 +34,8 @@ interface GameState {
 const defaultProgress: GenerationProgress = {
   stage: "Starting...",
   images: [],
+  assetSlots: [],
+  assetUrls: {},
 };
 
 export const useGameStore = create<GameState>((set) => ({
@@ -67,7 +73,6 @@ export const useGameStore = create<GameState>((set) => ({
               ...state.progress,
               stage: "Writing copy...",
               title: e.title,
-              tagline: e.tagline,
             },
           };
         case "image-progress":
@@ -94,6 +99,21 @@ export const useGameStore = create<GameState>((set) => ({
               images: [...state.progress.images, { id: e.id, url: e.url }],
             },
           };
+        case "card-structure":
+          return {
+            progress: {
+              ...state.progress,
+              assetSlots: e.slots,
+            },
+          };
+        case "asset-ready":
+          return {
+            progress: {
+              ...state.progress,
+              stage: "Adding images...",
+              assetUrls: { ...state.progress.assetUrls, [e.kind]: e.url },
+            },
+          };
         case "composing":
           return {
             progress: {
@@ -111,6 +131,14 @@ export const useGameStore = create<GameState>((set) => ({
     }),
 
   setCard: (data) => set({ cardData: data, view: "result", error: null }),
+
+  setMockAssetUrls: (assetUrls) =>
+    set((state) => ({
+      progress: {
+        ...state.progress,
+        assetUrls,
+      },
+    })),
 
   setError: (msg) => set({ error: msg, view: "landing" }),
 

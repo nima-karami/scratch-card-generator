@@ -79,6 +79,8 @@ export interface LuckyNumbersData {
   count: number;
   /** Lookup: number -> prize. Used by client when user reveals a Your Numbers cell. */
   winningNumbers: WinningNumberEntry[];
+  /** Shared spritesheet config for items with coverSpriteSheetSrc. */
+  coverSpriteSheet?: SpriteSheetConfig;
 }
 
 /** Your numbers: grid of revealable items (e.g. 3x3, 3x4, 4x4) */
@@ -87,6 +89,8 @@ export interface YourNumbersData {
   items: GameItemData[];
   cols: number;
   rows: number;
+  /** Shared spritesheet config for items with coverSpriteSheetSrc. */
+  coverSpriteSheet?: SpriteSheetConfig;
 }
 
 /** Prize grid: grid of revealable cells, each shows a prize (no matching) */
@@ -124,6 +128,8 @@ export interface ScratchCardVariant {
 export interface WinOverlayTheme {
   /** Optional overlay color (e.g. "rgba(0,0,0,0.5)" or theme key). */
   overlayColor?: string;
+  /** Optional win message graphic URL (transparent PNG) displayed in the win popup. */
+  winMessageImageUrl?: string;
   /** URL of spritesheet image for confetti particles (grid of N variants). */
   particleSpriteSheetUrl?: string;
   /** Spritesheet grid: cols x rows = number of particle variants. */
@@ -131,10 +137,28 @@ export interface WinOverlayTheme {
   particleSpriteSheetRows?: number;
 }
 
+/** Optional glyph sheet for rendering dollar/numeric values (e.g. themed digits). Grid layout: cols x rows = 12 cells for $ , 0-9. */
+export interface GlyphSheetConfig {
+  url: string;
+  cols: number;
+  rows: number;
+  /** Fraction of each cell to hide from each edge per axis (0 = full cell). Clamped to [0, 0.5). */
+  cellInset?: { x: number; y: number };
+}
+
+/** Container corner radius options controlled by the theme manifest. */
+export type GameContainerRadius = "none" | "sm" | "md" | "lg";
+
+/** Theme-controlled surface styling for the UI panel that wraps game content. */
+export interface GameContainerSurfaceTheme {
+  backgroundColor: string;
+  borderColor: string;
+  borderRadius: GameContainerRadius;
+}
+
 /** Final composed card data for the scratch-card layout */
 export interface CardData {
   title: string;
-  tagline: string;
   images: CardImageSlot[];
   /** When present, card renders the game variant; otherwise legacy image layout */
   variant?: ScratchCardVariant;
@@ -146,6 +170,10 @@ export interface CardData {
   backgroundVideoUrl?: string;
   /** Optional theme for the win overlay (overlay color, particle spritesheet). */
   winOverlayTheme?: WinOverlayTheme;
+  /** Optional glyph sheet for rendering dollar/numeric values on game items. */
+  glyphSheet?: GlyphSheetConfig;
+  /** Theme-controlled surface styling for the wrapper around game content. */
+  gameContainerSurface: GameContainerSurfaceTheme;
 }
 
 /** Job status for internal/SSE use */
@@ -156,11 +184,10 @@ export enum JobStatus {
   Failed = "failed",
 }
 
-/** SSE: text (title + tagline) ready */
+/** SSE: text (title) ready */
 export interface TextReadyEvent {
   type: "text-ready";
   title: string;
-  tagline: string;
 }
 
 /** SSE: image generation progress */
@@ -226,6 +253,20 @@ export interface GeneratingAssetEvent {
   message?: string;
 }
 
+/** SSE: card structure / placeholder slots (sent early so frontend can render layout) */
+export interface CardStructureEvent {
+  type: "card-structure";
+  slots: string[];
+}
+
+/** SSE: single asset ready (kind + url so frontend can fill slot) */
+export interface AssetReadyEvent {
+  type: "asset-ready";
+  kind: string;
+  id: string;
+  url: string;
+}
+
 export type SSEEvent =
   | TextReadyEvent
   | ImageProgressEvent
@@ -235,4 +276,6 @@ export type SSEEvent =
   | ErrorEvent
   | DesigningEvent
   | GeneratingSpritesheetEvent
-  | GeneratingAssetEvent;
+  | GeneratingAssetEvent
+  | CardStructureEvent
+  | AssetReadyEvent;

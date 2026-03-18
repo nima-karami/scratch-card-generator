@@ -6,6 +6,7 @@
 
 import type { ReactNode } from "react";
 import { cn } from "../../lib/utils";
+import type { GameContainerSurfaceTheme } from "@repo/shared";
 
 export type GameContainerVariant = "none" | "default" | "image";
 
@@ -28,6 +29,8 @@ export interface GameContainerProps {
   backgroundPosition?: string;
   /** Optional class name for the container (ignored when variant="none") */
   className?: string;
+  /** Theme-controlled surface styling for wrapper (bg/border/radius). */
+  surface?: GameContainerSurfaceTheme;
 }
 
 export function GameContainer({
@@ -37,25 +40,46 @@ export function GameContainer({
   backgroundSize = "cover",
   backgroundPosition = "center",
   className = "",
+  surface,
 }: GameContainerProps) {
   if (variant === "none") {
     return <>{children}</>;
   }
 
   const isImageVariant = variant === "image" && backgroundImageUrl;
-  const style = isImageVariant
-    ? {
-        backgroundImage: `url(${backgroundImageUrl})`,
-        backgroundSize,
-        backgroundPosition,
-      }
-    : undefined;
+
+  const radiusClass = (() => {
+    const br = surface?.borderRadius;
+    if (br === "none") return "rounded-none";
+    if (br === "sm") return "rounded-lg";
+    if (br === "md") return "rounded-xl";
+    if (br === "lg") return "rounded-2xl";
+    return "rounded-xl";
+  })();
+
+  let style: React.CSSProperties | undefined;
+  if (isImageVariant) {
+    style = {
+      backgroundImage: `url(${backgroundImageUrl})`,
+      backgroundSize,
+      backgroundPosition,
+      backgroundColor: surface?.backgroundColor,
+      borderColor: surface?.borderColor,
+    };
+  } else if (surface) {
+    style = { backgroundColor: surface.backgroundColor, borderColor: surface.borderColor };
+  }
+
+  let backgroundClass = "bg-surface-bright/50";
+  if (surface) backgroundClass = "bg-transparent";
+  else if (isImageVariant) backgroundClass = "bg-surface-bright/30";
 
   return (
     <div
       className={cn(
-        "relative z-10 rounded-xl border border-gold/20 p-4",
-        isImageVariant ? "bg-surface-bright/30" : "bg-surface-bright/50",
+        "relative z-10 border border-gold/20 p-4",
+        radiusClass,
+        backgroundClass,
         className,
       )}
       style={style}

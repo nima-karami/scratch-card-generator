@@ -146,6 +146,7 @@ export function generateLuckyNumbers(
     items,
     count: winningNumbers.length,
     winningNumbers,
+    ...(options.coverSpriteSheet && { coverSpriteSheet: options.coverSpriteSheet }),
   };
 }
 
@@ -191,6 +192,7 @@ export function generateYourNumbers(
     items,
     cols: config.cols,
     rows: config.rows,
+    ...(options.coverSpriteSheet && { coverSpriteSheet: options.coverSpriteSheet }),
   };
 }
 
@@ -205,7 +207,17 @@ export function generateVariantGames(
     games.push(generatePrizeGrid(configs.prizeGrid, options));
     return games;
   }
-  if (variantId === "variant-2" || variantId === "variant-3") {
+
+  if (variantId === "variant-2") {
+    // Variant 2: Lucky numbers row + Your numbers grid.
+    games.push(generateLuckyNumbers(configs.luckyNumbers, options));
+    const luckyData = games[games.length - 1] as LuckyNumbersData;
+    games.push(generateYourNumbers(configs.yourNumbers, luckyData.winningNumbers, options));
+    return games;
+  }
+
+  if (variantId === "variant-3") {
+    // Variant 3: Bonus spot + Match-a-bunch + Lucky numbers + Your numbers grid.
     games.push(generateBonusSpot(configs.bonusSpot, options));
     games.push(generateMatchABunch(configs.matchABunch, options));
     games.push(generateLuckyNumbers(configs.luckyNumbers, options));

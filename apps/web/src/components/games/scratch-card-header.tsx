@@ -4,8 +4,6 @@ import { CardTitle } from "./card-title";
 export interface ScratchCardHeaderProps {
   /** Card title */
   title: string;
-  /** Optional tagline below the title */
-  tagline?: string;
   /** Optional image URL for the title (overrides text) */
   titleImageUrl?: string;
   /** Optional class name for the root */
@@ -14,7 +12,6 @@ export interface ScratchCardHeaderProps {
 
 export function ScratchCardHeader({
   title,
-  tagline,
   titleImageUrl,
   className = "",
 }: ScratchCardHeaderProps) {
@@ -24,20 +21,10 @@ export function ScratchCardHeader({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
+        className="w-full h-full"
       >
         <CardTitle title={title} imageUrl={titleImageUrl} alt={title} />
       </motion.div>
-
-      {tagline && (
-        <motion.p
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55, duration: 0.4 }}
-          className="text-black text-sm mt-2 leading-relaxed text-center"
-        >
-          Powered by TimePlay
-        </motion.p>
-      )}
     </header>
   );
 }

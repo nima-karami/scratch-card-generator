@@ -2,16 +2,23 @@ import { create } from "zustand";
 
 const BGM_VOLUME = 0.25;
 const REVEAL_VOLUME = 0.75;
-const BGM_SRC = "/assets/sounds/bgm-loop.mp3";
-const REVEAL_SRC = "/assets/sounds/reveal-chime.mp3";
+const BGM_DEFAULT_SRC = "/assets/sounds/bgm-loop.mp3";
+const REVEAL_DEFAULT_SRC = "/assets/sounds/reveal-chime.mp3";
 
 let bgmAudio: HTMLAudioElement | null = null;
+let bgmSrc = BGM_DEFAULT_SRC;
+let revealSrc = REVEAL_DEFAULT_SRC;
+
+function createBGM(src: string): HTMLAudioElement {
+  const a = new Audio(src);
+  a.loop = true;
+  a.volume = BGM_VOLUME;
+  return a;
+}
 
 function getBGM(): HTMLAudioElement {
   if (!bgmAudio) {
-    bgmAudio = new Audio(BGM_SRC);
-    bgmAudio.loop = true;
-    bgmAudio.volume = BGM_VOLUME;
+    bgmAudio = createBGM(bgmSrc);
   }
   return bgmAudio;
 }
@@ -32,10 +39,40 @@ interface SoundState {
   playRevealSound: () => void;
   startBGM: () => void;
   stopBGM: () => void;
+  setSoundUrls: (urls: { bgmSrc?: string; revealSrc?: string }) => void;
 }
 
 export const useSoundStore = create<SoundState>((set, get) => ({
   muted: getInitialMuted(),
+
+  setSoundUrls: (urls) => {
+    const nextBgmSrc = urls.bgmSrc ?? BGM_DEFAULT_SRC;
+    const nextRevealSrc = urls.revealSrc ?? REVEAL_DEFAULT_SRC;
+
+    const bgmChanged = nextBgmSrc !== bgmSrc;
+    const revealChanged = nextRevealSrc !== revealSrc;
+
+    if (!bgmChanged && !revealChanged) return;
+
+    bgmSrc = nextBgmSrc;
+    revealSrc = nextRevealSrc;
+
+    // If BGM URL changed, recreate the audio element so the new theme plays.
+    if (bgmChanged) {
+      if (bgmAudio) {
+        bgmAudio.pause();
+        bgmAudio.currentTime = 0;
+      }
+      bgmAudio = null;
+    }
+
+    // If we're currently unmuted, restart BGM so the change is audible immediately.
+    if (!get().muted && bgmChanged) {
+      const bgm = getBGM();
+      bgm.volume = BGM_VOLUME;
+      bgm.play().catch(() => {});
+    }
+  },
 
   setMuted: (muted) => {
     set({ muted });
@@ -53,7 +90,7 @@ export const useSoundStore = create<SoundState>((set, get) => ({
 
   playRevealSound: () => {
     if (get().muted) return;
-    const a = new Audio(REVEAL_SRC);
+    const a = new Audio(revealSrc);
     a.volume = REVEAL_VOLUME;
     a.play().catch(() => {});
   },

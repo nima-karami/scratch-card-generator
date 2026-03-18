@@ -16,18 +16,13 @@ export interface CardTitleProps {
   className?: string;
 }
 
-export function CardTitle({
-  title,
-  imageUrl,
-  alt,
-  className = "",
-}: CardTitleProps) {
+export function CardTitle({ title, imageUrl, alt, className = "" }: CardTitleProps) {
   if (imageUrl) {
     return (
       <img
         src={imageUrl}
         alt={alt ?? title}
-        className={cn("max-w-full object-contain", className)}
+        className={cn("w-full h-full object-contain", className)}
         data-card-title
       />
     );
@@ -35,7 +30,10 @@ export function CardTitle({
 
   return (
     <h2
-      className={cn("font-display text-3xl font-extrabold text-gold-light leading-tight", className)}
+      className={cn(
+        "font-display text-3xl font-extrabold text-gold-light leading-tight",
+        className,
+      )}
       data-card-title
     >
       {title}

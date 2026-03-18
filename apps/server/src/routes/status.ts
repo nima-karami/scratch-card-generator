@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { cardQueue, queueEvents } from "../queue/queue.js";
-import { getJobResult, setProgressListener, clearProgressListener } from "../queue/worker.js";
+import { getJobResult, getAssetSlots, setProgressListener, clearProgressListener } from "../queue/worker.js";
 import { setSSEHeaders, sendSSEEvent } from "../lib/sse.js";
 import type { SSEEvent } from "@repo/shared";
 
@@ -23,10 +23,45 @@ export async function getStatus(req: Request, res: Response): Promise<void> {
   if (state === "completed") {
     const card = getJobResult(jobId);
     if (card) {
-      sendSSEEvent(res, { type: "text-ready", title: card.title, tagline: card.tagline });
-      card.images.forEach((img, i) => {
-        sendSSEEvent(res, { type: "image-ready", index: i, id: img.id, url: img.url });
-      });
+      sendSSEEvent(res, { type: "text-ready", title: card.title });
+      sendSSEEvent(res, { type: "card-structure", slots: getAssetSlots() });
+      if (card.titleImageUrl) {
+        sendSSEEvent(res, { type: "asset-ready", kind: "titleImage", id: "titleImage", url: card.titleImageUrl });
+      }
+      if (card.backgroundImageUrl) {
+        sendSSEEvent(res, {
+          type: "asset-ready",
+          kind: "backgroundImage",
+          id: "backgroundImage",
+          url: card.backgroundImageUrl,
+        });
+      }
+      if (card.backgroundVideoUrl) {
+        sendSSEEvent(res, {
+          type: "asset-ready",
+          kind: "backgroundVideo",
+          id: "backgroundVideo",
+          url: card.backgroundVideoUrl,
+        });
+      }
+      const firstGame = card.variant?.games?.[0];
+      const spritesheetUrl =
+        firstGame && "items" in firstGame
+          ? firstGame.items?.[0]?.coverSpriteSheetSrc
+          : firstGame && "item" in firstGame
+            ? firstGame.item?.coverSpriteSheetSrc
+            : undefined;
+      if (spritesheetUrl) {
+        sendSSEEvent(res, { type: "asset-ready", kind: "spritesheet", id: "spritesheet", url: spritesheetUrl });
+      }
+      if (card.winOverlayTheme?.particleSpriteSheetUrl) {
+        sendSSEEvent(res, {
+          type: "asset-ready",
+          kind: "particles",
+          id: "particles",
+          url: card.winOverlayTheme.particleSpriteSheetUrl,
+        });
+      }
       sendSSEEvent(res, { type: "composing", message: "Composing your card..." });
     }
     sendSSEEvent(res, { type: "complete", jobId });

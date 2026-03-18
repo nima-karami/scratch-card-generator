@@ -13,6 +13,7 @@ const MIME_TYPES: Record<string, string> = {
   ".webm": "video/webm",
   ".mp3": "audio/mpeg",
   ".wav": "audio/wav",
+  ".json": "application/json",
 };
 
 /** Safe filename: no path separators or parent refs */

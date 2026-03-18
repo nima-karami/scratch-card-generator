@@ -3,6 +3,7 @@ import "dotenv/config";
 import { writeFile, readFile } from "fs/promises";
 import { existsSync } from "fs";
 import { generateKlingVideo, pollUntilComplete } from "../lib/kling.js";
+import type { GenerateKlingVideoParams } from "../lib/kling.js";
 import { parseNamedArgs } from "./cli-utils.js";
 
 const USAGE = `
@@ -12,6 +13,7 @@ Options:
   --prompt <text>        Video description (required)
   --start-frame <path|url>  Start frame image (path or URL). Omit for text-to-video.
   --end-frame <path|url>    End frame image (path or URL). Optional for image-to-video.
+  --aspect-ratio <9:16|16:9|1:1> Aspect ratio. Default: 16:9
   --model <name>         Ignored (Kling 3.0 uses --mode: standard | professional)
   --duration <sec>      Duration in seconds (3-15). Default: 5
   --output <path>       Output video path (default: ./output.mp4)
@@ -24,6 +26,17 @@ Examples:
 
 function isUrl(s: string): boolean {
   return s.startsWith("http://") || s.startsWith("https://");
+}
+
+function parseAspectRatio(
+  aspectRatioRaw: unknown,
+): NonNullable<GenerateKlingVideoParams["aspect_ratio"]> {
+  const aspectRatio = typeof aspectRatioRaw === "string" ? aspectRatioRaw.trim() : "";
+  const allowed = new Set(["9:16", "16:9", "1:1"]);
+  if (!aspectRatio || !allowed.has(aspectRatio)) {
+    throw new Error(`Invalid --aspect-ratio '${aspectRatioRaw}'. Use one of: 9:16, 16:9, 1:1`);
+  }
+  return aspectRatio as NonNullable<GenerateKlingVideoParams["aspect_ratio"]>;
 }
 
 async function toFrameInput(pathOrUrl: string): Promise<string> {
@@ -49,6 +62,7 @@ async function main(): Promise<void> {
 
   const durationNum = opts.duration ? parseInt(opts.duration, 10) : 5;
   const duration = Number.isNaN(durationNum) ? 5 : Math.min(15, Math.max(3, durationNum));
+  const aspectRatio = parseAspectRatio(opts["aspect-ratio"] ?? "16:9");
   const outputPath = opts.output ?? "./output.mp4";
 
   let startFrame: string | undefined;
@@ -68,7 +82,7 @@ async function main(): Promise<void> {
       endFrame,
       model: opts.model,
       duration,
-      aspect_ratio: "16:9",
+      aspect_ratio: aspectRatio,
       mode: "professional",
     });
     console.log("Task ID:", taskId);

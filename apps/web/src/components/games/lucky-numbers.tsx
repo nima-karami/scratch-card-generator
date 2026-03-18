@@ -1,13 +1,15 @@
 import { motion } from "motion/react";
-import type { LuckyNumbersData } from "@repo/shared";
+import type { GlyphSheetConfig, LuckyNumbersData } from "@repo/shared";
 import { GameItem } from "./game-item";
 
 export interface LuckyNumbersProps {
   data: LuckyNumbersData;
+  glyphSheet?: GlyphSheetConfig;
 }
 
-export function LuckyNumbers({ data }: LuckyNumbersProps) {
+export function LuckyNumbers({ data, glyphSheet }: LuckyNumbersProps) {
   const items = data.items.slice(0, data.count);
+  const spriteSheetConfig = data.coverSpriteSheet;
 
   return (
     <motion.section
@@ -19,9 +21,16 @@ export function LuckyNumbers({ data }: LuckyNumbersProps) {
       <h3 className="text-xs font-semibold uppercase tracking-wider text-gold-dim">
         Lucky Numbers
       </h3>
-      <div className="flex flex-wrap gap-2">
+      {/* Center the tiles horizontally and vertically in their wrap grid */}
+      <div className="flex flex-wrap gap-2 justify-center items-center">
         {items.map((item) => (
-          <GameItem key={item.id} data={item} size="md" />
+          <GameItem
+            key={item.id}
+            data={item}
+            size="lg"
+            spriteSheetConfig={spriteSheetConfig}
+            glyphSheet={glyphSheet}
+          />
         ))}
       </div>
     </motion.section>

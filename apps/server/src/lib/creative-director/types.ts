@@ -13,6 +13,9 @@ export const themeManifestMetaSchema = z
     artStyle: z.string().describe("e.g. flat illustration, pixel art, watercolor"),
     colorPalette: z.array(z.string()).describe("3-5 hex colors"),
     mood: z.string().describe("e.g. playful, warm, cozy"),
+    gameName: z
+      .string()
+      .describe("Catchy 2–4 word title for the game; alliteration, puns, or wordplay that fits the theme"),
   })
   .describe("Global creative decisions");
 
@@ -33,6 +36,24 @@ const particleSpritesheetSchema = z.object({
 const titleImageSchema = z.object({
   text: z.string().describe("Title text"),
   visualStyle: z.string(),
+});
+
+const winMessageImageSchema = z.object({
+  visualStyle: z
+    .string()
+    .describe('Typography and visual treatment for the fixed win message wording (e.g. "You Won!")'),
+});
+
+const gameContainerSurfaceSchema = z.object({
+  backgroundColor: z
+    .string()
+    .describe("CSS color string; prefer hex from palette (e.g. #0B0C10)"),
+  borderColor: z
+    .string()
+    .describe("CSS color string; accent color that complements backgroundColor (prefer hex)"),
+  borderRadius: z
+    .enum(["none", "sm", "md", "lg"])
+    .describe('Container corner radius: "none" | "sm" | "md" | "lg"'),
 });
 
 const containerBackgroundSchema = z.object({
@@ -72,6 +93,9 @@ export const themeManifestElementsSchema = z
       .describe("Spritesheet variants for game cell reveals"),
     particleSpritesheet: particleSpritesheetSchema,
     titleImage: titleImageSchema,
+    // Optional for backwards compatibility with older manifests.
+    winMessageImage: winMessageImageSchema.optional(),
+    gameContainerSurface: gameContainerSurfaceSchema,
     containerBackground: containerBackgroundSchema,
     videoBackground: videoBackgroundSchema,
     backgroundMusic: backgroundMusicSchema,
@@ -112,9 +136,11 @@ export type ThemeManifestElements = z.infer<typeof themeManifestElementsSchema>;
 export type GameButtonSpritesheetVariant = ThemeManifest["elements"]["gameButtonSpritesheets"][number];
 export type ParticleSpritesheetElement = ThemeManifest["elements"]["particleSpritesheet"];
 export type TitleImageElement = ThemeManifest["elements"]["titleImage"];
+export type GameContainerSurfaceElement = ThemeManifest["elements"]["gameContainerSurface"];
 export type ContainerBackgroundElement = ThemeManifest["elements"]["containerBackground"];
 export type VideoBackgroundElement = ThemeManifest["elements"]["videoBackground"];
 export type BackgroundMusicElement = ThemeManifest["elements"]["backgroundMusic"];
 export type RevealSoundElement = ThemeManifest["elements"]["revealSound"];
 export type GlyphSheetElement = ThemeManifest["elements"]["glyphSheet"];
 export type WinOverlayElement = ThemeManifest["elements"]["winOverlay"];
+export type WinMessageImageElement = ThemeManifest["elements"]["winMessageImage"];

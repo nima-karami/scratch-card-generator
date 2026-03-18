@@ -1,12 +1,14 @@
 import { existsSync } from "fs";
 import { mkdir, readFile, writeFile } from "fs/promises";
-import { join, resolve } from "path";
+import { dirname, join, resolve, basename } from "path";
+import { fileURLToPath } from "url";
 import type { ThemeManifest } from "./types.js";
 import type { PipelineConfig } from "./pipeline-config.js";
 import { generateSpritesheet } from "../spritesheet/generate.js";
 import type { SpritesheetPromptParams } from "../spritesheet/prompt-builder.js";
 import { generateParticleSpritesheet } from "../spritesheet/generate.js";
 import { generateTitleImage, writeTitleImageDebug } from "../title-image.js";
+import { generateWinMessageImage, writeWinMessageImageDebug } from "../win-message-image.js";
 import { generateContainerImage } from "../container-image.js";
 import { generateBackground } from "../background.js";
 import { generateSoundEffect, writeSoundEffectDebug } from "../elevenlabs.js";
@@ -17,12 +19,27 @@ export interface ProgressEvent {
   message?: string;
   index?: number;
   total?: number;
+  kind?: string;
+  id?: string;
+  url?: string;
+}
+
+/** Glyph base path: cwd (e.g. apps/server) first, then @repo/server package root (works when cwd is monorepo root). */
+function resolveGlyphSheetBasePath(inputPath: string): string {
+  const fromCwd = resolve(process.cwd(), inputPath);
+  if (existsSync(fromCwd)) return fromCwd;
+  const serverPackageRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+  const relative = inputPath.replace(/^\.\//, "");
+  const fromServer = join(serverPackageRoot, relative);
+  if (existsSync(fromServer)) return fromServer;
+  return fromCwd;
 }
 
 export interface ThemeAssetResult {
   gameButtonSpritesheets: string[];
   particleSpritesheet?: string;
   titleImage?: string;
+  winMessageImage?: string;
   containerBackground?: string;
   backgroundImage?: string;
   videoBackground?: string;
@@ -62,6 +79,8 @@ function slug(s: string): string {
 export interface OrchestrateOptions {
   /** When set, saved to outputDir as moodboard.png and passed to all visual asset generators as style reference. */
   moodboard?: Buffer;
+  /** When set, asset-ready events are emitted with full URLs (baseUrl + filename) after each asset is written. */
+  baseUrl?: string;
 }
 
 /**
@@ -86,6 +105,18 @@ export async function orchestrateThemeAssets(
   const { elements } = manifest;
   const { enabled } = pipelineConfig;
   const moodboard = options?.moodboard;
+  const baseUrl = options?.baseUrl;
+
+  const emitAssetReady = (path: string, kind: string) => {
+    if (baseUrl && onProgress) {
+      onProgress({
+        type: "asset-ready",
+        kind,
+        id: kind,
+        url: `${baseUrl.replace(/\/$/, "")}/${basename(path)}`,
+      });
+    }
+  };
 
   if (moodboard) {
     const moodboardPath = join(outputDir, "moodboard.png");
@@ -127,6 +158,7 @@ export async function orchestrateThemeAssets(
           const path = join(outputDir, filename);
           await writeFile(path, transparent);
           result.gameButtonSpritesheets[i] = path;
+          if (i === 0) emitAssetReady(path, "spritesheet");
         })()
       );
     });
@@ -151,6 +183,7 @@ export async function orchestrateThemeAssets(
         const path = join(outputDir, "particles.png");
         await writeFile(path, transparent);
         result.particleSpritesheet = path;
+        emitAssetReady(path, "particles");
       })()
     );
   }
@@ -170,6 +203,27 @@ export async function orchestrateThemeAssets(
         await writeFile(path, buffer);
         await writeTitleImageDebug(buffer, params);
         result.titleImage = path;
+        emitAssetReady(path, "titleImage");
+      })()
+    );
+  }
+
+  // ---- Win message image ("You Won!") ----
+  if (enabled.winMessageImage) {
+    tasks.push(
+      (async () => {
+        onProgress?.({ type: "generating-title", message: "Win message image" });
+        const params = {
+          text: "You Won!",
+          visualStyle: elements.winMessageImage?.visualStyle ?? elements.titleImage.visualStyle,
+          ...(moodboard && { referenceImage: moodboard }),
+        };
+        const buffer = await generateWinMessageImage(params);
+        const path = join(outputDir, "win-message.png");
+        await writeFile(path, buffer);
+        await writeWinMessageImageDebug(buffer, params);
+        result.winMessageImage = path;
+        emitAssetReady(path, "winMessageImage");
       })()
     );
   }
@@ -198,7 +252,7 @@ export async function orchestrateThemeAssets(
 
   // ---- Glyph sheet ----
   if (enabled.glyphSheet) {
-    const inputPath = resolve(process.cwd(), pipelineConfig.glyphSheet.inputPath);
+    const inputPath = resolveGlyphSheetBasePath(pipelineConfig.glyphSheet.inputPath);
     if (!existsSync(inputPath)) {
       throw new Error(
         `Glyph sheet base image not found at ${inputPath}. Set pipelineConfig.glyphSheet.inputPath to a valid path.`
@@ -236,6 +290,8 @@ export async function orchestrateThemeAssets(
         await writeFile(path, buffer);
         await writeSoundEffectDebug(buffer, params);
         result.backgroundMusic = path;
+        // Stream the generated audio URL so the frontend can play per-theme sounds.
+        emitAssetReady(path, "backgroundMusic");
       })()
     );
   }
@@ -255,6 +311,8 @@ export async function orchestrateThemeAssets(
           loop: false,
         });
         result.revealSound = path;
+        // Stream the generated audio URL so the frontend can play per-theme sounds.
+        emitAssetReady(path, "revealSound");
       })()
     );
   }
@@ -275,11 +333,13 @@ export async function orchestrateThemeAssets(
         const imagePath = join(outputDir, "background.png");
         await writeFile(imagePath, image);
         result.backgroundImage = imagePath;
+        emitAssetReady(imagePath, "backgroundImage");
         if (video) {
           onProgress?.({ type: "generating-video", message: "Video background loop" });
           const videoPath = join(outputDir, "video-background.mp4");
           await writeFile(videoPath, video);
           result.videoBackground = videoPath;
+          emitAssetReady(videoPath, "backgroundVideo");
         }
       })()
     );

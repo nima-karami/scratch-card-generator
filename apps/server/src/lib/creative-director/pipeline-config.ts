@@ -9,11 +9,12 @@ export const PIPELINE_CONFIG = {
     gameButtonSpritesheets: true,
     particleSpritesheet: false,
     titleImage: true,
+    winMessageImage: true,
     containerBackground: false,
     background: true,
     backgroundMusic: true,
     revealSound: true,
-    glyphSheet: false,
+    glyphSheet: true,
     winOverlay: true,
   },
 
@@ -23,7 +24,7 @@ export const PIPELINE_CONFIG = {
     canvasHeight: 768,
     cols: 4,
     rows: 3,
-    variantCount: 2,
+    variantCount: 1,
   },
 
   /** Technical params for particle spritesheet (generate-particle-spritesheet). */
@@ -58,11 +59,11 @@ export const PIPELINE_CONFIG = {
     durationSeconds: 1,
   },
 
-  /** Technical params for glyph sheet (generate-glyph-sheet). Requires base image at inputPath. */
+  /** Technical params for glyph sheet (generate-glyph-sheet). Base image: $ , 0-9 in cols x rows grid (see apps/server/assets/). */
   glyphSheet: {
-    inputPath: "./base-font.png",
-    cols: 12,
-    rows: 1,
+    inputPath: "./assets/glyphs-roboto-bold.jpg",
+    cols: 4,
+    rows: 3,
   },
 } as const;
 

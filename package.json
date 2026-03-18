@@ -12,6 +12,7 @@
     "generate-kling-video": "tsx apps/server/src/scripts/generate-kling-video.ts",
     "generate-sound-effect": "tsx apps/server/src/scripts/generate-sound-effect.ts",
     "generate-title-image": "tsx apps/server/src/scripts/generate-title-image.ts",
+    "generate-win-message-image": "tsx apps/server/src/scripts/generate-win-message-image.ts",
     "generate-background": "tsx apps/server/src/scripts/generate-background.ts",
     "generate-container-image": "tsx apps/server/src/scripts/generate-container-image.ts",
     "generate-glyph-sheet": "tsx apps/server/src/scripts/generate-glyph-sheet.ts",

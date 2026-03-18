@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 import "dotenv/config";
-import { writeFile } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 import { dirname } from "path";
 import { config } from "../config/index.js";
 import { parseNamedArgs } from "./cli-utils.js";
