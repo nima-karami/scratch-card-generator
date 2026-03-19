@@ -49,6 +49,8 @@ The main title graphic at the top of the card.
 
 - **text**: Use exactly the game name provided in the user message (meta.gameName). The game name was already chosen in the art direction step; do not invent different wording.
 - **visualStyle**: Typography and style that match the moodboard (colors, mood, treatment). Use the moodboard only for how the title should look visually.
+  - **Typography sub-area mapping (critical)**: The moodboard Typography panel contains multiple coordinated typography treatments (large title, digit sample line, and a smaller subtitle phrase). This `titleImage.visualStyle` MUST match the large title treatment only.
+    - Ignore the digit sample line treatment and the subtitle phrase treatment.
   - **Typography-only constraint (critical)**: `visualStyle` MUST describe only the title lettering/typography treatment (strokes/outlines, fill color usage, texture/discoloration inside the letters, halftone/print texture, shadows/drop-shadows, and letter-adjacent ornaments that are part of the typography treatment).
   - **Allowed (letter-adjacent ornaments)**: Small decorations immediately next to/attached to the lettering are allowed (e.g. water drops/splashes, beach spritz, tiny shells/bubbles, small leaf-like flourishes).
   - **Forbidden**: Do NOT describe any external framing, borders around the whole title, surrounding foliage/vines/palm trees/leaves as an *overall frame*, or any background/scene composition outside the letters.
@@ -63,8 +65,13 @@ Typography-only graphic for the fixed win popup wording: **"You Won!"**.
 The orchestrator will render the exact words, so your job is only to describe how they should look visually.
 
 - **visualStyle**: Typography and visual treatment for the fixed win message wording "You Won!" that matches the moodboard (colors, mood, lighting/textures, treatment). Use the moodboard only for how the win message should look visually.
-  - Use the semantic `colorPalette.foreground` token as the dominant readable color for the win message typography (primary legibility layer).
-  - You may also use `colorPalette.primary` and/or `colorPalette.accent` for secondary layers like outlines, drop-shadows, glows/neon edges, and texture tinting for contrast/visual interest.
+  - **Typography sub-area mapping (critical)**: Use the moodboard Typography panel's **subtitle phrase** treatment only.
+    - Ignore the large title treatment and the digit sample line treatment.
+  - Use a mix of semantic palette colors from `colorPalette.foreground`, `colorPalette.primary`, `colorPalette.secondary`, and/or `colorPalette.accent` for different typography layers (fill, outlines, drop-shadows, glows/neon edges, inner highlights, distressed texture tinting).
+  - MUST NOT use `colorPalette.background` as a readable/primary typography color for "You Won!".
+  - Avoid choosing a typography color that looks too similar to the moodboard Typography background (background-like/near-background colors).
+  - Color encoding rule (critical): when you reference colors in `visualStyle`, use the exact literal hex codes from the user message's `colorPalette={background:"...", foreground:"...", primary:"...", secondary:"...", accent:"..."}`. Do not use color names like "dark forest green".
+  - Hex inclusion rule (critical): your `winMessageImage.visualStyle` must include at least one of the palette hex codes for `foreground`/`primary`/`secondary`/`accent` verbatim.
 
 ### nextButtonImage
 
@@ -75,7 +82,7 @@ The generator draws a single clickable-looking control on white, then extracts t
 - **Shape**: e.g. pill, rounded rectangle, chunky arcade slab, soft chip.
 - **Surface**: fill, gradient, gloss, material (metal, enamel, paper sticker, etc.) aligned with Graphic Style + Color Palette.
 - **Chrome**: border, bevel, inner shadow, outer glow, emboss — whatever fits the theme.
-- **Label**: the word **"Next"** centered, readable; typography (weight, distress, outline) from Typography + palette (`colorPalette.foreground` or accent for the letters as appropriate).
+- **Label**: the word **"Next"** centered, readable; typography rendered using a mix of palette hex codes from `foreground`/`primary`/`secondary`/`accent`. MUST NOT use the background hex (`colorPalette.background`) or any background-like/near-background colors. When referencing colors, use the exact literal hex codes from the user message palette; do not use color names. Hex inclusion rule (critical): your `nextButtonImage.visualStyle` must include at least one palette hex code for `foreground`/`primary`/`secondary`/`accent` verbatim.
 
 Do **not** describe a full game UI, second button, HUD, or scene outside the button. The asset is one isolated CTA; everything outside it in the image is flat white for pipeline reasons.
 
@@ -85,6 +92,8 @@ Visual treatment for the **UI container** that wraps each game area (the boxed p
 
 - **backgroundColor**: A CSS color string. MUST use the semantic `colorPalette.background` token from the current theme direction.
 - **borderColor**: A CSS color string. MUST use the semantic `colorPalette.primary` or `colorPalette.accent` token (choose whichever looks best while remaining clearly readable on `backgroundColor`).
+  - Softness rule: the container surface should feel like a *supporting panel*, not a high-contrast “sticker” that pops out harshly from the card background.
+  - If `colorPalette.background` is relatively light, prefer `colorPalette.secondary` or `colorPalette.primary` over `colorPalette.accent`, and pick a softer/less neon border treatment (thin outline rather than thick glow edge).
 - **borderRadius**: One of "none" | "sm" | "md" | "lg". Pick based on vibe:
   - "none" for sharp, rigid, mechanical, pixel/retro UI
   - "sm" for slightly softened retro UI
@@ -95,6 +104,7 @@ Visual treatment for the **UI container** that wraps each game area (the boxed p
   - "sm" for subtle outlines
   - "md" for clear, modern panel framing
   - "lg" for chunky, arcade/toy-like emphasis
+  - Softness rule: if `colorPalette.background` is light, prefer `"sm"` (or `"none"` if still readable) to avoid harsh edges.
 
 ### matchHighlightTheme
 
@@ -138,8 +148,28 @@ Short sound when the user reveals a game cell.
 Themed number/currency glyphs. Only describe visual style, not the glyphs themselves.
 
 - **visualStyle**: Style description that matches the moodboard (colors, texture). IMPORTANT: all 12 glyphs must share the exact same overall "color recipe" (fill + outline/glow/highlight colors, plus texture and effects) with no per-glyph variation.
-  - Use the semantic `colorPalette.foreground` token as the dominant legibility layer (fill or main stroke) so digits remain readable on win overlays.
-  - You may also use `colorPalette.primary` and/or `colorPalette.accent` as secondary colors for outlines/glow/highlights, as long as the recipe is consistent across all glyphs.
+  - **Typography sub-area mapping (critical)**: Use the moodboard Typography panel's **digit sample line** treatment only.
+    - Ignore the large title treatment and the subtitle phrase treatment.
+  - Use a consistent overall "color recipe" across all glyphs, built from a mix of `colorPalette.foreground`, `colorPalette.primary`, `colorPalette.secondary`, and/or `colorPalette.accent` for typography layers (fills/outlines/glow/highlights/texture tinting).
+  - MUST NOT use `colorPalette.background` as a typography color for the digits.
+  - Avoid choosing digit typography colors that are too similar to the moodboard Typography background (background-like/near-background colors).
+  - Color encoding rule (critical): when you reference colors in `visualStyle`, use the exact literal hex codes from the user message palette. Do not use color names like "dark forest green".
+  - Hex inclusion rule (critical): your `glyphSheet.visualStyle` must include at least one palette hex code for `foreground`/`primary`/`secondary`/`accent` verbatim.
+
+### numbersHeaderImage
+
+Themed **Lucky Numbers** and **Your Numbers** wordmark styling.
+
+This style is used for the section header wordmarks generated by the orchestrator (two-line wordmarks where the first line is "Lucky Numbers" and the second line is "Your Numbers").
+
+- **visualStyle**: Typography-only styling that matches the moodboard Typography panel's **digit sample line** treatment (same overall digit treatment concept, but applied to the words).
+  - Typography sub-area mapping (critical): match only the digit sample line treatment; do not reuse the large title treatment or subtitle treatment.
+  - Must be typography-only (no external framing/background/scene composition).
+  - Use a mix of `colorPalette.foreground`, `colorPalette.primary`, `colorPalette.secondary`, and/or `colorPalette.accent` for the wordmark typography layers (fills/outlines/glow/highlights/texture tinting).
+  - MUST NOT use `colorPalette.background` as a typography color for the wordmarks.
+  - Avoid choosing wordmark typography colors that are too similar to the moodboard Typography background (background-like/near-background colors).
+  - Color encoding rule (critical): when you reference colors in `visualStyle`, use the exact literal hex codes from the user message palette. Do not use color names like "dark forest green".
+  - Hex inclusion rule (critical): your `numbersHeaderImage.visualStyle` must include at least one palette hex code for `foreground`/`primary`/`secondary`/`accent` verbatim.
 
 ### winOverlay
 
@@ -156,4 +186,4 @@ Overlay when the user wins (color only).
 
 ## Output format
 
-The API enforces the response shape. Output only the elements object (gameButtonSpritesheets, particleSpritesheet, titleImage, winMessageImage, nextButtonImage, gameContainerSurface, matchHighlightTheme, containerBackground, videoBackground, backgroundMusic, revealSound, glyphSheet, winOverlay). No meta in this response.
+The API enforces the response shape. Output only the elements object (gameButtonSpritesheets, particleSpritesheet, titleImage, winMessageImage, numbersHeaderImage, nextButtonImage, gameContainerSurface, matchHighlightTheme, containerBackground, videoBackground, backgroundMusic, revealSound, glyphSheet, winOverlay). No meta in this response.

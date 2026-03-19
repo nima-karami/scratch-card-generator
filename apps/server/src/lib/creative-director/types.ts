@@ -56,6 +56,10 @@ const winMessageImageSchema = z.object({
     .describe('Typography and visual treatment for the fixed win message wording (e.g. "You Won!")'),
 });
 
+const numbersHeaderImageSchema = z.object({
+  visualStyle: z.string().describe("Typography and visual treatment for the section header wordmarks (e.g. Lucky Numbers / Your Numbers)."),
+});
+
 const nextButtonImageSchema = z.object({
   visualStyle: z
     .string()
@@ -124,6 +128,8 @@ export const themeManifestElementsSchema = z
     titleImage: titleImageSchema,
     // Optional for backwards compatibility with older manifests.
     winMessageImage: winMessageImageSchema.optional(),
+    // Optional for backwards compatibility with older manifests.
+    numbersHeaderImage: numbersHeaderImageSchema.optional(),
     // Optional for backwards compatibility with older manifests.
     nextButtonImage: nextButtonImageSchema.optional(),
     gameContainerSurface: gameContainerSurfaceSchema,

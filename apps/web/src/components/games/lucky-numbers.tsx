@@ -32,7 +32,7 @@ export function LuckyNumbers({
             <img
               src={data.headerImageUrl}
               alt="Lucky Numbers"
-              className="h-4 max-w-full object-contain object-center"
+              className="h-6 max-w-full object-contain object-center"
             />
           </div>
         ) : (

@@ -34,7 +34,7 @@ export function YourNumbers({
             <img
               src={data.headerImageUrl}
               alt="Your Numbers"
-              className="h-4 max-w-full object-contain object-center"
+              className="h-6 max-w-full object-contain object-center"
             />
           </div>
         ) : (

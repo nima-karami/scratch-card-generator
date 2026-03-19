@@ -20,6 +20,14 @@ const sanitizedResponseSchema = z.object({
   sanitized: z.string().describe("Sanitized replacement text. No extra commentary."),
 });
 
+const sanitizedResponseSchemaJson = {
+  type: "object" as const,
+  properties: {
+    sanitized: { type: "string" as const, description: "Sanitized replacement text" },
+  },
+  required: ["sanitized"] as const,
+};
+
 export type SanitizeTextWithLLMParams = {
   inputText: string;
   constraintsText: string;
@@ -80,7 +88,7 @@ Return JSON of the form: {"sanitized": "<string>"} only.`;
         config: {
           systemInstruction,
           responseMimeType: "application/json",
-          responseSchema: sanitizedResponseSchema,
+          responseSchema: sanitizedResponseSchemaJson,
         },
       });
 

@@ -14,6 +14,52 @@ import { writeThemeManifestDebug } from "../lib/creative-director/theme-manifest
 import { PIPELINE_CONFIG } from "../config/creative-director/pipeline-config.js";
 import type { ThemeAssetResult } from "../lib/creative-director/orchestrate.js";
 
+function parseHexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const normalized = hex.trim().toLowerCase();
+  const m = normalized.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (!m) return null;
+
+  let h = m[1]!;
+  if (h.length === 3) {
+    h = h
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  if (!Number.isFinite(r) || !Number.isFinite(g) || !Number.isFinite(b)) return null;
+  return { r, g, b };
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const to = (n: number) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, "0");
+  return `#${to(r)}${to(g)}${to(b)}`;
+}
+
+/**
+ * Blend color a -> b where `t=0` returns a and `t=1` returns b.
+ */
+function blendHexColors(a: string, b: string, t: number): string {
+  const ar = parseHexToRgb(a);
+  const br = parseHexToRgb(b);
+  if (!ar || !br) return a;
+  const tt = Math.max(0, Math.min(1, t));
+  return rgbToHex(ar.r * (1 - tt) + br.r * tt, ar.g * (1 - tt) + br.g * tt, ar.b * (1 - tt) + br.b * tt);
+}
+
+function relativeLuminance({ r, g, b }: { r: number; g: number; b: number }): number {
+  // WCAG relative luminance using sRGB companding.
+  const srgb = (v255: number) => v255 / 255;
+  const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  const R = lin(srgb(r));
+  const G = lin(srgb(g));
+  const B = lin(srgb(b));
+  return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+}
+
 export interface GenerationJobData {
   jobId: string;
   prompt: string;
@@ -136,11 +182,42 @@ function runComposeStep(
   const title = manifest.elements.titleImage.text;
 
   const rawSurface = manifest.elements.gameContainerSurface;
+  // Post-process container surface to respect semantic palette background
+  // and avoid harsh contrasts in light themes.
+  const palette = manifest.meta.colorPalette;
+  const paletteBackground = palette.background.trim();
+  const paletteBackgroundRgb = parseHexToRgb(paletteBackground);
+  const paletteBackgroundLuma = paletteBackgroundRgb ? relativeLuminance(paletteBackgroundRgb) : null;
+  const paletteIsLight = paletteBackgroundLuma != null ? paletteBackgroundLuma >= 0.65 : false;
+
+  const rawBackgroundColor = rawSurface.backgroundColor.trim();
+  const rawBorderColor = rawSurface.borderColor.trim();
+  const rawBorderThickness = rawSurface.borderThickness;
+
+  // Always prefer semantic palette background when possible.
+  const backgroundColor = parseHexToRgb(rawBackgroundColor) && paletteBackgroundRgb ? paletteBackground : rawBackgroundColor;
+
+  let borderColor = rawBorderColor;
+  let borderThickness = rawBorderThickness;
+
+  if (paletteIsLight) {
+    // Reduce border pop by downgrading thickness and blending border toward the background.
+    borderThickness = rawBorderThickness === "lg" || rawBorderThickness === "md" ? "sm" : rawBorderThickness;
+
+    const secondary = palette.secondary.trim();
+    const primary = palette.primary.trim();
+    const secondaryRgb = parseHexToRgb(secondary);
+    const primaryRgb = parseHexToRgb(primary);
+
+    const preferred = secondaryRgb ? secondary : primaryRgb ? primary : rawBorderColor;
+    borderColor = blendHexColors(preferred, paletteBackground, 0.55);
+  }
+
   const gameContainerSurface = {
-    backgroundColor: rawSurface.backgroundColor.trim(),
-    borderColor: rawSurface.borderColor.trim(),
+    backgroundColor,
+    borderColor,
     borderRadius: rawSurface.borderRadius,
-    borderThickness: rawSurface.borderThickness,
+    borderThickness,
   };
 
   let winOverlayTheme: WinOverlayTheme | undefined;

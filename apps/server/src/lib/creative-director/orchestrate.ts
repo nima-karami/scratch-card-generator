@@ -1,13 +1,15 @@
 import { existsSync } from "fs";
-import { mkdir, readFile, writeFile } from "fs/promises";
+import { appendFile, mkdir, readFile, writeFile } from "fs/promises";
 import { dirname, join, resolve, basename } from "path";
 import { fileURLToPath } from "url";
 import type { ThemeManifest } from "./types.js";
 import type { PipelineConfig } from "../../config/creative-director/pipeline-config.js";
+import { config } from "../../config/index.js";
 import { generateSpritesheet } from "../spritesheet/generate.js";
 import type { SpritesheetPromptParams } from "../spritesheet/prompt-builder.js";
 import { generateParticleSpritesheet } from "../spritesheet/generate.js";
 import { generateTitleImage, generateTwoWordmarkImages, writeTitleImageDebug } from "../title-image.js";
+import { validateTitleImageWithLLM } from "../title-image-qa.js";
 import { generateWinMessageImage, writeWinMessageImageDebug } from "../win-message-image.js";
 import { generateNextButtonImage, writeNextButtonImageDebug } from "../next-button-image.js";
 import { generateContainerImage } from "../container-image.js";
@@ -197,15 +199,66 @@ export async function orchestrateThemeAssets(
     tasks.push(
       (async () => {
         onProgress?.({ type: "generating-title", message: "Title image" });
-        const params = {
-          text: elements.titleImage.text,
-          visualStyle: elements.titleImage.visualStyle,
-          ...(moodboard && { referenceImage: moodboard }),
-        };
-        const buffer = await generateTitleImage(params);
+        const debugDir = config.debug.titleImage;
+        const titleText = elements.titleImage.text;
+        const titleVisualStyle = elements.titleImage.visualStyle;
+
+        const qaEnabled = config.titleImageQa.enabled;
+        const maxRetries = config.titleImageQa.maxRetries ?? 2;
+        const maxAttempts = qaEnabled ? maxRetries + 1 : 1;
+
+        let bestBuffer: Buffer | null = null;
+        let bestConfidence = -1;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          const params = {
+            text: titleText,
+            visualStyle: titleVisualStyle,
+            ...(moodboard && { referenceImage: moodboard }),
+          };
+
+          const candidateBuffer = await generateTitleImage(params);
+          await writeTitleImageDebug(candidateBuffer, params);
+
+          if (!qaEnabled) {
+            bestBuffer = candidateBuffer;
+            bestConfidence = 1;
+            break;
+          }
+
+          const qa = await validateTitleImageWithLLM({
+            imageBuffer: candidateBuffer,
+            expectedTitleText: titleText,
+          });
+
+          if (debugDir) {
+            const qaLogPath = join(debugDir, "title-image-qa-log.txt");
+            // Write attempt QA results to help debug false positives/negatives.
+            const issuesJoined = (qa.issues ?? []).join(" | ").replaceAll('"', "'");
+            const line = `${new Date().toISOString()}\tattempt=${attempt}/${maxAttempts}\tpassed=${qa.passed}\tconfidence=${qa.confidence}\tissues="${issuesJoined}"\n`;
+            await appendFile(qaLogPath, line, "utf-8");
+          }
+
+          if (qa.passed) {
+            bestBuffer = candidateBuffer;
+            bestConfidence = qa.confidence ?? 1;
+            break;
+          }
+
+          const candidateConfidence = typeof qa.confidence === "number" ? qa.confidence : 0;
+          if (candidateConfidence > bestConfidence) {
+            bestBuffer = candidateBuffer;
+            bestConfidence = candidateConfidence;
+          }
+        }
+
+        if (!bestBuffer) {
+          // Should never happen, but keep behavior predictable.
+          throw new Error("Title image QA loop produced no candidates");
+        }
+
         const path = join(outputDir, "title.png");
-        await writeFile(path, buffer);
-        await writeTitleImageDebug(buffer, params);
+        await writeFile(path, bestBuffer);
         result.titleImage = path;
         emitAssetReady(path, "titleImage");
       })()
@@ -217,10 +270,12 @@ export async function orchestrateThemeAssets(
     tasks.push(
       (async () => {
         onProgress?.({ type: "generating-title", message: "Lucky/Your numbers header images" });
+        const headerVisualStyle =
+          elements.numbersHeaderImage?.visualStyle ?? elements.titleImage.visualStyle;
         const { top, bottom } = await generateTwoWordmarkImages({
           topText: "Lucky Numbers",
           bottomText: "Your Numbers",
-          visualStyle: elements.titleImage.visualStyle,
+          visualStyle: headerVisualStyle,
           ...(moodboard && { referenceImage: moodboard }),
         });
 
@@ -228,7 +283,7 @@ export async function orchestrateThemeAssets(
         await writeFile(luckyPath, top);
         await writeTitleImageDebug(top, {
           text: "Lucky Numbers",
-          visualStyle: elements.titleImage.visualStyle,
+          visualStyle: headerVisualStyle,
           ...(moodboard && { referenceImage: moodboard }),
         });
         result.luckyNumbersHeaderImage = luckyPath;
@@ -238,7 +293,7 @@ export async function orchestrateThemeAssets(
         await writeFile(yourPath, bottom);
         await writeTitleImageDebug(bottom, {
           text: "Your Numbers",
-          visualStyle: elements.titleImage.visualStyle,
+          visualStyle: headerVisualStyle,
           ...(moodboard && { referenceImage: moodboard }),
         });
         result.yourNumbersHeaderImage = yourPath;

@@ -221,6 +221,111 @@ export async function generateThemeElements(
       const parsed = themeManifestElementsSchema.safeParse(raw);
 
       if (parsed.success) {
+        const validateTypographyVisualStyles = (): Error | null => {
+          const elements = parsed.data;
+          const cp = meta.colorPalette;
+
+          const normalizeHexTo6 = (hex: string): string | null => {
+            const normalized = hex.trim().toLowerCase();
+            const m6 = normalized.match(/^#([0-9a-f]{6})$/i);
+            if (m6) return `#${m6[1]!.toLowerCase()}`;
+            const m3 = normalized.match(/^#([0-9a-f]{3})$/i);
+            if (m3) {
+              const a = m3[1]!;
+              return `#${a[0]}${a[0]}${a[1]}${a[1]}${a[2]}${a[2]}`.toLowerCase();
+            }
+            return null;
+          };
+
+          const parseHexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+            const h = normalizeHexTo6(hex);
+            if (!h) return null;
+            const r = parseInt(h.slice(1, 3), 16);
+            const g = parseInt(h.slice(3, 5), 16);
+            const b = parseInt(h.slice(5, 7), 16);
+            if (!Number.isFinite(r) || !Number.isFinite(g) || !Number.isFinite(b)) return null;
+            return { r, g, b };
+          };
+
+          const rgbDistance = (aHex: string, bHex: string): number | null => {
+            const a = parseHexToRgb(aHex);
+            const b = parseHexToRgb(bHex);
+            if (!a || !b) return null;
+            const dr = a.r - b.r;
+            const dg = a.g - b.g;
+            const db = a.b - b.b;
+            return Math.sqrt(dr * dr + dg * dg + db * db);
+          };
+
+          const backgroundHex = normalizeHexTo6(cp.background);
+          if (!backgroundHex) return new Error("Creative Director (elements) produced invalid background hex.");
+
+          const tokenH = [
+            normalizeHexTo6(cp.foreground),
+            normalizeHexTo6(cp.primary),
+            normalizeHexTo6(cp.secondary),
+            normalizeHexTo6(cp.accent),
+          ].filter((x): x is string => x != null);
+
+          if (tokenH.length === 0) return new Error("Creative Director (elements) produced invalid palette tokens.");
+
+          // Threshold for "too close to background" — tuned to prevent background-like lettering.
+          const minRgbDistanceFromBackground = 60;
+
+          const closeTokenH = new Set<string>(
+            tokenH
+              .map((t) => {
+                const d = rgbDistance(t, backgroundHex);
+                return d != null && d < minRgbDistanceFromBackground ? t : null;
+              })
+              .filter((x): x is string => x != null)
+          );
+
+          const requireAtLeastOneTokenHexMentioned = (label: string, vs: string): Error | null => {
+            const vsLower = vs.toLowerCase();
+            const hasAnyTokenHex = tokenH.some((t) => vsLower.includes(t));
+            if (!hasAnyTokenHex) {
+              return new Error(`${label}.visualStyle must include at least one palette token hex verbatim.`);
+            }
+            return null;
+          };
+
+          const validateVisualStyle = (label: string, vs: string | undefined): Error | null => {
+            if (!vs) return null;
+            const vsLower = vs.toLowerCase();
+
+            if (vsLower.includes(backgroundHex)) {
+              return new Error(`${label}.visualStyle must not include background hex ${backgroundHex}.`);
+            }
+
+            const missingTokenErr = requireAtLeastOneTokenHexMentioned(label, vs);
+            if (missingTokenErr) return missingTokenErr;
+
+            for (const closeToken of closeTokenH) {
+              if (vsLower.includes(closeToken)) {
+                return new Error(
+                  `${label}.visualStyle uses a palette token too close to background (token ${closeToken} distance < ${minRgbDistanceFromBackground}).`
+                );
+              }
+            }
+
+            return null;
+          };
+
+          return (
+            validateVisualStyle("winMessageImage", elements.winMessageImage?.visualStyle) ||
+            validateVisualStyle("numbersHeaderImage", elements.numbersHeaderImage?.visualStyle) ||
+            validateVisualStyle("glyphSheet", elements.glyphSheet.visualStyle) ||
+            validateVisualStyle("nextButtonImage", elements.nextButtonImage?.visualStyle)
+          );
+        };
+
+        const validationError = validateTypographyVisualStyles();
+        if (validationError) {
+          lastError = validationError;
+          continue;
+        }
+
         return parsed.data;
       }
 

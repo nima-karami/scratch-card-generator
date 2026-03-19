@@ -49,8 +49,11 @@ export function GameItem({
     registeredIds !== null && registeredIds.size > 0 && registeredIds.has(data.id);
   const revealed = isOnScratchCard ? storeItemState !== "closed" : data.revealed || localRevealed;
   const hasSpritesheet = Boolean(data.coverSpriteSheetSrc && spriteSheetConfig);
-  // For spritesheet items: show value only after animation completes (localRevealed). Otherwise store-driven reveal would show value immediately.
+  // For non-spritesheet covers: show value only after the item is revealed.
   const showValue = revealed && (!hasSpritesheet || localRevealed);
+  // For spritesheet covers we hide the underlay until the reveal actually starts.
+  // This prevents spritesheet alpha/size QA issues from leaking the value beneath.
+  const shouldShowSpritesheetValue = revealed || isPlayingRevealAnimation;
 
   // When the scratch-store resets to "closed" (e.g. after pressing Next),
   // ensure the local spritesheet reveal state also resets. Without this,
@@ -186,7 +189,7 @@ export function GameItem({
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0 } }}
             className={cn(
               "absolute inset-0 z-20 pointer-events-none border-[3px]",
               {
@@ -212,10 +215,10 @@ export function GameItem({
 
       {hasSpritesheet && data.coverSpriteSheetSrc && spriteSheetConfig ? (
         <div className="relative w-full h-full">
-          {/* Keep value in a stable, centered layer to avoid any layout shift at reveal-complete. */}
+          {/* Keep the value layer in place to avoid layout shift, but opacity-hide it until reveal starts. */}
           <span
             className="absolute inset-0 flex items-center justify-center font-semibold text-text-primary"
-            style={foregroundStyle}
+            style={{ ...(foregroundStyle ?? {}), opacity: shouldShowSpritesheetValue ? 1 : 0 }}
           >
             {renderRevealedValue()}
           </span>

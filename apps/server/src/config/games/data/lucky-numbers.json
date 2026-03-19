@@ -2,11 +2,11 @@
   "winningCount": 3,
   "numberRange": { "min": 1, "max": 99 },
   "prizePool": [
-    { "value": "$1", "valueCents": 100, "weight": 40 },
-    { "value": "$5", "valueCents": 500, "weight": 35 },
-    { "value": "$10", "valueCents": 1000, "weight": 20 },
+    { "value": "$5", "valueCents": 500, "weight": 40 },
+    { "value": "$10", "valueCents": 1000, "weight": 35 },
+    { "value": "$20", "valueCents": 2000, "weight": 20 },
     { "value": "$50", "valueCents": 5000, "weight": 5 }
   ],
-  "minPrizeCents": 100,
+  "minPrizeCents": 500,
   "maxPrizeCents": 5000
 }

@@ -25,6 +25,7 @@ export const config = {
   /** API keys and service options only. No debug paths here. */
   gemini: {
     apiKey: process.env.GEMINI_API_KEY ?? null,
+    imageRetries: parseInt(process.env.GEMINI_IMAGE_RETRIES ?? "3", 10),
   },
   elevenlabs: {
     apiKey: process.env.ELEVENLABS_API_KEY ?? null,
@@ -43,6 +44,12 @@ export const config = {
       algorithmicEnabled: process.env.SPRITESHEET_QA_ALGORITHMIC_ENABLED === "true",
       maxRetries: parseInt(process.env.SPRITESHEET_QA_MAX_RETRIES || "3", 10),
     },
+  },
+
+  /** Title image QA gating / regeneration policy. */
+  titleImageQa: {
+    enabled: process.env.TITLE_IMAGE_QA_ENABLED === "false" ? false : true,
+    maxRetries: parseInt(process.env.TITLE_IMAGE_QA_MAX_RETRIES || "2", 10),
   },
 
   /** When set, generated assets are written under these dirs (one key per feature). Null = no debug output. */
