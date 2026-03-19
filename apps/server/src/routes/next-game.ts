@@ -1,26 +1,14 @@
 import type { Request, Response } from "express";
-import { readFile } from "fs/promises";
-import { join } from "path";
 import type { CardData, GameId } from "@repo/shared";
 import { generateVariantGames } from "../lib/game-outcomes.js";
 import { getGameConfigs } from "../config/games/index.js";
 import { PIPELINE_CONFIG } from "../config/creative-director/pipeline-config.js";
-import { getJobOutputsDir, getJobResult } from "../queue/worker.js";
+import { getJobResult, loadCardFromDisk } from "../queue/worker.js";
 
 type VariantId = "variant-1" | "variant-2" | "variant-3";
 
 function isVariantId(value: unknown): value is VariantId {
   return value === "variant-1" || value === "variant-2" || value === "variant-3";
-}
-
-async function loadCardFromDisk(jobId: string): Promise<CardData | null> {
-  const path = join(process.cwd(), getJobOutputsDir(), jobId, "card-data.json");
-  try {
-    const raw = await readFile(path, "utf-8");
-    return JSON.parse(raw) as CardData;
-  } catch {
-    return null;
-  }
 }
 
 function extractCoverSpriteSheetSrcByGameId(card: CardData): {
@@ -50,6 +38,18 @@ function extractCoverSpriteSheetSrcByGameId(card: CardData): {
   return { coverSpriteSheetSrcByGameId, fallbackCoverSpriteSheetSrc };
 }
 
+function extractHeaderImageSrcByGameId(card: CardData): Partial<Record<GameId, string>> {
+  const games = card.variant?.games ?? [];
+  const headerImageSrcByGameId: Partial<Record<GameId, string>> = {};
+  for (const game of games) {
+    const gameId = game.id as GameId;
+    if (gameId !== "lucky-numbers" && gameId !== "your-numbers") continue;
+    const url = (game as { headerImageUrl?: string }).headerImageUrl;
+    if (url) headerImageSrcByGameId[gameId] = url;
+  }
+  return headerImageSrcByGameId;
+}
+
 export async function postNextGame(req: Request, res: Response): Promise<void> {
   const jobId = Array.isArray(req.params.jobId) ? req.params.jobId[0] : req.params.jobId;
   if (!jobId) {
@@ -71,6 +71,7 @@ export async function postNextGame(req: Request, res: Response): Promise<void> {
   }
 
   const { coverSpriteSheetSrcByGameId, fallbackCoverSpriteSheetSrc } = extractCoverSpriteSheetSrcByGameId(card);
+  const headerImageSrcByGameId = extractHeaderImageSrcByGameId(card);
 
   const nextSeed = crypto.randomUUID();
 
@@ -79,6 +80,7 @@ export async function postNextGame(req: Request, res: Response): Promise<void> {
     coverSpriteSheet: { cols: PIPELINE_CONFIG.spritesheet.cols, rows: PIPELINE_CONFIG.spritesheet.rows },
     coverSpriteSheetSrc: fallbackCoverSpriteSheetSrc,
     coverSpriteSheetSrcByGameId,
+    headerImageSrcByGameId,
   });
 
   const nextCard: CardData = {

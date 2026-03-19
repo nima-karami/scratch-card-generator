@@ -10,7 +10,12 @@ export interface YourNumbersProps {
   foregroundColor?: string;
 }
 
-export function YourNumbers({ data, glyphSheet, matchHighlightTheme, foregroundColor }: YourNumbersProps) {
+export function YourNumbers({
+  data,
+  glyphSheet,
+  matchHighlightTheme,
+  foregroundColor,
+}: YourNumbersProps) {
   const { cols, rows, items } = data;
   const total = cols * rows;
   const visibleItems = items.slice(0, total);
@@ -21,15 +26,17 @@ export function YourNumbers({ data, glyphSheet, matchHighlightTheme, foregroundC
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="space-y-3"
+      className="space-y-1"
     >
       <h3 className="flex w-full justify-center text-xs font-semibold uppercase tracking-wider text-gold-dim">
         {data.headerImageUrl ? (
-          <img
-            src={data.headerImageUrl}
-            alt="Your Numbers"
-            className="h-4 max-w-full object-contain object-center"
-          />
+          <div className="flex w-full justify-center items-center p-2">
+            <img
+              src={data.headerImageUrl}
+              alt="Your Numbers"
+              className="h-4 max-w-full object-contain object-center"
+            />
+          </div>
         ) : (
           "Your Numbers"
         )}

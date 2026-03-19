@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import type { CardData } from "@repo/shared";
 import { cn } from "../../lib/utils";
 import { useScratchCardStore, allRevealedSelector } from "../../stores/scratch-card-store";
@@ -68,12 +68,14 @@ export function ScratchCard({
     return null;
   }
 
-  const videoUrl = cardData.backgroundVideoUrl ?? (cardData.backgroundImageUrl ? undefined : DEFAULT_BACKGROUND_VIDEO);
+  const videoUrl =
+    cardData.backgroundVideoUrl ??
+    (cardData.backgroundImageUrl ? undefined : DEFAULT_BACKGROUND_VIDEO);
   const totalWon = getTotalWonPlaceholder(cardData, itemStates);
   const nextButtonImageUrl = cardData.nextButtonImageUrl;
-  const showNextControl =
-    Boolean(nextButtonImageUrl) && (Boolean(allRevealed) || isNextLoading);
   const nextEnabled = Boolean(allRevealed) && !isNextLoading && Boolean(jobId);
+  /** Full opacity + pulse: round complete and ready to tap. */
+  const nextReady = nextEnabled;
 
   async function handleNext() {
     if (!jobId) return;
@@ -109,30 +111,42 @@ export function ScratchCard({
         {variant.id === "variant-3" && <Variant3 cardData={cardData} />}
       </div>
 
-      {showNextControl && nextButtonImageUrl && (
-        <div className="absolute bottom-0 left-0 right-0 z-40 flex justify-center p-4 pointer-events-none [&>button]:pointer-events-auto">
-          <button
+      {nextButtonImageUrl && (
+        <div className="absolute bottom-0 left-0 right-0 z-20 flex justify-center p-4 pointer-events-none">
+          <motion.button
             type="button"
             onClick={handleNext}
             disabled={!nextEnabled}
             aria-busy={isNextLoading}
             aria-label="Next game"
             className={cn(
-              "m-0 border-0 bg-transparent p-0 shadow-none cursor-pointer",
-              "appearance-none outline-none",
+              "m-0 border-0 bg-transparent p-0 shadow-none pointer-events-auto",
+              "appearance-none outline-none cursor-pointer",
               "focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded-sm",
-              "disabled:cursor-not-allowed transition-opacity",
-              isNextLoading && "opacity-60",
-              !nextEnabled && !isNextLoading && "opacity-40",
+              "disabled:cursor-not-allowed",
             )}
+            initial={false}
+            animate={nextReady ? { opacity: 1, scale: [1, 1.045, 1] } : { opacity: 0.8, scale: 1 }}
+            transition={
+              nextReady
+                ? {
+                    opacity: { duration: 0.35, ease: "easeOut" },
+                    scale: {
+                      duration: 1.5,
+                      repeat: Number.POSITIVE_INFINITY,
+                      ease: "easeInOut",
+                    },
+                  }
+                : { duration: 0.25, ease: "easeOut" }
+            }
           >
             <img
               src={nextButtonImageUrl}
               alt=""
               draggable={false}
-              className="block h-10 w-auto max-w-[min(100%,280px)] object-contain select-none"
+              className="block h-16 w-auto max-w-[min(100%,280px)] object-contain select-none pointer-events-none"
             />
-          </button>
+          </motion.button>
         </div>
       )}
 

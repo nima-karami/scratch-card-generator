@@ -10,7 +10,12 @@ export interface LuckyNumbersProps {
   foregroundColor?: string;
 }
 
-export function LuckyNumbers({ data, glyphSheet, matchHighlightTheme, foregroundColor }: LuckyNumbersProps) {
+export function LuckyNumbers({
+  data,
+  glyphSheet,
+  matchHighlightTheme,
+  foregroundColor,
+}: LuckyNumbersProps) {
   const items = data.items.slice(0, data.count);
   const spriteSheetConfig = data.coverSpriteSheet;
 
@@ -19,15 +24,17 @@ export function LuckyNumbers({ data, glyphSheet, matchHighlightTheme, foreground
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="space-y-3"
+      className="space-y-1"
     >
       <h3 className="flex w-full justify-center text-xs font-semibold uppercase tracking-wider text-gold-dim">
         {data.headerImageUrl ? (
-          <img
-            src={data.headerImageUrl}
-            alt="Lucky Numbers"
-            className="h-4 max-w-full object-contain object-center"
-          />
+          <div className="flex w-full justify-center items-center p-2">
+            <img
+              src={data.headerImageUrl}
+              alt="Lucky Numbers"
+              className="h-4 max-w-full object-contain object-center"
+            />
+          </div>
         ) : (
           "Lucky Numbers"
         )}

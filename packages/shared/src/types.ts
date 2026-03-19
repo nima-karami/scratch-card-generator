@@ -215,6 +215,8 @@ export enum JobStatus {
 export interface TextReadyEvent {
   type: "text-ready";
   title: string;
+  /** Optional fun copy for UI/logs. */
+  message?: string;
 }
 
 /** SSE: image generation progress */
@@ -292,6 +294,8 @@ export interface AssetReadyEvent {
   kind: string;
   id: string;
   url: string;
+  /** Optional fun copy for the frontend log/UI. */
+  message?: string;
 }
 
 export type SSEEvent =

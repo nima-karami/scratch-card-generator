@@ -28,6 +28,8 @@ interface GameState {
   setGenerating: (jobId: string) => void;
   applySSEEvent: (e: SSEEvent) => void;
   setCard: (data: CardData) => void;
+  /** Open a completed card by job id (URL deep link). Resets scratch state. */
+  openCompletedJob: (jobId: string, data: CardData) => void;
   setMockAssetUrls: (assetUrls: Record<string, string>) => void;
   setError: (msg: string | null) => void;
   reset: () => void;
@@ -51,14 +53,16 @@ export const useGameStore = create<GameState>((set) => ({
 
   setPrompt: (p) => set({ prompt: p, error: null }),
 
-  setGenerating: (jobId) =>
+  setGenerating: (jobId) => {
+    useScratchCardStore.getState().reset();
     set({
       view: "generating",
       jobId,
       progress: defaultProgress,
       cardData: null,
       error: null,
-    }),
+    });
+  },
 
   applySSEEvent: (e) =>
     set((state) => {
@@ -80,9 +84,9 @@ export const useGameStore = create<GameState>((set) => ({
           return {
             progress: {
               ...state.progress,
-              stage: "Writing copy...",
+              stage: e.message ?? "Writing copy...",
               title: e.title,
-              log: pushLog(`Theme copy ready: ${e.title}`),
+              log: pushLog(e.message ?? `Theme copy ready: ${e.title}`),
             },
           };
         case "image-progress":
@@ -122,9 +126,9 @@ export const useGameStore = create<GameState>((set) => ({
           return {
             progress: {
               ...state.progress,
-              stage: "Adding images...",
+              stage: e.message ?? "Adding images...",
               assetUrls: { ...state.progress.assetUrls, [e.kind]: e.url },
-              log: pushLog(`Asset ready: ${e.kind}`),
+              log: pushLog(e.message ?? `Asset ready: ${e.kind}`),
             },
           };
         case "composing":
@@ -138,13 +142,33 @@ export const useGameStore = create<GameState>((set) => ({
         case "complete":
           return { progress: { ...state.progress, stage: "Done!", log: pushLog("Done!") } };
         case "error":
-          return { error: e.message, view: "landing" as View, progress: { ...state.progress, log: pushLog(`Error: ${e.message}`) } };
+          return {
+            error: e.message,
+            progress: { ...state.progress, log: pushLog(`Error: ${e.message}`) },
+          };
         default:
           return state;
       }
     }),
 
-  setCard: (data) => set({ cardData: data, view: "result", error: null }),
+  setCard: (data) =>
+    set((state) => ({
+      cardData: data,
+      view: "result" as View,
+      error: null,
+      jobId: state.jobId,
+    })),
+
+  openCompletedJob: (jobId, data) => {
+    useScratchCardStore.getState().reset();
+    set({
+      jobId,
+      cardData: data,
+      view: "result",
+      error: null,
+      progress: defaultProgress,
+    });
+  },
 
   setMockAssetUrls: (assetUrls) =>
     set((state) => ({

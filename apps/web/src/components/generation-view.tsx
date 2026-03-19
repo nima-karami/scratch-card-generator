@@ -17,7 +17,12 @@ function friendlyStage(raw: string): string {
   return STAGE_LABELS[raw] ?? raw;
 }
 
-export function GenerationView() {
+export function GenerationView({
+  onFatalError,
+}: {
+  /** When set (e.g. on /card/:jobId), connection/SSE failures send user home with a message. */
+  onFatalError?: (message: string) => void;
+}) {
   const { jobId, progress, applySSEEvent, setCard, setError } = useGameStore();
   const unsubRef = useRef<(() => void) | null>(null);
   const logEndRef = useRef<HTMLDivElement | null>(null);
@@ -27,19 +32,31 @@ export function GenerationView() {
     unsubRef.current = subscribeToStatus(
       jobId,
       (e) => {
+        if (e.type === "error") {
+          const m = e.message ?? "Generation failed";
+          if (onFatalError) onFatalError(m);
+          else setError(m);
+          return;
+        }
         applySSEEvent(e);
         if (e.type === "complete") {
           getCard(jobId)
             .then(setCard)
-            .catch((err) => setError(err.message));
+            .catch((err) => {
+              if (onFatalError) onFatalError(err.message);
+              else setError(err.message);
+            });
         }
       },
-      (err) => setError(err.message),
+      (err) => {
+        if (onFatalError) onFatalError(err.message);
+        else setError(err.message);
+      },
     );
     return () => {
       unsubRef.current?.();
     };
-  }, [jobId, applySSEEvent, setCard, setError]);
+  }, [jobId, applySSEEvent, setCard, setError, onFatalError]);
 
   // Auto-scroll live log as new SSE messages arrive.
   useEffect(() => {

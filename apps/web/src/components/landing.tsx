@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { useGameStore } from "../stores/game-store";
 import { submitPrompt } from "../lib/api";
@@ -15,6 +16,7 @@ const LANDING_SHADER_GLOW_LEFT: [number, number, number] = [0.004, 0.525, 0.992]
 const LANDING_SHADER_GLOW_RIGHT: [number, number, number] = [0, 0.953, 1.0];
 
 export function Landing() {
+  const navigate = useNavigate();
   const [input, setInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { setPrompt, setGenerating, setError, error } = useGameStore();
@@ -33,6 +35,7 @@ export function Landing() {
       const { jobId } = await submitPrompt(trimmed);
       setPrompt(trimmed);
       setGenerating(jobId);
+      navigate(`/card/${jobId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {

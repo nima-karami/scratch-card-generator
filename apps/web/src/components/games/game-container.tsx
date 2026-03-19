@@ -88,7 +88,7 @@ export function GameContainer({
   return (
     <div
       className={cn(
-        "relative z-10 p-4 border",
+        "relative z-10 p-2 border",
         radiusClass,
         borderWidthClass,
         backgroundClass,

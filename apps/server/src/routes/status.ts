@@ -3,6 +3,7 @@ import { cardQueue, queueEvents } from "../queue/queue.js";
 import { getJobResult, getAssetSlots, setProgressListener, clearProgressListener } from "../queue/worker.js";
 import { setSSEHeaders, sendSSEEvent } from "../lib/sse.js";
 import type { SSEEvent } from "@repo/shared";
+import { translateSSEEventCopy } from "../config/progress-copy.js";
 
 export async function getStatus(req: Request, res: Response): Promise<void> {
   const jobId = Array.isArray(req.params.jobId) ? req.params.jobId[0] : req.params.jobId;
@@ -23,26 +24,40 @@ export async function getStatus(req: Request, res: Response): Promise<void> {
   if (state === "completed") {
     const card = getJobResult(jobId);
     if (card) {
-      sendSSEEvent(res, { type: "text-ready", title: card.title });
-      sendSSEEvent(res, { type: "card-structure", slots: getAssetSlots() });
+      sendSSEEvent(res, translateSSEEventCopy({ type: "text-ready", title: card.title }));
+      sendSSEEvent(res, translateSSEEventCopy({ type: "card-structure", slots: getAssetSlots() }));
       if (card.titleImageUrl) {
-        sendSSEEvent(res, { type: "asset-ready", kind: "titleImage", id: "titleImage", url: card.titleImageUrl });
+        sendSSEEvent(
+          res,
+          translateSSEEventCopy({
+            type: "asset-ready",
+            kind: "titleImage",
+            id: "titleImage",
+            url: card.titleImageUrl,
+          }),
+        );
       }
       if (card.backgroundImageUrl) {
-        sendSSEEvent(res, {
-          type: "asset-ready",
-          kind: "backgroundImage",
-          id: "backgroundImage",
-          url: card.backgroundImageUrl,
-        });
+        sendSSEEvent(
+          res,
+          translateSSEEventCopy({
+            type: "asset-ready",
+            kind: "backgroundImage",
+            id: "backgroundImage",
+            url: card.backgroundImageUrl,
+          }),
+        );
       }
       if (card.backgroundVideoUrl) {
-        sendSSEEvent(res, {
-          type: "asset-ready",
-          kind: "backgroundVideo",
-          id: "backgroundVideo",
-          url: card.backgroundVideoUrl,
-        });
+        sendSSEEvent(
+          res,
+          translateSSEEventCopy({
+            type: "asset-ready",
+            kind: "backgroundVideo",
+            id: "backgroundVideo",
+            url: card.backgroundVideoUrl,
+          }),
+        );
       }
       const firstGame = card.variant?.games?.[0];
       const spritesheetUrl =
@@ -52,33 +67,39 @@ export async function getStatus(req: Request, res: Response): Promise<void> {
             ? firstGame.item?.coverSpriteSheetSrc
             : undefined;
       if (spritesheetUrl) {
-        sendSSEEvent(res, { type: "asset-ready", kind: "spritesheet", id: "spritesheet", url: spritesheetUrl });
+        sendSSEEvent(
+          res,
+          translateSSEEventCopy({ type: "asset-ready", kind: "spritesheet", id: "spritesheet", url: spritesheetUrl }),
+        );
       }
       if (card.winOverlayTheme?.particleSpriteSheetUrl) {
-        sendSSEEvent(res, {
-          type: "asset-ready",
-          kind: "particles",
-          id: "particles",
-          url: card.winOverlayTheme.particleSpriteSheetUrl,
-        });
+        sendSSEEvent(
+          res,
+          translateSSEEventCopy({
+            type: "asset-ready",
+            kind: "particles",
+            id: "particles",
+            url: card.winOverlayTheme.particleSpriteSheetUrl,
+          }),
+        );
       }
-      sendSSEEvent(res, { type: "composing", message: "Composing your card..." });
+      sendSSEEvent(res, translateSSEEventCopy({ type: "composing", message: "Composing your card..." }));
     }
-    sendSSEEvent(res, { type: "complete", jobId });
+    sendSSEEvent(res, translateSSEEventCopy({ type: "complete", jobId }));
     res.end();
     return;
   }
 
   if (state === "failed") {
     const err = job.failedReason;
-    sendSSEEvent(res, { type: "error", message: err ?? "Job failed" });
+    sendSSEEvent(res, translateSSEEventCopy({ type: "error", message: err ?? "Job failed" }));
     res.end();
     return;
   }
 
   const sendEvent = (event: SSEEvent) => {
     try {
-      sendSSEEvent(res, event);
+      sendSSEEvent(res, translateSSEEventCopy(event));
     } catch {
       clearProgressListener(jobId);
     }
@@ -91,12 +112,15 @@ export async function getStatus(req: Request, res: Response): Promise<void> {
 
   job.waitUntilFinished(queueEvents).then(
     () => {
-      sendSSEEvent(res, { type: "complete", jobId });
+      sendSSEEvent(res, translateSSEEventCopy({ type: "complete", jobId }));
       clearProgressListener(jobId);
       res.end();
     },
     (err) => {
-      sendSSEEvent(res, { type: "error", message: String(err?.message ?? err) });
+      sendSSEEvent(
+        res,
+        translateSSEEventCopy({ type: "error", message: String(err?.message ?? err) }),
+      );
       clearProgressListener(jobId);
       res.end();
     },

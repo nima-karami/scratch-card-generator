@@ -71,6 +71,34 @@ export async function generateThemeMeta(
   const ai = new GoogleGenAI({ apiKey });
   let lastError: unknown;
 
+  const nearWhiteThreshold = 240;
+  const parseHexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+    const normalized = hex.trim().toLowerCase();
+    const m = normalized.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (!m) return null;
+
+    let h = m[1]!;
+    if (h.length === 3) {
+      // Expand #RGB to #RRGGBB.
+      h = h
+        .split("")
+        .map((c) => c + c)
+        .join("");
+    }
+
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    if (!Number.isFinite(r) || !Number.isFinite(g) || !Number.isFinite(b)) return null;
+    return { r, g, b };
+  };
+
+  const isNearWhite = (hex: string): boolean => {
+    const rgb = parseHexToRgb(hex);
+    if (!rgb) return false;
+    return rgb.r >= nearWhiteThreshold && rgb.g >= nearWhiteThreshold && rgb.b >= nearWhiteThreshold;
+  };
+
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       onProgress?.({
@@ -97,6 +125,23 @@ export async function generateThemeMeta(
       const parsed = themeManifestMetaSchema.safeParse(raw);
 
       if (parsed.success) {
+        // Reject palettes that can cause alpha extraction to erase typography/glyphs.
+        // (See apps/server/src/lib/extractAlpha.ts nearWhiteThreshold behavior.)
+        const paletteTokens = parsed.data.colorPalette;
+        const tokensToProtect = [
+          paletteTokens.foreground,
+          paletteTokens.primary,
+          paletteTokens.secondary,
+          paletteTokens.accent,
+        ];
+        const anyProtectedTokenNearWhite = tokensToProtect.some((c) => isNearWhite(c));
+        if (anyProtectedTokenNearWhite) {
+          lastError = new Error(
+            `Creative Director (meta) produced a near-white protected palette token (threshold RGB >= ${nearWhiteThreshold} for all channels).`,
+          );
+          continue;
+        }
+
         parsed.data.generatedAt = new Date().toISOString();
         return parsed.data;
       }

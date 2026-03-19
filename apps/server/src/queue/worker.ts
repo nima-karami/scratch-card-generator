@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, readFile, writeFile } from "fs/promises";
 import { join, basename } from "path";
 import { Worker, Job } from "bullmq";
 import { config } from "../config/index.js";
@@ -27,6 +27,17 @@ const JOB_OUTPUTS_DIR = "job-outputs";
 
 export function getJobResult(jobId: string): CardData | undefined {
   return jobResults.get(jobId);
+}
+
+/** Load persisted card from job-outputs/{jobId}/card-data.json (e.g. after server restart). */
+export async function loadCardFromDisk(jobId: string): Promise<CardData | null> {
+  const path = join(process.cwd(), JOB_OUTPUTS_DIR, jobId, "card-data.json");
+  try {
+    const raw = await readFile(path, "utf-8");
+    return JSON.parse(raw) as CardData;
+  } catch {
+    return null;
+  }
 }
 
 export function setJobResult(jobId: string, data: CardData): void {
@@ -172,6 +183,8 @@ function runComposeStep(
     backgroundVideoUrl: assetResult.videoBackground
       ? `${baseUrl}/${basename(assetResult.videoBackground)}`
       : undefined,
+    // Used by the frontend to render the "match rectangle" glow/border effect.
+    matchHighlightTheme: manifest.elements.matchHighlightTheme,
     winOverlayTheme,
     gameContainerSurface,
     variant: {

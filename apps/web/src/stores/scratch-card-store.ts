@@ -5,6 +5,8 @@ export type ScratchItemState = "closed" | "open" | "win";
 interface ScratchCardState {
   itemStates: Record<string, ScratchItemState>;
   registeredIds: Set<string> | null;
+  /** Incremented on `reset()` so stale effects don't apply "win" states after a Next round. */
+  roundId: number;
   /** When true, the win overlay is hidden (user clicked Done). Reset when card changes or when triggerWinAnimation is called so overlay can show again. */
   winDismissed: boolean;
   setWinDismissed: (value: boolean) => void;
@@ -28,6 +30,7 @@ export const allRevealedSelector = (s: ScratchCardState): boolean => {
 const initialState = {
   itemStates: {} as Record<string, ScratchItemState>,
   registeredIds: null as Set<string> | null,
+  roundId: 0,
   winDismissed: false,
 };
 
@@ -77,5 +80,9 @@ export const useScratchCardStore = create<ScratchCardState>((set, get) => ({
     });
   },
 
-  reset: () => set(initialState),
+  reset: () =>
+    set((s) => ({
+      ...initialState,
+      roundId: s.roundId + 1,
+    })),
 }));

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { getJobResult } from "../queue/worker.js";
+import { getJobResult, loadCardFromDisk } from "../queue/worker.js";
 
 export async function getCard(req: Request, res: Response): Promise<void> {
   const jobId = Array.isArray(req.params.jobId) ? req.params.jobId[0] : req.params.jobId;
@@ -8,7 +8,7 @@ export async function getCard(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const card = getJobResult(jobId);
+  const card = getJobResult(jobId) ?? (await loadCardFromDisk(jobId));
   if (!card) {
     res.status(404).json({ error: "Card not found", jobId });
     return;

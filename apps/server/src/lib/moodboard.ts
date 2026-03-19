@@ -24,11 +24,11 @@ function buildRethemeMoodboardPrompt(meta: ThemeManifestMeta): string {
     "A structured design moodboard on a solid light gray background, consisting of white, rounded-rectangle panels. The layout is divided into two main columns. The attached image is only a structural layout example; do not copy or adapt its imagery, patterns, or composition.",
     `The overall theme is ${meta.themeDescription}, with a ${meta.mood} mood and a ${meta.artStyle} style.`,
     "Left column (three stacked square panels):",
-    "1. Top left panel: Above the panel, the explicit small text 'Graphic Style'. Inside the panel: A single, centered game object illustration representing the theme on a clean background.",
-    `2. Middle left panel: Above the panel, the explicit small text 'Typography'. Inside the panel: A large, stylized title displaying the game name: "${meta.gameName}".`,
+    "1. Top left panel: Above the panel, the explicit small text 'Graphic Style'. Inside the panel: Render a single, centered game object illustration representing the theme. Use ${cp.primary} and ${cp.foreground} as dominant object colors, and reserve ${cp.accent} for small glow/highlight touches. Keep the background inside the panel clean and texture-light (no text, no UI).",
+    `2. Middle left panel: Above the panel, the explicit small text 'Typography'. Inside the panel: Render a large, stylized title displaying the game name: "${meta.gameName}". The title must sit on a solid rectangle background of exactly ${cp.background}. Use ${cp.foreground} as the dominant readable lettering color, and add secondary visual interest with outlines/glow/highlights using ${cp.primary} and/or ${cp.accent}. Also include (but keep visually smaller than the main title): a small example digit line "7 42 100" and a small subtitle phrase (2–5 words) derived from the theme's ${meta.mood} and ${meta.themeDescription}. Use the same color layering strategy for the example digit line and subtitle (foreground as dominant, accent/primary as secondary outlines/glow).`,
     `3. Bottom left panel: Above the panel, the explicit small text 'Color Palette'. Inside the panel: Vertical color swatches representing these exact hex codes: ${colors}.`,
     "Right column (one tall vertical panel):",
-    "4. Large right panel: Above the panel, the explicit small text 'Background Style'. Inside the panel: A new full-bleed patterned or textured background designed for this theme, matching the color palette.",
+    "4. Large right panel: Above the panel, the explicit small text 'Background Style'. Inside the panel: A new full-bleed patterned or textured background designed for this theme. ${cp.background} must be the dominant base color; use subtle ${cp.primary}/${cp.secondary}/${cp.accent} accents for visual interest. No text, no grids, no UI.",
     "Output a single image with this exact four-panel structure and explicit text labels. Keep each section clearly isolated. Do not produce a full scratch card or game layout — only this tagged moodboard.",
   ];
   return parts.join(" ");
@@ -43,10 +43,10 @@ function buildMoodboardPrompt(meta: ThemeManifestMeta): string {
   const colors = [cp.background, cp.foreground, cp.primary, cp.secondary, cp.accent].join(", ");
   const parts = [
     "Generate a single moodboard image that will be used as the visual style reference for a scratch card game. It must have four clearly labeled sections, arranged in a single image:",
-    "(1) Graphic Style — one or two sample objects or icons for the theme (e.g. a cookie, a gem), on a plain background.",
-    `(2) Typography — the game title "${meta.gameName}" styled as a headline, showing how the title should look.`,
+    `(1) Graphic Style — one or two sample objects or icons for the theme (e.g. a cookie, a gem). Use ${cp.primary} and ${cp.foreground} as dominant object colors, with ${cp.accent} reserved for small glow/highlight touches. Keep the background clean (no text, no UI).`,
+    `(2) Typography — render the game title "${meta.gameName}" as a headline on a solid background of exactly ${cp.background}. The dominant readable lettering color must use ${cp.foreground}. Secondary layers (outlines, shadows/glow edges, inner highlights, distressed texture tinting) may use ${cp.primary} and/or ${cp.accent} for contrast and visual interest. Also (smaller than the main title) include: a small example digit line "7 42 100" and a small subtitle phrase (2–5 words) derived from the theme's mood (${meta.mood}) and description (${meta.themeDescription}). Use the same foreground-dominant + accent/primary-outline/glow layering strategy for the example digits and subtitle.`,
     "(3) Color Palette — a row of color swatches using exactly these hex colors: " + colors + ".",
-    "(4) Background Style — a patterned or textured background area (no game UI, no grids).",
+    `(4) Background Style — a patterned or textured background area where ${cp.background} is the dominant base color, with subtle accents in ${cp.primary}/${cp.secondary}/${cp.accent}. No game UI, no grids, no text.`,
     `Theme: ${meta.themeDescription}. Art style: ${meta.artStyle}. Mood: ${meta.mood}.`,
     "Keep the four sections visually distinct and labeled. Do not produce a full scratch card layout. This moodboard will be used so that title generation uses the Typography section, background generation uses the Background Style section, and game objects use the Graphic Style section.",
   ];

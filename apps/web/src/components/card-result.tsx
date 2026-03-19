@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { useGameStore } from "../stores/game-store";
 import { useSoundStore } from "../stores/sound-store";
@@ -6,6 +7,7 @@ import { resolveAssetUrl } from "../lib/api";
 import { ScratchCard } from "./games";
 
 export function CardResult() {
+  const navigate = useNavigate();
   const { cardData, reset, progress } = useGameStore();
   const { muted, toggleMuted, startBGM, stopBGM, setSoundUrls } = useSoundStore();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -63,6 +65,7 @@ export function CardResult() {
   const handleGenerateAnother = () => {
     reset();
     setMenuOpen(false);
+    navigate("/");
   };
 
   if (!cardData) return null;

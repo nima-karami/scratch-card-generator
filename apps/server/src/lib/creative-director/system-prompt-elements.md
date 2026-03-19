@@ -52,7 +52,9 @@ The main title graphic at the top of the card.
   - **Typography-only constraint (critical)**: `visualStyle` MUST describe only the title lettering/typography treatment (strokes/outlines, fill color usage, texture/discoloration inside the letters, halftone/print texture, shadows/drop-shadows, and letter-adjacent ornaments that are part of the typography treatment).
   - **Allowed (letter-adjacent ornaments)**: Small decorations immediately next to/attached to the lettering are allowed (e.g. water drops/splashes, beach spritz, tiny shells/bubbles, small leaf-like flourishes).
   - **Forbidden**: Do NOT describe any external framing, borders around the whole title, surrounding foliage/vines/palm trees/leaves as an *overall frame*, or any background/scene composition outside the letters.
-  - Use the semantic `colorPalette.foreground` token as the dominant readable color for the title typography.
+- Use the semantic `colorPalette.foreground` token as the dominant readable color for the title typography (primary legibility layer).
+  - You may also use `colorPalette.primary` and/or `colorPalette.accent` for secondary layers like outlines, drop-shadows, glows/neon edges, inner highlights, and distressed texture tinting to make the title more visually interesting.
+  - Keep the overall title readable against the moodboard’s Typography background context.
 
 ### winMessageImage
 
@@ -61,7 +63,8 @@ Typography-only graphic for the fixed win popup wording: **"You Won!"**.
 The orchestrator will render the exact words, so your job is only to describe how they should look visually.
 
 - **visualStyle**: Typography and visual treatment for the fixed win message wording "You Won!" that matches the moodboard (colors, mood, lighting/textures, treatment). Use the moodboard only for how the win message should look visually.
-  - Use the semantic `colorPalette.foreground` token as the dominant readable color for the win message typography.
+  - Use the semantic `colorPalette.foreground` token as the dominant readable color for the win message typography (primary legibility layer).
+  - You may also use `colorPalette.primary` and/or `colorPalette.accent` for secondary layers like outlines, drop-shadows, glows/neon edges, and texture tinting for contrast/visual interest.
 
 ### nextButtonImage
 
@@ -134,14 +137,17 @@ Short sound when the user reveals a game cell.
 
 Themed number/currency glyphs. Only describe visual style, not the glyphs themselves.
 
-- **visualStyle**: Style description that matches the moodboard (colors, texture). IMPORTANT: all 12 glyphs must share the exact same color, outline, texture, and glow. Use the semantic `colorPalette.foreground` token as the dominant glyph color so digits remain readable on win overlays.
+- **visualStyle**: Style description that matches the moodboard (colors, texture). IMPORTANT: all 12 glyphs must share the exact same overall "color recipe" (fill + outline/glow/highlight colors, plus texture and effects) with no per-glyph variation.
+  - Use the semantic `colorPalette.foreground` token as the dominant legibility layer (fill or main stroke) so digits remain readable on win overlays.
+  - You may also use `colorPalette.primary` and/or `colorPalette.accent` as secondary colors for outlines/glow/highlights, as long as the recipe is consistent across all glyphs.
 
 ### winOverlay
 
 Overlay when the user wins (color only).
 
 - **overlayColor**: CSS color string, e.g. "rgba(44, 24, 16, 0.7)" — semi-transparent overlay that creates strong contrast with the win message typography rendered using `colorPalette.foreground`.
-  - Prefer making the overlay a semi-transparent version of `colorPalette.background` (alpha ~0.55–0.8) so the foreground text stays legible.
+  - Prefer making the overlay a semi-transparent version of `colorPalette.background` (alpha ~0.55–0.8) so the win message typography remains legible.
+  - The overlay should preserve contrast even if the win message typography uses secondary accent/primary layers (outlines/glow/highlights).
 
 ## Variety and balance
 - Game buttons: one distinct subject/action per active game id in **{{ACTIVE_GAME_IDS}}**.

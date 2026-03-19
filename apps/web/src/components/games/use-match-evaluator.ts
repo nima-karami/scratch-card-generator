@@ -5,8 +5,13 @@ import { useScratchCardStore } from "../../stores/scratch-card-store";
 export function useMatchEvaluator(cardData: CardData) {
   const itemStates = useScratchCardStore((s) => s.itemStates);
   const setItemState = useScratchCardStore((s) => s.setItemState);
+  const roundId = useScratchCardStore((s) => s.roundId);
 
   useEffect(() => {
+    // If a Next round reset happened after this effect was scheduled,
+    // prevent stale effects from applying "win" states into the next card.
+    if (useScratchCardStore.getState().roundId !== roundId) return;
+
     const games = cardData.variant?.games ?? [];
     if (games.length === 0) return;
 
@@ -100,9 +105,10 @@ export function useMatchEvaluator(cardData: CardData) {
 
     // Apply updates
     if (updates.size > 0) {
+      if (useScratchCardStore.getState().roundId !== roundId) return;
       for (const [id, state] of updates.entries()) {
         setItemState(id, state);
       }
     }
-  }, [cardData, itemStates, setItemState]);
+  }, [cardData, itemStates, setItemState, roundId]);
 }
