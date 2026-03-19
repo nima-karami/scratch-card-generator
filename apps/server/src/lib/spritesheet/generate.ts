@@ -64,6 +64,9 @@ export async function generateSpritesheet(
 ): Promise<GenerateSpritesheetResult> {
   const prompt = buildSpritesheetPrompt({ ...params, backgroundColor: "white" });
   
+  const { canvasWidth, canvasHeight } = params;
+  const aspect = canvasWidth > canvasHeight ? "16:9" : canvasHeight > canvasWidth ? "9:16" : "1:1";
+
   let whiteBg: Buffer | null = null;
   let attempts = 0;
   const maxRetries = config.spritesheet.qa.maxRetries;
@@ -101,7 +104,7 @@ export async function generateSpritesheet(
         message: `Spritesheet QA: attempt ${attempts}/${totalAttempts} (generating)`,
       });
       const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
-      whiteBg = await generateImage(fullPrompt, params.referenceImage);
+      whiteBg = await generateImage(fullPrompt, params.referenceImage, aspect);
     } else {
       console.log(`Edit attempt ${attempts} of ${maxRetries + 1} (fixing from QA feedback)...`);
       onProgress?.({
@@ -116,7 +119,7 @@ export async function generateSpritesheet(
       } else {
         instruction = buildEditInstructionFromQA(lastFailureReason ?? "Unknown QA failure", params);
       }
-      whiteBg = await editImage(whiteBg!, instruction);
+      whiteBg = await editImage(whiteBg!, instruction, aspect);
     }
 
     let qaPassed = true;
@@ -251,7 +254,7 @@ export async function generateSpritesheet(
     throw new Error("Failed to generate spritesheet.");
   }
 
-  const blackBg = await swapBackground(whiteBg, "white", "black");
+  const blackBg = await swapBackground(whiteBg, "white", "black", aspect);
 
   const workDir = await mkdtemp(join(tmpdir(), `spritesheet-${randomUUID()}-`));
   const whitePath = join(workDir, "white.png");
@@ -292,13 +295,15 @@ export async function generateSpritesheet(
 export async function generateParticleSpritesheet(
   params: ParticleSpritesheetPromptParams
 ): Promise<GenerateSpritesheetResult> {
+    const { canvasWidth, canvasHeight } = params;
+    const aspect = canvasWidth > canvasHeight ? "16:9" : canvasHeight > canvasWidth ? "9:16" : "1:1";
   const prompt = buildParticleSpritesheetPrompt({
     ...params,
     backgroundColor: "white",
   });
   const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
-  const whiteBg = await generateImage(fullPrompt, params.referenceImage);
-  const blackBg = await swapBackground(whiteBg, "white", "black");
+  const whiteBg = await generateImage(fullPrompt, params.referenceImage, aspect);
+  const blackBg = await swapBackground(whiteBg, "white", "black", aspect);
   const workDir = await mkdtemp(join(tmpdir(), `particle-sheet-${randomUUID()}-`));
   const whitePath = join(workDir, "white.png");
   const blackPath = join(workDir, "black.png");

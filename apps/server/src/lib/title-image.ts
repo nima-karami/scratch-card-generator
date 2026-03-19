@@ -3,7 +3,7 @@ import { join } from "path";
 import { config } from "../config/index.js";
 import { cropTransparentToContent } from "./crop-to-content.js";
 import { extractAlphaTwoPassFromBuffers } from "./extractAlpha.js";
-import { generateImage } from "./gemini.js";
+import { generateImage, generateImageWithTwoReferences } from "./gemini.js";
 import { validateNumbersHeaderPairWithLLM } from "./numbers-header-qa.js";
 import { sanitizeTextWithLLM } from "./llm/text-sanitizer.js";
 import { swapBackground } from "./spritesheet/swap-background.js";
@@ -11,6 +11,15 @@ import sharp from "sharp";
 
 const REFERENCE_IMAGE_PREFIX =
   "The attached image is a tagged moodboard with sections: Graphic Style, Typography, Color Palette, Background Style. For this task use ONLY the TYPOGRAPHY section as your style reference (the sample title/h headline treatment). Ignore all other sections. You are generating a standalone TITLE GRAPHIC: the title words as styled text. Match the typography's colors, lighting, textures, and treatment from the Typography section only. Do not copy the layout of the full moodboard. Output ONLY the title graphic.\n\n";
+
+const TWO_REFERENCE_IMAGE_PREFIX =
+  "You are given TWO attached images.\n\n" +
+  "Image 1 is a tagged moodboard with sections: Graphic Style, Typography, Color Palette, Background Style.\n" +
+  "Use ONLY the TYPOGRAPHY section as your STYLE reference (the sample title/h headline treatment). Ignore all other sections.\n\n" +
+  "Image 2 is a reference for the intended LAYOUT of the numbers header wordmark.\n" +
+  "Use Image 2 ONLY to infer placement: relative vertical spacing between the two lines, horizontal baseline alignment, and word boundaries within each line.\n" +
+  "IGNORE any colors, lighting, textures, or typography styling from Image 2. Do NOT copy image 2's artwork; only use it as a layout guide.\n\n" +
+  "Output ONLY the requested styled heading typography as text on a pure solid white #FFFFFF background. No other objects or UI.\n\n";
 
 export type GenerateTitleImageParams = {
   text: string;
@@ -122,8 +131,13 @@ export type GenerateTwoWordmarkImagesParams = {
   topText: string;
   bottomText: string;
   visualStyle: string;
-  /** When set, generation uses this image as style reference (moodboard) via multimodal API. */
+  /** When set, Image 1 is used as typography STYLE reference (moodboard) via multimodal API. */
   referenceImage?: Buffer;
+  /**
+   * When set alongside `referenceImage`, Image 2 is used as a layout guide (where the two text lines/word boundaries belong).
+   * The generator must ignore Image 2 styling and use it ONLY for layout.
+   */
+  layoutReferenceImage?: Buffer;
 };
 
 export type NumbersHeaderPairQaOptions = {
@@ -297,7 +311,14 @@ export async function generateTwoWordmarkImages(
 
   async function generateSplitAndTrim(retrySuffix: boolean): Promise<{ top: Buffer; bottom: Buffer }> {
     const prompt = buildTwoWordmarkPrompt(baseParams, { retrySuffix });
-    const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
+    const hasMoodboardRef = Boolean(params.referenceImage);
+    const hasLayoutRef = Boolean(params.layoutReferenceImage);
+    const fullPrompt =
+      hasMoodboardRef && hasLayoutRef
+        ? TWO_REFERENCE_IMAGE_PREFIX + prompt
+        : hasMoodboardRef
+          ? REFERENCE_IMAGE_PREFIX + prompt
+          : prompt;
 
     const qaEnabled = qaOptions?.enabled ?? false;
     const qaMaxRetries = qaOptions?.maxRetries ?? 0;
@@ -307,7 +328,16 @@ export async function generateTwoWordmarkImages(
     let bestConfidence = -1;
 
     for (let attempt = 1; attempt <= qaMaxAttempts; attempt++) {
-      const candidateWhiteBuffer = await generateImage(fullPrompt, params.referenceImage);
+      const candidateWhiteBuffer =
+        hasMoodboardRef && hasLayoutRef
+          ? await generateImageWithTwoReferences(
+              fullPrompt,
+              params.referenceImage!,
+              "image/png",
+              params.layoutReferenceImage!,
+              "image/jpeg",
+            )
+          : await generateImage(fullPrompt, params.referenceImage);
 
       if (!qaEnabled) {
         bestWhiteBuffer = candidateWhiteBuffer;

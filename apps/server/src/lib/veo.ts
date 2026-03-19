@@ -59,7 +59,7 @@ export async function generateThemeBackgroundImage(
   ];
   const fullPrompt = parts.join(" ");
   const prompt = referenceImage ? REFERENCE_IMAGE_PREFIX + fullPrompt : fullPrompt;
-  return generateImage(prompt, referenceImage);
+  return generateImage(prompt, referenceImage, aspectRatio as "1:1" | "4:3" | "16:9" | "9:16");
 }
 
 export type GenerateLoopedVideoBackgroundParams = {

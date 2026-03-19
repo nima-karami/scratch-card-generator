@@ -32,7 +32,11 @@ function shouldRetryGeminiImageError(err: unknown): boolean {
  * rather than as an image to be edited.
  * Returns the raw PNG buffer.
  */
-export async function generateImage(prompt: string, referenceImage?: Buffer): Promise<Buffer> {
+export async function generateImage(
+  prompt: string,
+  referenceImage?: Buffer,
+  aspectRatio: "1:1" | "4:3" | "16:9" | "9:16" = "1:1",
+): Promise<Buffer> {
   const ai = getClient();
   const maxAttempts = Math.max(1, config.gemini.imageRetries ?? 3);
 
@@ -41,8 +45,7 @@ export async function generateImage(prompt: string, referenceImage?: Buffer): Pr
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const input: Array<
-      | { type: "text"; text: string }
-      | { type: "image"; mime_type: "image/png"; data: string }
+      { type: "text"; text: string } | { type: "image"; mime_type: "image/png"; data: string }
     > = [];
 
     if (referenceImage) {
@@ -59,16 +62,117 @@ export async function generateImage(prompt: string, referenceImage?: Buffer): Pr
     });
 
     try {
-      const interaction = await ai.interactions.create({
+      const parts = input.map((i) =>
+        i.type === "text"
+          ? { text: i.text }
+          : { inlineData: { mimeType: i.mime_type, data: i.data } },
+      );
+
+      const response = await ai.models.generateContent({
         model: IMAGE_MODEL,
-        input,
-        response_modalities: ["image"],
+        contents: parts,
+        config: {
+          responseModalities: ["IMAGE"],
+          imageConfig: {
+            aspectRatio,
+          },
+        },
       });
 
-      const outputs = interaction.outputs ?? [];
+      const outputs = response.candidates?.[0]?.content?.parts ?? [];
       for (const output of outputs) {
-        if (output.type === "image" && output.data) {
-          return Buffer.from(output.data, "base64");
+        if (output.inlineData?.data) {
+          return Buffer.from(output.inlineData.data, "base64");
+        }
+      }
+
+      // If we got a response but no image data, treat that as retryable.
+      throw new Error("No image in response from Gemini");
+    } catch (err) {
+      lastErr = err;
+      if (attempt === maxAttempts || !shouldRetryGeminiImageError(err)) throw err;
+
+      const errMsg = err instanceof Error ? err.message : String(err);
+      attemptPrompt =
+        `${prompt}\n\n[Retry ${attempt}/${maxAttempts}] Previous Gemini error: ${errMsg}\n` +
+        "Please retry and produce a valid PNG image asset. If the previous attempt failed, try a cleaner composition and ensure an image is returned in the outputs.";
+
+      // Small backoff so we don't instantly hammer the model on repeated failures.
+      await sleep(500 * attempt);
+    }
+  }
+
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}
+
+/**
+ * Generates an image from a text prompt and exactly two reference images.
+ * Both references are passed via multimodal input (inlineData), not as an "edit" source.
+ *
+ * NOTE: Image ordering matters. Caller should ensure referenceImageA corresponds
+ * to "image 1" and referenceImageB corresponds to "image 2" as described in the prompt.
+ *
+ * Returns the raw PNG buffer.
+ */
+export async function generateImageWithTwoReferences(
+  prompt: string,
+  referenceImageA: Buffer,
+  referenceMimeTypeA: "image/png" | "image/jpeg" | "image/webp",
+  referenceImageB: Buffer,
+  referenceMimeTypeB: "image/png" | "image/jpeg" | "image/webp",
+  aspectRatio: "1:1" | "4:3" | "16:9" | "9:16" = "1:1",
+): Promise<Buffer> {
+  const ai = getClient();
+  const maxAttempts = Math.max(1, config.gemini.imageRetries ?? 3);
+
+  let lastErr: unknown;
+  let attemptPrompt = prompt;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const input: Array<
+      | { type: "text"; text: string }
+      | { type: "image"; mime_type: "image/png" | "image/jpeg" | "image/webp"; data: string }
+    > = [];
+
+    input.push({
+      type: "image",
+      mime_type: referenceMimeTypeA,
+      data: referenceImageA.toString("base64"),
+    });
+
+    input.push({
+      type: "image",
+      mime_type: referenceMimeTypeB,
+      data: referenceImageB.toString("base64"),
+    });
+
+    input.push({
+      type: "text",
+      text: attemptPrompt,
+    });
+
+    try {
+      const parts = input.map((i) =>
+        i.type === "text"
+          ? { text: i.text }
+          : { inlineData: { mimeType: i.mime_type, data: i.data } },
+      );
+
+      const response = await ai.models.generateContent({
+        model: IMAGE_MODEL,
+        contents: parts,
+        config: {
+          responseModalities: ["IMAGE"],
+          imageConfig: {
+            aspectRatio,
+          },
+        },
+      });
+
+      const outputs = response.candidates?.[0]?.content?.parts ?? [];
+      for (const output of outputs) {
+        if (output.inlineData?.data) {
+          return Buffer.from(output.inlineData.data, "base64");
         }
       }
 
@@ -97,7 +201,8 @@ export async function generateImage(prompt: string, referenceImage?: Buffer): Pr
  */
 export async function editImage(
   sourceImage: Buffer,
-  instruction: string
+  instruction: string,
+  aspectRatio: "1:1" | "4:3" | "16:9" | "9:16" = "1:1",
 ): Promise<Buffer> {
   const ai = getClient();
   const maxAttempts = Math.max(1, config.gemini.imageRetries ?? 3);
@@ -109,19 +214,26 @@ export async function editImage(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const interaction = await ai.interactions.create({
+      const parts = [
+        { inlineData: { mimeType: "image/png", data: base64Image } },
+        { text: attemptInstruction },
+      ];
+
+      const response = await ai.models.generateContent({
         model: IMAGE_MODEL,
-        input: [
-          { type: "image", data: base64Image, mime_type: "image/png" },
-          { type: "text", text: attemptInstruction },
-        ],
-        response_modalities: ["image"],
+        contents: parts,
+        config: {
+          responseModalities: ["IMAGE"],
+          imageConfig: {
+            aspectRatio,
+          },
+        },
       });
 
-      const outputs = interaction.outputs ?? [];
+      const outputs = response.candidates?.[0]?.content?.parts ?? [];
       for (const output of outputs) {
-        if (output.type === "image" && output.data) {
-          return Buffer.from(output.data, "base64");
+        if (output.inlineData?.data) {
+          return Buffer.from(output.inlineData.data, "base64");
         }
       }
 

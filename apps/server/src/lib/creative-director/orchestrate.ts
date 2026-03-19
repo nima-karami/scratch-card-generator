@@ -273,23 +273,31 @@ export async function orchestrateThemeAssets(
         onProgress?.({ type: "generating-title", message: "Lucky/Your numbers header images" });
         const headerVisualStyle =
           elements.numbersHeaderImage?.visualStyle ?? elements.titleImage.visualStyle;
-            const qaEnabled = config.numbersHeaderQa.enabled;
-            const maxRetries = config.numbersHeaderQa.maxRetries ?? 2;
-            const qaLogPath = config.debug.titleImage && qaEnabled ? join(config.debug.titleImage, "numbers-header-qa-log.txt") : undefined;
+        const qaEnabled = config.numbersHeaderQa.enabled;
+        const maxRetries = config.numbersHeaderQa.maxRetries ?? 2;
+        const qaLogPath =
+          config.debug.titleImage && qaEnabled ? join(config.debug.titleImage, "numbers-header-qa-log.txt") : undefined;
 
-            const { top, bottom } = await generateTwoWordmarkImages(
-              {
-                topText: "Lucky Numbers",
-                bottomText: "Your Numbers",
-                visualStyle: headerVisualStyle,
-                ...(moodboard && { referenceImage: moodboard }),
-              },
-              {
-                enabled: qaEnabled,
-                maxRetries,
-                qaLogPath,
-              },
-            );
+        // Image 2 for wordmarks: layout-only reference to help keep baseline alignment and spacing consistent.
+        const numbersHeaderReferencePath = join(
+          dirname(fileURLToPath(import.meta.url)),
+          "../../../assets/numbers-header-reference.jpg",
+        );
+        const layoutReferenceImage = moodboard ? await readFile(numbersHeaderReferencePath) : undefined;
+
+        const { top, bottom } = await generateTwoWordmarkImages(
+          {
+            topText: "Lucky Numbers",
+            bottomText: "Your Numbers",
+            visualStyle: headerVisualStyle,
+            ...(moodboard && { referenceImage: moodboard, layoutReferenceImage }),
+          },
+          {
+            enabled: qaEnabled,
+            maxRetries,
+            qaLogPath,
+          },
+        );
 
         const luckyPath = join(outputDir, "lucky-numbers-header.png");
         await writeFile(luckyPath, top);

@@ -23,7 +23,7 @@ export const PIPELINE_CONFIG = {
 
   /** Technical params for game button spritesheets (generate-spritesheet). */
   spritesheet: {
-    canvasWidth: 1024,
+    canvasWidth: 1376,
     canvasHeight: 768,
     cols: 4,
     rows: 3,

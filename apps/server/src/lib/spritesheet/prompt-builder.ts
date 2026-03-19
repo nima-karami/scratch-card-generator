@@ -81,7 +81,7 @@ export function buildSpritesheetPrompt(params: SpritesheetPromptParams): string 
 - Exact canvas: ${canvasWidth} pixels wide × ${canvasHeight} pixels tall (${orientation}, NOT square)
 - Exact cell size: ${cellWidth}x${cellHeight}px
 - Grid: ${cols} columns × ${rows} rows = ${totalFrames} frames total. ${rows} row${rows > 1 ? "s" : ""} only.
-- Each frame's content centered within its ${cellWidth}x${cellHeight} cell
+- Each frame's content centered within its ${cellWidth}x${cellHeight} cell. Provide a generous safe margin of empty background inside each cell so the subject NEVER touches the cell boundaries.
 - Pure solid ${bgName} ${bgHex} background everywhere
 - Keep the background absolutely pristine and solid; do not add glows, shadows, or ambient particles into the empty space; semi-transparent pixels only at the direct edges of the subject
 - NO grid lines, NO borders, NO separators, NO dividers between frames
@@ -154,7 +154,7 @@ export function buildParticleSpritesheetPrompt(
 - Exact canvas: ${canvasWidth}px × ${canvasHeight}px
 - Exact cell size: ${cellWidth}x${cellHeight}px
 - Grid: ${cols} columns × ${rows} rows = ${totalCells} cells
-- Each cell: one static variant of ${subject}, centered in its cell
+- Each cell: one static variant of ${subject}, centered in its cell. Provide a generous safe margin of empty background so the subject NEVER touches the cell boundaries.
 - Pure solid ${bgName} ${bgHex} background
 - NO grid lines, NO borders, NO separators
 - Consistent art style across all cells
