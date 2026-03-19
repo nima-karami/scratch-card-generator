@@ -16,6 +16,7 @@ import { generateContainerImage } from "../container-image.js";
 import { generateBackground } from "../background.js";
 import { generateSoundEffect, writeSoundEffectDebug } from "../elevenlabs.js";
 import { generateGlyphSheet } from "../glyph-sheet/generate.js";
+import { validateWinMessageWithLLM } from "../win-message-qa.js";
 
 export interface ProgressEvent {
   type: string;
@@ -272,12 +273,23 @@ export async function orchestrateThemeAssets(
         onProgress?.({ type: "generating-title", message: "Lucky/Your numbers header images" });
         const headerVisualStyle =
           elements.numbersHeaderImage?.visualStyle ?? elements.titleImage.visualStyle;
-        const { top, bottom } = await generateTwoWordmarkImages({
-          topText: "Lucky Numbers",
-          bottomText: "Your Numbers",
-          visualStyle: headerVisualStyle,
-          ...(moodboard && { referenceImage: moodboard }),
-        });
+            const qaEnabled = config.numbersHeaderQa.enabled;
+            const maxRetries = config.numbersHeaderQa.maxRetries ?? 2;
+            const qaLogPath = config.debug.titleImage && qaEnabled ? join(config.debug.titleImage, "numbers-header-qa-log.txt") : undefined;
+
+            const { top, bottom } = await generateTwoWordmarkImages(
+              {
+                topText: "Lucky Numbers",
+                bottomText: "Your Numbers",
+                visualStyle: headerVisualStyle,
+                ...(moodboard && { referenceImage: moodboard }),
+              },
+              {
+                enabled: qaEnabled,
+                maxRetries,
+                qaLogPath,
+              },
+            );
 
         const luckyPath = join(outputDir, "lucky-numbers-header.png");
         await writeFile(luckyPath, top);
@@ -307,15 +319,69 @@ export async function orchestrateThemeAssets(
     tasks.push(
       (async () => {
         onProgress?.({ type: "generating-title", message: "Win message image" });
+        const titleText = "You Won!";
         const params = {
           text: "You Won!",
           visualStyle: elements.winMessageImage?.visualStyle ?? elements.titleImage.visualStyle,
           ...(moodboard && { referenceImage: moodboard }),
         };
-        const buffer = await generateWinMessageImage(params);
+
+        const debugDir = config.debug.winMessageImage;
+        const qaEnabled = config.winMessageQa.enabled;
+        const maxRetries = config.winMessageQa.maxRetries ?? 2;
+        const maxAttempts = qaEnabled ? maxRetries + 1 : 1;
+
+        let bestBuffer: Buffer | null = null;
+        let bestConfidence = -1;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          const candidateBuffer = await generateWinMessageImage(params);
+
+          if (debugDir) {
+            await writeWinMessageImageDebug(candidateBuffer, params);
+          } else {
+            // Still capture at least one debug artifact if configured; no-op otherwise.
+            // (writeWinMessageImageDebug already checks config.debug internally, but we bypass it here to keep behavior consistent.)
+          }
+
+          if (!qaEnabled) {
+            bestBuffer = candidateBuffer;
+            bestConfidence = 1;
+            break;
+          }
+
+          const qa = await validateWinMessageWithLLM({
+            imageBuffer: candidateBuffer,
+            expectedText: titleText,
+          });
+
+          if (debugDir) {
+            const qaLogPath = join(debugDir, "win-message-qa-log.txt");
+            const issuesJoined = (qa.issues ?? []).join(" | ").replaceAll('"', "'");
+            const line = `${new Date().toISOString()}\tattempt=${attempt}/${maxAttempts}\tpassed=${qa.passed}\tconfidence=${qa.confidence}\tissues="${issuesJoined}"\n`;
+            await appendFile(qaLogPath, line, "utf-8");
+          }
+
+          if (qa.passed) {
+            bestBuffer = candidateBuffer;
+            bestConfidence = qa.confidence ?? 1;
+            break;
+          }
+
+          const candidateConfidence = typeof qa.confidence === "number" ? qa.confidence : 0;
+          if (candidateConfidence > bestConfidence) {
+            bestBuffer = candidateBuffer;
+            bestConfidence = candidateConfidence;
+          }
+        }
+
+        if (!bestBuffer) {
+          throw new Error("Win message QA loop produced no candidates");
+        }
+
         const path = join(outputDir, "win-message.png");
-        await writeFile(path, buffer);
-        await writeWinMessageImageDebug(buffer, params);
+        await writeFile(path, bestBuffer);
+        await writeWinMessageImageDebug(bestBuffer, params);
         result.winMessageImage = path;
         emitAssetReady(path, "winMessageImage");
       })()

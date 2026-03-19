@@ -56,6 +56,11 @@ The image MUST NOT contain:
 - Any surrounding background/scene elements behind/around the letters (e.g. vines, palm trees, leaves as an enclosing frame)
 - Any extra text/words beyond "${expectedTitleText}"
 
+Line spacing requirement:
+- If the title is rendered across multiple distinct lines/baselines, the vertical gaps between adjacent lines must be consistent/even (baseline-to-baseline spacing).
+- Fail QA if one line is noticeably closer or farther than the others (uneven stacking).
+- This is especially important when the title appears as 3 stacked words.
+
 Ignore transparency. Visually inspect the rendered pixels and decide if there are non-letter objects or extra text.
 
 Return ONLY the JSON matching the response schema.`;

@@ -4,6 +4,7 @@ import { config } from "../config/index.js";
 import { cropTransparentToContent } from "./crop-to-content.js";
 import { extractAlphaTwoPassFromBuffers } from "./extractAlpha.js";
 import { generateImage } from "./gemini.js";
+import { validateNumbersHeaderPairWithLLM } from "./numbers-header-qa.js";
 import { sanitizeTextWithLLM } from "./llm/text-sanitizer.js";
 import { swapBackground } from "./spritesheet/swap-background.js";
 import sharp from "sharp";
@@ -100,6 +101,11 @@ function buildPrompt(params: GenerateTitleImageParams): string {
   const singleLineConstraint = params.singleLine
     ? "Render the title text as a single horizontal line ONLY. Absolutely no line breaks, wrapping, stacked lines, or vertical/stacked letter layout."
     : "";
+  const wordCount = text.trim().split(/\s+/g).filter(Boolean).length;
+  const multiLineSpacingConstraint =
+    wordCount >= 2 && !params.singleLine
+      ? "If the title must render across multiple lines, the vertical spacing (baseline-to-baseline gap) between all lines must be consistent/even. Do NOT use uneven gaps that make one line closer or farther than the others."
+      : "";
   const parts = [
     `Generate a single image that displays the following title text prominently and clearly: "${text}".`,
     visualStyle.trim(),
@@ -107,6 +113,7 @@ function buildPrompt(params: GenerateTitleImageParams): string {
     "The image must be on a pure solid white #FFFFFF background with no other background elements.",
     `CRITICAL CONSTRAINTS: Output ONLY the words "${text}". The background MUST be pure solid white #FFFFFF. Absolutely no other objects, no secondary text, and no game UI.`,
     ...(singleLineConstraint ? [singleLineConstraint] : []),
+    ...(multiLineSpacingConstraint ? [multiLineSpacingConstraint] : []),
   ];
   return parts.join(" ");
 }
@@ -117,6 +124,14 @@ export type GenerateTwoWordmarkImagesParams = {
   visualStyle: string;
   /** When set, generation uses this image as style reference (moodboard) via multimodal API. */
   referenceImage?: Buffer;
+};
+
+export type NumbersHeaderPairQaOptions = {
+  enabled: boolean;
+  /** Number of retries after the first attempt. */
+  maxRetries: number;
+  /** When set, append per-attempt QA results here. */
+  qaLogPath?: string;
 };
 
 const TWO_WORDMARK_LAYOUT_RULES = `LAYOUT (non-negotiable):
@@ -146,6 +161,7 @@ function buildTwoWordmarkPrompt(
     `Line 1 (top): "${topText}" — entire phrase on one horizontal line.`,
     `Line 2 (bottom): "${bottomText}" — entire phrase on one horizontal line.`,
     visualStyle.trim(),
+    "Typography must be crisp, readable, and correctly spelled; no garbled/illegible letters.",
     "Treat the provided visualStyle as typography-only. Same letter treatment for both lines.",
     layout,
   ];
@@ -274,6 +290,7 @@ async function splitTransparentImageIntoTwoByAlpha(pngBuffer: Buffer, alphaThres
 
 export async function generateTwoWordmarkImages(
   params: GenerateTwoWordmarkImagesParams,
+  qaOptions?: NumbersHeaderPairQaOptions,
 ): Promise<{ top: Buffer; bottom: Buffer }> {
   const sanitizedVisualStyle = await sanitizeVisualStyle(params.visualStyle);
   const baseParams = { ...params, visualStyle: sanitizedVisualStyle };
@@ -281,9 +298,54 @@ export async function generateTwoWordmarkImages(
   async function generateSplitAndTrim(retrySuffix: boolean): Promise<{ top: Buffer; bottom: Buffer }> {
     const prompt = buildTwoWordmarkPrompt(baseParams, { retrySuffix });
     const fullPrompt = params.referenceImage ? REFERENCE_IMAGE_PREFIX + prompt : prompt;
-    const whiteBuffer = await generateImage(fullPrompt, params.referenceImage);
-    const blackBuffer = await swapBackground(whiteBuffer, "white", "black");
-    const combinedTransparent = await extractAlphaTwoPassFromBuffers(whiteBuffer, blackBuffer);
+
+    const qaEnabled = qaOptions?.enabled ?? false;
+    const qaMaxRetries = qaOptions?.maxRetries ?? 0;
+    const qaMaxAttempts = qaEnabled ? qaMaxRetries + 1 : 1;
+
+    let bestWhiteBuffer: Buffer | null = null;
+    let bestConfidence = -1;
+
+    for (let attempt = 1; attempt <= qaMaxAttempts; attempt++) {
+      const candidateWhiteBuffer = await generateImage(fullPrompt, params.referenceImage);
+
+      if (!qaEnabled) {
+        bestWhiteBuffer = candidateWhiteBuffer;
+        bestConfidence = 1;
+        break;
+      }
+
+      const qa = await validateNumbersHeaderPairWithLLM({
+        imageBuffer: candidateWhiteBuffer,
+        expectedTopText: params.topText,
+        expectedBottomText: params.bottomText,
+      });
+
+      if (qaOptions?.qaLogPath) {
+        const issuesJoined = (qa.issues ?? []).join(" | ").replaceAll('"', "'");
+        const line = `${new Date().toISOString()}\tattempt=${attempt}/${qaMaxAttempts}\tpassed=${qa.passed}\tconfidence=${qa.confidence}\tissues="${issuesJoined}"\n`;
+        await appendFile(qaOptions.qaLogPath, line, "utf-8");
+      }
+
+      if (qa.passed) {
+        bestWhiteBuffer = candidateWhiteBuffer;
+        bestConfidence = qa.confidence ?? 1;
+        break;
+      }
+
+      const candidateConfidence = typeof qa.confidence === "number" ? qa.confidence : 0;
+      if (candidateConfidence > bestConfidence || bestWhiteBuffer == null) {
+        bestWhiteBuffer = candidateWhiteBuffer;
+        bestConfidence = candidateConfidence;
+      }
+    }
+
+    if (!bestWhiteBuffer) {
+      throw new Error("Numbers header QA loop produced no candidates");
+    }
+
+    const blackBuffer = await swapBackground(bestWhiteBuffer, "white", "black");
+    const combinedTransparent = await extractAlphaTwoPassFromBuffers(bestWhiteBuffer, blackBuffer);
     const { topCrop, bottomCrop } = await splitTransparentImageIntoTwoByAlpha(combinedTransparent);
     const top = await cropTransparentToContent(topCrop, { padding: 16 });
     const bottom = await cropTransparentToContent(bottomCrop, { padding: 16 });

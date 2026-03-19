@@ -52,6 +52,18 @@ export const config = {
     maxRetries: parseInt(process.env.TITLE_IMAGE_QA_MAX_RETRIES || "2", 10),
   },
 
+  /** Win message QA gating / regeneration policy. */
+  winMessageQa: {
+    enabled: process.env.WIN_MESSAGE_QA_ENABLED === "false" ? false : true,
+    maxRetries: parseInt(process.env.WIN_MESSAGE_QA_MAX_RETRIES || "2", 10),
+  },
+
+  /** Lucky/Your numbers header QA gating / regeneration policy. */
+  numbersHeaderQa: {
+    enabled: process.env.NUMBERS_HEADER_QA_ENABLED === "false" ? false : true,
+    maxRetries: parseInt(process.env.NUMBERS_HEADER_QA_MAX_RETRIES || "2", 10),
+  },
+
   /** When set, generated assets are written under these dirs (one key per feature). Null = no debug output. */
   debug: {
     soundEffect: process.env.SOUND_EFFECT_DEBUG_OUTPUT_DIR || null,
